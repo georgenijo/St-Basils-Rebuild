@@ -14,7 +14,7 @@
 :root {
   --default-font: "Roboto",  system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
   --heading-font: "Raleway",  sans-serif;
-  --nav-font: "Poppins",  sans-serif;
+  --nav-font: "Libre Baskerville",  serif;
 }
 
 /* Global Colors - The following color variables are used throughout the website. Updating them here will change the color scheme of the entire website */
@@ -29,10 +29,10 @@
 
 /* Nav Menu Colors - The following color variables are used specifically for the navigation menu. They are separate from the global colors to allow for more customization options */
 :root {
-  --nav-color: #ffffff;  /* The default color of the main navmenu links */
+  --nav-color: #444444;  /* The default color of the main navmenu links */
   --nav-hover-color: #67b0d1; /* Applied to main navmenu links when they are hovered over or active */
-  --nav-mobile-background-color: #ffffff; /* Used as the background color for mobile navigation menu */
-  --nav-dropdown-background-color: #ffffff; /* Used as the background color for dropdown items that appear when hovering over primary navigation items */
+  --nav-mobile-background-color: #FEFAE0; /* Used as the background color for mobile navigation menu */
+  --nav-dropdown-background-color: #FEFAE0; /* Used as the background color for dropdown items that appear when hovering over primary navigation items */
   --nav-dropdown-color: #444444; /* Used for navigation links of the dropdown items in the navigation menu. */
   --nav-dropdown-hover-color: #67b0d1; /* Similar to --nav-hover-color, this color is applied to dropdown navigation links when they are hovered over. */
 }
@@ -150,12 +150,12 @@ h6 {
 # Global Header
 --------------------------------------------------------------*/
 .header {
-  --background-color: rgba(255, 255, 255, 0);
-  --default-color: #ffffff;
-  --heading-color: #ffffff;
+  --background-color: #FEFAE0;
+  --default-color: #444444;
+  --heading-color: #2f4d5a;
   color: var(--default-color);
   background-color: var(--background-color);
-  padding: 15px 0;
+  padding: 17px 0;
   transition: all 0.5s;
   z-index: 997;
 }
@@ -165,8 +165,11 @@ h6 {
 }
 
 .header .logo img {
-  max-height: 32px;
+  height: 80px;
+  max-height: 80px;
+  width: auto;
   margin-right: 8px;
+  margin-left: -5px;
 }
 
 .header .logo h1 {
@@ -184,7 +187,7 @@ h6 {
 /* Global Header on Scroll
 ------------------------------*/
 .scrolled .header {
-  --background-color: #4b99bb;
+  --background-color: #FEFAE0;
 }
 
 /*--------------------------------------------------------------
@@ -215,7 +218,7 @@ h6 {
     margin-left: 2px;
     font-size: 16px;
     font-family: var(--nav-font);
-    font-weight: 500;
+    font-weight: 700;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -263,6 +266,7 @@ h6 {
     font-size: 15px;
     text-transform: none;
     color: var(--nav-dropdown-color);
+    font-weight: 700;
   }
 
   .navmenu .dropdown ul a i {
@@ -333,7 +337,7 @@ h6 {
     padding: 10px 20px;
     font-family: var(--nav-font);
     font-size: 17px;
-    font-weight: 500;
+    font-weight: 700;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -786,6 +790,18 @@ section,
   height: 100%;
   object-fit: cover;
   z-index: 1;
+}
+
+.hero .welcome-overlay {
+  position: absolute;
+  top: 15%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: auto;
+  height: auto;
+  max-width: 500px;
+  object-fit: contain;
+  z-index: 2;
 }
 
 .hero .container {
