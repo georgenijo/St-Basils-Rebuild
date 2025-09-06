@@ -26,6 +26,35 @@
 
   <!-- Main CSS File -->
   <link href="assets/css/main.css" rel="stylesheet">
+  
+  <!-- Custom Navigation Styles -->
+  <style>
+    /* Header navigation font styles */
+    .navmenu a,
+    .navmenu a:focus {
+      font-family: 'Libre Baskerville', serif !important;
+      color: #283618 !important;
+    }
+    
+    /* Dropdown menu font styles */
+    .navmenu .dropdown ul a {
+      font-family: 'Libre Baskerville', serif !important;
+      color: #283618 !important;
+    }
+    
+    /* Active and hover states */
+    .navmenu li:hover>a,
+    .navmenu .active,
+    .navmenu .active:focus,
+    .navmenu .dropdown ul a:hover,
+    .navmenu .dropdown ul .active:hover,
+    .navmenu .dropdown ul li:hover>a {
+      font-family: 'Libre Baskerville', serif !important;
+      color: #283618 !important;
+      background-color: #ccd5ae !important;
+      opacity: 1 !important;
+    }
+  </style>
 
   <!-- =======================================================
   * Template Name: Squadfree
@@ -41,8 +70,8 @@
   <header id="header" class="header d-flex align-items-center fixed-top">
     <div class="container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
 
-      <a href="index.html" class="logo d-flex align-items-center">
-        <img src="assets/img/church logo 3.png" alt="St. Basil's Syrian Orthodox Church" class="logo-img">
+      <a href="index.html" class="logo d-flex align-items-center" style="transform: translateX(-10px);">
+        <img src="assets/img/sbb.png" alt="St. Basil's Syrian Orthodox Church" class="logo-img" style="height: 55px; max-height: 55px;">
       </a>
 
       <nav id="navmenu" class="navmenu">
@@ -73,16 +102,20 @@
   <main class="main">
 
     <!-- Hero Section -->
-    <section id="hero" class="hero section accent-background">
+    <section id="hero" class="hero section accent-background" style="position: relative; overflow: hidden;">
 
-      <img src="assets/img/church group.jpeg" alt="" data-aos="fade-in">
+      <img src="assets/img/church photo.jpg" alt="" data-aos="fade-in">
       
-      <!-- Welcome overlay image -->
-      <img src="assets/img/welcome home.png" alt="Welcome Home" class="welcome-overlay" data-aos="fade-in" data-aos-delay="200">
+      <!-- Overlay images container -->
+      <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5;">
+        <!-- Hero overlay image -->
+        <img src="assets/img/hero image overlay.png" alt="" style="position: absolute; bottom: 20px; left: 20px; height: 60px; width: auto;">
+        
+        <!-- HIO overlay image -->
+        <img src="assets/img/hio.png" alt="" style="position: absolute; bottom: 150px; right: 35px; height: 50px; width: auto;">
+      </div>
 
       <div class="container text-end position-absolute bottom-0 end-0 pe-5" style="padding-bottom: 96px;" data-aos="fade-up" data-aos-delay="100">
-        <h2>Welcome to<br>St. Basil's Syriac Orthodox Church</h2>
-        <!--<p>We are team of talented designers making websites with Bootstrap</p>-->
         <a href="#services" class="btn-scroll position-absolute bottom-0 start-50 translate-middle-x mb-3" title="Scroll Down"><i class="bi bi-chevron-down"></i></a>
       </div>
 
