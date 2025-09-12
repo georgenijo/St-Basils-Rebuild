@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>Contact Us - St.Basil's Syrian Orthodox Church</title>
+  <meta name="description" content="Contact St. Basil's Syriac Orthodox Church in Boston, Massachusetts">
+  <meta name="keywords" content="Contact, St Basils, Syrian Orthodox Church, Boston, Newton">
+  <meta name="robots" content="index,follow">
+  <meta name="author" content="George Nijo">
+
+  <!-- Favicons -->
+  <link href="assets/img/favicon.png" rel="icon">
+  <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com" rel="preconnect">
+  <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400;1,700;1,900&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Raleway:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+
+  <!-- Vendor CSS Files -->
+  <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="assets/vendor/aos/aos.css" rel="stylesheet">
+  <link href="assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
+  <link href="assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
+
+  <!-- Main CSS File -->
+  <link href="assets/css/main.css" rel="stylesheet">
+  
+  <!-- Custom Navigation Styles -->
+  <style>
+    body {
+      background-color: #FEFAE0 !important;
+    }
+    
+    .main {
+      background-color: #FEFAE0 !important;
+    }
+    
+    section {
+      background-color: #FEFAE0 !important;
+    }
+    
+    /* Header navigation font styles */
+    .navmenu a,
+    .navmenu a:focus {
+      font-family: 'Libre Baskerville', serif !important;
+      color: #253341 !important;
+    }
+    
+    /* Dropdown menu styles */
+    .navmenu .dropdown ul {
+      background: #FEFAE0 !important;
+    }
+
+    .navmenu .dropdown ul a,
+    .navmenu .dropdown ul a:link,
+    .navmenu .dropdown ul a:visited {
+      font-family: 'Libre Baskerville', serif !important;
+      color: #253341 !important;
+      background-color: transparent !important;
+    }
+
+    /* Dropdown hover states */
+    .navmenu .dropdown ul li:hover,
+    .navmenu .dropdown ul li a:hover {
+      background-color: rgba(196, 164, 132, 0.5) !important;
+    }
+
+    .navmenu .dropdown ul a:hover,
+    .navmenu .dropdown ul .active:hover,
+    .navmenu .dropdown ul li:hover>a {
+      font-family: 'Libre Baskerville', serif !important;
+      color: #253341 !important;
+      background-color: transparent !important;
+      opacity: 1 !important;
+    }
+    
+    /* Active and hover states for non-dropdown items */
+    .navmenu li:hover>a,
+    .navmenu .active,
+    .navmenu .active:focus {
+      font-family: 'Libre Baskerville', serif !important;
+      color: #253341 !important;
+      background-color: rgba(196, 164, 132, 0.2) !important;
+      opacity: 1 !important;
+    }
+    
+    .header {
+      background-color: #FEFAE0; /* Light cream background color */
+      opacity: 1; /* Remove transparency */
+    }
+
+    .main {
+      padding-top: 0; /* Remove padding to show maroon section */
+    }
+
+    .contact-content {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .contact-content h3 {
+      margin-top: 30px;
+      margin-bottom: 15px;
+      color: #253341;
+    }
+
+    .contact-content p {
+      text-align: justify;
+      line-height: 1.8;
+    }
+
+    .contact-info {
+      background: rgba(196, 164, 132, 0.1);
+      padding: 30px;
+      border-radius: 10px;
+      margin: 30px 0;
+    }
+
+    .contact-info-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .contact-info-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .contact-info-item i {
+      font-size: 24px;
+      color: #91203C;
+      margin-right: 20px;
+      width: 30px;
+      text-align: center;
+    }
+
+    .contact-form {
+      background: rgba(196, 164, 132, 0.05);
+      padding: 30px;
+      border-radius: 10px;
+      margin-top: 30px;
+    }
+
+    .contact-form .form-control,
+    .contact-form .form-select {
+      background: #FEFAE0;
+      border: 1px solid rgba(196, 164, 132, 0.3);
+      color: #253341;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    .contact-form .form-control:focus,
+    .contact-form .form-select:focus {
+      background: #FEFAE0;
+      border-color: #91203C;
+      box-shadow: 0 0 0 0.2rem rgba(145, 32, 60, 0.1);
+    }
+
+    .contact-form label {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 500;
+      color: #253341;
+      margin-bottom: 8px;
+    }
+
+    .btn-submit {
+      background-color: #91203C;
+      color: #FAEDCD;
+      border: none;
+      padding: 12px 40px;
+      font-family: 'Poppins', sans-serif;
+      font-weight: 500;
+      border-radius: 5px;
+      transition: all 0.3s ease;
+    }
+
+    .btn-submit:hover {
+      background-color: #7a1a32;
+      color: #FAEDCD;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(145, 32, 60, 0.3);
+    }
+
+    .map-container {
+      margin-top: 40px;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 5px 25px rgba(0, 0, 0, 0.1);
+    }
+  </style>
+
+</head>
+
+<body class="index-page">
+
+    <header id="header" class="header d-flex align-items-center fixed-top">
+        <div class="container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
+    
+          <a href="index.html" class="logo d-flex align-items-center" style="transform: translateX(-10px);">
+            <img src="assets/img/sbb.png" alt="St. Basil's Syrian Orthodox Church" class="logo-img" style="height: 75px; max-height: 75px;">
+          </a>
+    
+          <nav id="navmenu" class="navmenu">
+            <ul>
+              <li><a href="index.html#hero">Home</a></li>
+              <li><a href="about.html">About</a></li>
+              <li class="dropdown"><a href="#"><span>Our Organizations</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
+                <ul>
+                  <li><a href="sunday-school.html">Sunday School</a></li>
+                  <li><a href="youth.html">Youth</a></li>
+                  <li><a href="stpauls-mensfellow.html">St. Pauls Mens Fellowship</a></li>
+                  <li><a href="stmarys-womens.html">St. Marys Womens League</a></li>
+                  <li><a href="#">Managing Committee</a></li>
+                  <li><a href="#">Spiritual Council</a></li>
+                  <li><a href="spiritual-leader.html">Spiritual Leaders</a></li>
+                </ul>
+              </li>
+            </ul>
+            
+            <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
+          </nav>
+    
+        </div>
+      </header>
+  
+  <!-- Top Maroon Section -->
+  <div style="background-color: #91203C; height: 3in; width: 100%; display: flex; align-items: center; justify-content: center; margin: 0; padding: 0; position: relative; top: 75px;">
+    <h1 data-aos="fade-down" data-aos-duration="1500" style="font-family: 'Poppins', sans-serif; font-weight: bold; font-size: 50px; color: #FAEDCD; text-transform: uppercase; margin: 0; padding: 0; text-align: center; position: relative; top: 10px;">CONTACT US</h1>
+  </div>
+
+  <main class="main" style="padding-top: 75px;">
+    <section id="contact" class="contact section">
+      <div class="container contact-content">
+        
+        <p data-aos="fade-up" data-aos-delay="100" style="font-family: 'Poppins', sans-serif; font-weight: 400; font-size: 15px; color: #253341; line-height: 1.8; text-align: justify;">
+          We welcome you to connect with us at St. Basil's Syriac Orthodox Church. Whether you're seeking spiritual guidance, information about our services, or wish to become part of our community, we're here to help.
+        </p>
+
+        <div class="row mt-5">
+          <div class="col-lg-6">
+            <div data-aos="fade-up" data-aos-delay="200" class="contact-info">
+              <h3 style="font-family: 'Poppins', sans-serif; font-weight: bold; font-size: 24px; color: #253341; margin-bottom: 25px;">Get in Touch</h3>
+              
+              <div class="contact-info-item">
+                <i class="bi bi-geo-alt-fill"></i>
+                <div>
+                  <h5 style="font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 16px; color: #253341; margin-bottom: 5px;">Address</h5>
+                  <p style="font-family: 'Poppins', sans-serif; font-weight: 400; font-size: 14px; color: #253341; margin: 0;">
+                    73 Ellis Street<br>
+                    Newton, MA 02464
+                  </p>
+                </div>
+              </div>
+
+              <div class="contact-info-item">
+                <i class="bi bi-telephone-fill"></i>
+                <div>
+                  <h5 style="font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 16px; color: #253341; margin-bottom: 5px;">Phone</h5>
+                  <p style="font-family: 'Poppins', sans-serif; font-weight: 400; font-size: 14px; color: #253341; margin: 0;">
+                    (617) 555-0123
+                  </p>
+                </div>
+              </div>
+
+              <div class="contact-info-item">
+                <i class="bi bi-envelope-fill"></i>
+                <div>
+                  <h5 style="font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 16px; color: #253341; margin-bottom: 5px;">Email</h5>
+                  <p style="font-family: 'Poppins', sans-serif; font-weight: 400; font-size: 14px; color: #253341; margin: 0;">
+                    info@stbasilsboston.org
+                  </p>
+                </div>
+              </div>
+
+              <div class="contact-info-item">
+                <i class="bi bi-clock-fill"></i>
+                <div>
+                  <h5 style="font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 16px; color: #253341; margin-bottom: 5px;">Service Times</h5>
+                  <p style="font-family: 'Poppins', sans-serif; font-weight: 400; font-size: 14px; color: #253341; margin: 0;">
+                    Sunday Morning Prayer: 8:30 AM<br>
+                    Sunday Holy Qurbono: 9:15 AM
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div data-aos="fade-up" data-aos-delay="300" class="contact-info mt-4">
+              <h3 style="font-family: 'Poppins', sans-serif; font-weight: bold; font-size: 24px; color: #253341; margin-bottom: 25px;">Follow Us</h3>
+              <div style="display: flex; gap: 20px;">
+                <a href="#" style="font-size: 24px; color: #91203C;"><i class="bi bi-facebook"></i></a>
+                <a href="#" style="font-size: 24px; color: #91203C;"><i class="bi bi-instagram"></i></a>
+                <a href="#" style="font-size: 24px; color: #91203C;"><i class="bi bi-youtube"></i></a>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-6">
+            <div data-aos="fade-up" data-aos-delay="400" class="contact-form">
+              <h3 style="font-family: 'Poppins', sans-serif; font-weight: bold; font-size: 24px; color: #253341; margin-bottom: 25px;">Send us a Message</h3>
+              
+              <form action="forms/contact.php" method="post" class="php-email-form">
+                <div class="row">
+                  <div class="col-md-6 mb-3">
+                    <label for="name">Your Name</label>
+                    <input type="text" name="name" class="form-control" id="name" required>
+                  </div>
+                  <div class="col-md-6 mb-3">
+                    <label for="email">Your Email</label>
+                    <input type="email" class="form-control" name="email" id="email" required>
+                  </div>
+                </div>
+                
+                <div class="mb-3">
+                  <label for="phone">Phone Number</label>
+                  <input type="text" class="form-control" name="phone" id="phone">
+                </div>
+                
+                <div class="mb-3">
+                  <label for="subject">Subject</label>
+                  <select class="form-select" name="subject" id="subject" required>
+                    <option value="">Select a subject...</option>
+                    <option value="general">General Inquiry</option>
+                    <option value="spiritual">Spiritual Guidance</option>
+                    <option value="membership">Membership Information</option>
+                    <option value="events">Events & Activities</option>
+                    <option value="prayer">Prayer Request</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                
+                <div class="mb-3">
+                  <label for="message">Message</label>
+                  <textarea class="form-control" name="message" rows="5" id="message" required></textarea>
+                </div>
+                
+                <div class="text-center">
+                  <button type="submit" class="btn-submit">Send Message</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- Map Section -->
+        <div data-aos="fade-up" data-aos-delay="500" class="map-container">
+          <iframe 
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2949.6374847456!2d-71.20936998453547!3d42.31907897919!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89e3826f9a9a1c2d%3A0x123456789abcdef!2s73%20Ellis%20St%2C%20Newton%2C%20MA%2002464!5e0!3m2!1sen!2sus!4v1234567890" 
+            width="100%" 
+            height="400" 
+            style="border:0;" 
+            allowfullscreen="" 
+            loading="lazy">
+          </iframe>
+        </div>
+
+        <div data-aos="fade-up" data-aos-delay="600" style="margin-top: 40px;">
+          <h3 style="font-family: 'Poppins', sans-serif; font-weight: bold; font-size: 30px; color: #253341; margin-bottom: 15px;">Parking Information</h3>
+          <p style="font-family: 'Poppins', sans-serif; font-weight: 400; font-size: 15px; color: #253341; line-height: 1.8; text-align: justify;">
+            Free parking is available in our church parking lot, accessible from Ellis Street. Additional street parking is available on nearby streets. For detailed parking information and directions, please visit our <a href="parking.html" style="color: #91203C; text-decoration: none; font-weight: 500;">Parking Information</a> page.
+          </p>
+        </div>
+
+        <div data-aos="fade-up" data-aos-delay="700" style="margin-top: 40px;">
+          <h3 style="font-family: 'Poppins', sans-serif; font-weight: bold; font-size: 30px; color: #253341; margin-bottom: 15px;">Office Hours</h3>
+          <p style="font-family: 'Poppins', sans-serif; font-weight: 400; font-size: 15px; color: #253341; line-height: 1.8; text-align: justify;">
+            Our church office is open by appointment. Please call or email us to schedule a visit. The Vicar is available for spiritual counseling and pastoral care throughout the week.
+          </p>
+        </div>
+
+      </div>
+    </section><!-- /Contact Section -->
+  </main>
+
+  <!-- Bottom Section -->
+  <section style="background-color: #253341; height: 1in; width: 100%; display: flex; align-items: center; justify-content: center;">
+    <div style="display: flex; align-items: center; font-family: 'Libre Baskerville', serif; color: #FEFAE0;">
+      <a href="privacy-policy.html" style="color: #FEFAE0; text-decoration: none; padding: 0 0.5in;">Privacy Policy</a>
+      <span style="border-left: 1px solid #FEFAE0; height: 0.5in; margin: 0 0.5in;"></span>
+      <a href="terms-of-use.html" style="color: #FEFAE0; text-decoration: none; padding: 0 0.5in;">Terms of Use</a>
+      <span style="border-left: 1px solid #FEFAE0; height: 0.5in; margin: 0 0.5in;"></span>
+      <a href="contact-us.html" style="color: #FEFAE0; text-decoration: none; padding: 0 0.5in;">Contact Us</a>
+    </div>
+  </section>
+
+  <!-- Scroll Top -->
+  <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+
+  <!-- Preloader -->
+  <div id="preloader"></div>
+
+  <!-- Vendor JS Files -->
+  <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="assets/vendor/php-email-form/validate.js"></script>
+  <script src="assets/vendor/aos/aos.js"></script>
+  <script src="assets/vendor/purecounter/purecounter_vanilla.js"></script>
+  <script src="assets/vendor/glightbox/js/glightbox.min.js"></script>
+  <script src="assets/vendor/imagesloaded/imagesloaded.pkgd.min.js"></script>
+  <script src="assets/vendor/isotope-layout/isotope.pkgd.min.js"></script>
+  <script src="assets/vendor/swiper/swiper-bundle.min.js"></script>
+
+  <!-- Main JS File -->
+  <script src="assets/js/main.js"></script>
+
+</body>
+
+</html>
