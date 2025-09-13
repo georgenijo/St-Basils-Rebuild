@@ -31,6 +31,20 @@
   
   <!-- Custom Navigation Styles -->
   <style>
+    @keyframes dropIn {
+      0% {
+        opacity: 0;
+        transform: translate(-50%, -80%);
+      }
+      100% {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+      }
+    }
+    
+    .drop-in-text {
+      animation: dropIn 2.5s ease-out;
+    }
     body {
       background-color: #FEFAE0 !important;
     }
@@ -227,156 +241,87 @@
         </div>
       </header>
   
-  <!-- Top Maroon Section -->
-  <div style="background-color: #91203C; height: 3in; width: 100%; display: flex; align-items: center; justify-content: center; margin: 0; padding: 0; position: relative; top: 75px;">
-    <h1 data-aos="fade-down" data-aos-duration="1500" style="font-family: 'Poppins', sans-serif; font-weight: bold; font-size: 50px; color: #FAEDCD; text-transform: uppercase; margin: 0; padding: 0; text-align: center; position: relative; top: 10px;">CONTACT US</h1>
+  <!-- Top Header Image Section with Parallax -->
+  <div style="height: auto; width: 100%; position: relative; top: 75px; overflow: hidden;">
+    <!-- Fixed background image -->
+    <div style="position: fixed; top: 75px; left: 0; width: 100%; height: calc(100vh - 75px); background-image: url('assets/img/Contact Us/contact us.png'); background-size: contain; background-position: center; background-repeat: no-repeat; z-index: -1;"></div>
+    <!-- Invisible image for maintaining height -->
+    <img src="assets/img/Contact Us/contact us.png" style="width: 100%; height: auto; opacity: 0; display: block; position: relative;">
+    <!-- Dimming filter overlay that scrolls with content -->
+    <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6);"></div>
+    <!-- Contact Us Text that scrolls normally -->
+    <h1 class="drop-in-text" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-family: 'Poppins', sans-serif; font-weight: bold; font-size: 80px; color: #FAEDCD; text-transform: uppercase; margin: 0; padding: 0; text-align: center; z-index: 1;">CONTACT US</h1>
   </div>
 
-  <main class="main" style="padding-top: 75px;">
-    <section id="contact" class="contact section">
-      <div class="container contact-content">
-        
-        <p data-aos="fade-up" data-aos-delay="100" style="font-family: 'Poppins', sans-serif; font-weight: 400; font-size: 15px; color: #253341; line-height: 1.8; text-align: justify;">
-          We welcome you to connect with us at St. Basil's Syriac Orthodox Church. Whether you're seeking spiritual guidance, information about our services, or wish to become part of our community, we're here to help.
-        </p>
-
-        <div class="row mt-5">
-          <div class="col-lg-6">
-            <div data-aos="fade-up" data-aos-delay="200" class="contact-info">
-              <h3 style="font-family: 'Poppins', sans-serif; font-weight: bold; font-size: 24px; color: #253341; margin-bottom: 25px;">Get in Touch</h3>
-              
-              <div class="contact-info-item">
-                <i class="bi bi-geo-alt-fill"></i>
-                <div>
-                  <h5 style="font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 16px; color: #253341; margin-bottom: 5px;">Address</h5>
-                  <p style="font-family: 'Poppins', sans-serif; font-weight: 400; font-size: 14px; color: #253341; margin: 0;">
-                    73 Ellis Street<br>
-                    Newton, MA 02464
-                  </p>
-                </div>
-              </div>
-
-              <div class="contact-info-item">
-                <i class="bi bi-telephone-fill"></i>
-                <div>
-                  <h5 style="font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 16px; color: #253341; margin-bottom: 5px;">Phone</h5>
-                  <p style="font-family: 'Poppins', sans-serif; font-weight: 400; font-size: 14px; color: #253341; margin: 0;">
-                    (617) 555-0123
-                  </p>
-                </div>
-              </div>
-
-              <div class="contact-info-item">
-                <i class="bi bi-envelope-fill"></i>
-                <div>
-                  <h5 style="font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 16px; color: #253341; margin-bottom: 5px;">Email</h5>
-                  <p style="font-family: 'Poppins', sans-serif; font-weight: 400; font-size: 14px; color: #253341; margin: 0;">
-                    info@stbasilsboston.org
-                  </p>
-                </div>
-              </div>
-
-              <div class="contact-info-item">
-                <i class="bi bi-clock-fill"></i>
-                <div>
-                  <h5 style="font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 16px; color: #253341; margin-bottom: 5px;">Service Times</h5>
-                  <p style="font-family: 'Poppins', sans-serif; font-weight: 400; font-size: 14px; color: #253341; margin: 0;">
-                    Sunday Morning Prayer: 8:30 AM<br>
-                    Sunday Holy Qurbono: 9:15 AM
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div data-aos="fade-up" data-aos-delay="300" class="contact-info mt-4">
-              <h3 style="font-family: 'Poppins', sans-serif; font-weight: bold; font-size: 24px; color: #253341; margin-bottom: 25px;">Follow Us</h3>
-              <div style="display: flex; gap: 20px;">
-                <a href="#" style="font-size: 24px; color: #91203C;"><i class="bi bi-facebook"></i></a>
-                <a href="#" style="font-size: 24px; color: #91203C;"><i class="bi bi-instagram"></i></a>
-                <a href="#" style="font-size: 24px; color: #91203C;"><i class="bi bi-youtube"></i></a>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-lg-6">
-            <div data-aos="fade-up" data-aos-delay="400" class="contact-form">
-              <h3 style="font-family: 'Poppins', sans-serif; font-weight: bold; font-size: 24px; color: #253341; margin-bottom: 25px;">Send us a Message</h3>
-              
-              <form action="forms/contact.php" method="post" class="php-email-form">
-                <div class="row">
-                  <div class="col-md-6 mb-3">
-                    <label for="name">Your Name</label>
-                    <input type="text" name="name" class="form-control" id="name" required>
-                  </div>
-                  <div class="col-md-6 mb-3">
-                    <label for="email">Your Email</label>
-                    <input type="email" class="form-control" name="email" id="email" required>
-                  </div>
-                </div>
-                
-                <div class="mb-3">
-                  <label for="phone">Phone Number</label>
-                  <input type="text" class="form-control" name="phone" id="phone">
-                </div>
-                
-                <div class="mb-3">
-                  <label for="subject">Subject</label>
-                  <select class="form-select" name="subject" id="subject" required>
-                    <option value="">Select a subject...</option>
-                    <option value="general">General Inquiry</option>
-                    <option value="spiritual">Spiritual Guidance</option>
-                    <option value="membership">Membership Information</option>
-                    <option value="events">Events & Activities</option>
-                    <option value="prayer">Prayer Request</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
-                
-                <div class="mb-3">
-                  <label for="message">Message</label>
-                  <textarea class="form-control" name="message" rows="5" id="message" required></textarea>
-                </div>
-                
-                <div class="text-center">
-                  <button type="submit" class="btn-submit">Send Message</button>
-                </div>
-              </form>
-            </div>
-          </div>
+  <main class="main" style="padding-top: 0;">
+    <!-- Three Column Contact Section -->
+    <section style="height: 4in; background-color: #FAEDCD; display: flex; align-items: stretch; position: relative; padding: 0; margin: 0;">
+      
+      <!-- First Section - Find Us Here -->
+      <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; position: relative;">
+        <i class="bi bi-geo-alt-fill" style="font-size: 40px; color: #91203C; margin-bottom: 20px;"></i>
+        <h3 style="font-family: 'Poppins', sans-serif; font-weight: bold; font-size: 30px; color: #91203C; text-transform: uppercase; letter-spacing: 1px; text-align: center; margin-bottom: 20px;">Find Us Here</h3>
+        <p style="font-family: 'Poppins', sans-serif; font-size: 18px; color: #91203C; text-align: center; letter-spacing: 1px; margin: 0;">73 Ellis Street</p>
+        <p style="font-family: 'Poppins', sans-serif; font-size: 18px; color: #91203C; text-align: center; letter-spacing: 1px; margin: 0;">Newton, MA 02464</p>
+        <!-- Full height border line -->
+        <div style="position: absolute; right: 0; top: 0; height: 100%; width: 1px; background-color: #91203C;"></div>
+      </div>
+      
+      <!-- Middle Section - Image -->
+      <div style="flex: 1; position: relative; background-image: url('assets/img/Contact Us/c.u ph.jpg'); background-size: cover; background-position: center; background-repeat: no-repeat; padding: 0; margin: 0; min-height: 100%;">
+        <!-- Full height border line -->
+        <div style="position: absolute; right: 0; top: 0; height: 100%; width: 1px; background-color: #91203C;"></div>
+      </div>
+      
+      <!-- Third Section - Connect with Us -->
+      <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;">
+        <i class="bi bi-chat-dots-fill" style="font-size: 40px; color: #91203C; margin-bottom: 20px;"></i>
+        <h3 style="font-family: 'Poppins', sans-serif; font-weight: bold; font-size: 30px; color: #91203C; text-transform: uppercase; letter-spacing: 1px; text-align: center; margin-bottom: 20px;">Connect with Us Here</h3>
+        <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 10px;">
+          <i class="bi bi-telephone-fill" style="font-size: 18px; color: #91203C; margin-right: 10px;"></i>
+          <p style="font-family: 'Poppins', sans-serif; font-size: 18px; color: #91203C; text-align: center; letter-spacing: 1px; margin: 0;">+1 (478) 227-4572</p>
         </div>
-
-        <!-- Map Section -->
-        <div data-aos="fade-up" data-aos-delay="500" class="map-container">
+        <div style="display: flex; align-items: center; justify-content: center;">
+          <i class="bi bi-envelope-fill" style="font-size: 18px; color: #91203C; margin-right: 10px;"></i>
+          <p style="font-family: 'Poppins', sans-serif; font-size: 18px; color: #91203C; text-align: center; letter-spacing: 1px; margin: 0;">stbasilsboston@gmail.com</p>
+        </div>
+      </div>
+      
+    </section>
+    
+    <!-- Five inch section with Church Location -->
+    <div style="height: 5in; width: 100%; background-color: #253341; display: flex; flex-direction: column; align-items: center; position: relative; padding: 0 2in;">
+      <!-- Our Location Title -->
+      <h2 style="font-size: 45px; color: #FAEDCD; text-transform: uppercase; text-align: center; margin-top: 1in; margin-bottom: 30px; letter-spacing: 1px;">
+        <span style="font-family: 'Poppins', sans-serif; font-weight: 400;">OUR</span>
+        <span style="font-family: 'Poppins', sans-serif; font-weight: bold;">LOCATION</span>
+      </h2>
+      <!-- Description Text -->
+      <p style="font-family: 'Poppins', sans-serif; font-weight: 300; font-size: 17px; color: #FAEDCD; text-align: center; letter-spacing: 2px; line-height: 1.4; margin: 0; padding: 0 3in; max-width: 100%;">St. Basil's Syriac Orthodox Church is easily accessible by both car and public transportation. We're located just minutes from I-95/Route 128 and the Massachusetts Turnpike (I-90), making us convenient for visitors traveling from Boston, the North Shore, South Shore, and western suburbs. Our church is also accessible via the MBTA Green Line (D Branch). The nearest station is Eliot station, which is within walking distance or a short ride from our location.</p>
+      
+      <!-- Google Maps Section -->
+      <div style="display: flex; justify-content: center; margin-top: 0.5in; padding-bottom: 1in; position: relative; z-index: 10;">
+        <div style="width: 12in; height: 6in; border-radius: 10px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.3); position: relative;">
           <iframe 
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2949.6374847456!2d-71.20936998453547!3d42.31907897919!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89e3826f9a9a1c2d%3A0x123456789abcdef!2s73%20Ellis%20St%2C%20Newton%2C%20MA%2002464!5e0!3m2!1sen!2sus!4v1234567890" 
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2949.0846!2d-71.2012!3d42.3287!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89e3826d5e45f5e7%3A0x8f9a8c7f1b3d4e5a!2s73%20Ellis%20St%2C%20Newton%2C%20MA%2002464!5e0!3m2!1sen!2sus!4v1234567890" 
             width="100%" 
-            height="400" 
+            height="100%" 
             style="border:0;" 
             allowfullscreen="" 
-            loading="lazy">
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade">
           </iframe>
         </div>
-
-        <div data-aos="fade-up" data-aos-delay="600" style="margin-top: 40px;">
-          <h3 style="font-family: 'Poppins', sans-serif; font-weight: bold; font-size: 30px; color: #253341; margin-bottom: 15px;">Parking Information</h3>
-          <p style="font-family: 'Poppins', sans-serif; font-weight: 400; font-size: 15px; color: #253341; line-height: 1.8; text-align: justify;">
-            Free parking is available in our church parking lot, accessible from Ellis Street. Additional street parking is available on nearby streets. For detailed parking information and directions, please visit our <a href="parking.html" style="color: #91203C; text-decoration: none; font-weight: 500;">Parking Information</a> page.
-          </p>
-        </div>
-
-        <div data-aos="fade-up" data-aos-delay="700" style="margin-top: 40px;">
-          <h3 style="font-family: 'Poppins', sans-serif; font-weight: bold; font-size: 30px; color: #253341; margin-bottom: 15px;">Office Hours</h3>
-          <p style="font-family: 'Poppins', sans-serif; font-weight: 400; font-size: 15px; color: #253341; line-height: 1.8; text-align: justify;">
-            Our church office is open by appointment. Please call or email us to schedule a visit. The Vicar is available for spiritual counseling and pastoral care throughout the week.
-          </p>
-        </div>
-
       </div>
-    </section><!-- /Contact Section -->
+    </div>
+    
+    <!-- Cream colored section below -->
+    <div style="height: 6in; background-color: #FAEDCD; position: relative;">
+    </div>
   </main>
 
   <!-- Bottom Section -->
-  <section style="background-color: #253341; height: 1in; width: 100%; display: flex; align-items: center; justify-content: center;">
+  <section style="background-color: #253341; height: 1in; width: 100%; display: flex; align-items: center; justify-content: center; position: relative;">
     <div style="display: flex; align-items: center; font-family: 'Libre Baskerville', serif; color: #FEFAE0;">
       <a href="privacy-policy.html" style="color: #FEFAE0; text-decoration: none; padding: 0 0.5in;">Privacy Policy</a>
       <span style="border-left: 1px solid #FEFAE0; height: 0.5in; margin: 0 0.5in;"></span>
