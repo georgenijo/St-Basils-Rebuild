@@ -30,6 +30,91 @@
 
   <!-- Custom Navigation Styles -->
   <style>
+    /* Candle animation styles */
+    @keyframes flicker {
+      0%, 100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+      25% {
+        opacity: 0.95;
+        transform: scale(1.05) translateY(-2px);
+      }
+      50% {
+        opacity: 0.9;
+        transform: scale(0.95) translateY(-1px);
+      }
+      75% {
+        opacity: 0.95;
+        transform: scale(1.02) translateY(-2px);
+      }
+    }
+
+    .candle-container {
+      display: inline-block;
+      position: relative;
+      width: 40px;
+      height: 110px;
+      margin: 0 30px;
+    }
+
+    .candle {
+      position: absolute;
+      bottom: 0;
+      width: 32px;
+      height: 80px;
+      background: linear-gradient(180deg, #fff8e1 0%, #ffe4b5 30%, #ffd4a3 70%, #ffcc99 100%);
+      border-radius: 2px;
+      left: 4px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2), inset 0 -10px 15px rgba(139,69,19,0.15);
+    }
+
+    .candle::after {
+      content: '';
+      position: absolute;
+      top: -3px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 28px;
+      height: 6px;
+      background: radial-gradient(ellipse, #8b4513 0%, #a0522d 100%);
+      border-radius: 50%;
+    }
+
+    .flame {
+      position: absolute;
+      bottom: 78px;
+      left: 8px;
+      width: 24px;
+      height: 32px;
+      background: radial-gradient(ellipse at bottom, #fff6e6 0%, #ffd700 20%, #ff8c00 50%, #ff4500 80%, transparent 100%);
+      border-radius: 50% 50% 50% 50% / 65% 65% 35% 35%;
+      animation: flicker 2s infinite ease-in-out;
+      filter: blur(0.5px);
+    }
+
+    .flame::before {
+      content: '';
+      position: absolute;
+      bottom: 5px;
+      left: 7px;
+      width: 10px;
+      height: 18px;
+      background: radial-gradient(ellipse at bottom, #ffffcc 0%, #ffeb99 40%, transparent 70%);
+      border-radius: 50%;
+      opacity: 0.9;
+    }
+
+    .candle-glow {
+      position: absolute;
+      bottom: 70px;
+      left: -10px;
+      width: 50px;
+      height: 50px;
+      background: radial-gradient(circle, rgba(255,200,100,0.3) 0%, transparent 70%);
+      border-radius: 50%;
+      animation: flicker 2s infinite ease-in-out;
+    }
     /* Page background */
     body {
       background-color: #FEFAE0 !important;
@@ -272,7 +357,21 @@
           <h2 style="font-family: 'Poppins', sans-serif; font-weight: 700; color: #253341; font-size: 48px; margin-bottom: 60px; text-decoration: underline;" data-aos="fade-up" data-aos-duration="1200" data-aos-offset="100">In Memoriam</h2>
           <div class="row justify-content-center">
             <div class="col-12" style="padding: 0 60px;">
-              <div style="background-color: #FAEDCD; padding: 50px 30px 40px; border-radius: 12px; box-shadow: 0 10px 35px rgba(0,0,0,0.2); text-align: center; max-width: 400px; margin: 0 auto 40px;" data-aos="fade-in" data-aos-duration="1800" data-aos-delay="200">
+              <div style="background-color: #FAEDCD; padding: 50px 30px 40px; border-radius: 12px; box-shadow: 0 10px 35px rgba(0,0,0,0.2); text-align: center; max-width: 500px; margin: 0 auto 40px; position: relative;" data-aos="fade-in" data-aos-duration="1800" data-aos-delay="200">
+                <!-- Left Candle -->
+                <div class="candle-container" style="position: absolute; left: 20px; top: 50%; transform: translateY(-50%);">
+                  <div class="candle"></div>
+                  <div class="candle-glow"></div>
+                  <div class="flame"></div>
+                </div>
+
+                <!-- Right Candle -->
+                <div class="candle-container" style="position: absolute; right: 20px; top: 50%; transform: translateY(-50%);">
+                  <div class="candle"></div>
+                  <div class="candle-glow"></div>
+                  <div class="flame"></div>
+                </div>
+
                 <img src="assets/img/Our Clergy/fr punnoose.jpg" alt="Very Rev. Fr. Punnoose Abraham Kallamparambil" style="width: 280px; height: 280px; object-fit: cover; object-position: center 20%; border-radius: 50%; margin-bottom: 25px; border: 5px solid #FEFAE0;">
                 <h3 style="font-family: 'Poppins', sans-serif; font-weight: 700; color: #91203C; margin-bottom: 10px; font-size: 24px;">In Loving Memory</h3>
                 <h4 style="font-family: 'Poppins', sans-serif; font-weight: 600; color: #253341; margin-bottom: 0; font-size: 20px;">Very Rev. Fr. Punnoose Abraham Kallamparambil</h4>
