@@ -232,12 +232,24 @@
 
     /* Responsive adjustments */
     @media (max-width: 1200px) {
+      /* Logo padding for medium to large screens */
+      .logo {
+        transform: translateX(0) !important;
+        padding-left: 15px;
+      }
+
       .main-title {
         font-size: 35px !important;
       }
     }
 
-    @media (max-width: 992px) {
+    @media (max-width: 991px) {
+      /* Logo padding maintained */
+      .logo {
+        transform: translateX(0) !important;
+        padding-left: 15px;
+      }
+
       .main-title {
         font-size: 32px !important;
       }
@@ -249,9 +261,43 @@
       .leader-title {
         font-size: 18px !important;
       }
+
+      /* Footer starts to compress at medium screens */
+      section[style*="background-color: #253341"] {
+        flex-direction: column !important;
+        padding: 30px 20px !important;
+        text-align: center !important;
+        gap: 20px !important;
+      }
+
+      section[style*="background-color: #253341"] > div:first-child {
+        margin-bottom: 15px !important;
+        font-size: 14px !important;
+      }
+
+      section[style*="background-color: #253341"] > div:nth-child(2) {
+        position: relative !important;
+        left: 0 !important;
+        transform: none !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 10px !important;
+        margin-bottom: 15px !important;
+      }
+
+      section[style*="background-color: #253341"] a.footer-link {
+        padding: 5px 15px !important;
+        font-size: 14px !important;
+      }
     }
 
     @media (max-width: 768px) {
+      /* Logo padding maintained for mobile */
+      .logo {
+        transform: translateX(0) !important;
+        padding-left: 15px;
+      }
+
       .flip-card {
         height: 612px;
       }
@@ -295,20 +341,37 @@
         padding-bottom: 30px !important;
       }
 
-      /* Footer responsive */
-      .footer-section {
-        padding: 20px !important;
-        height: auto !important;
-        min-height: 80px;
+      /* Footer responsive with better selectors */
+      section[style*="background-color: #253341"] {
+        flex-direction: column !important;
+        padding: 30px 15px !important;
+        text-align: center !important;
+        gap: 20px !important;
       }
 
-      .footer-links {
+      section[style*="background-color: #253341"] > div:first-child {
+        margin-bottom: 15px !important;
+        font-size: 13px !important;
+      }
+
+      section[style*="background-color: #253341"] > div:nth-child(2) {
+        position: relative !important;
+        left: 0 !important;
+        transform: none !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 10px !important;
+        margin-bottom: 15px !important;
+      }
+
+      section[style*="background-color: #253341"] a.footer-link {
+        padding: 5px 10px !important;
+        font-size: 13px !important;
+      }
+
+      section[style*="background-color: #253341"] span[style*="border-left"] {
         display: none !important;
-      }
-
-      .footer-copyright {
-        font-size: 9px !important;
-        text-align: center;
       }
     }
 
@@ -361,18 +424,30 @@
       .leader-description {
         font-size: 12px !important;
       }
-    }
 
-    /* Fix footer on mobile */
-    @media (max-width: 768px) {
-      .footer-section {
-        padding: 0 20px !important;
+      section[style*="background-color: #253341"] {
+        padding: 20px 10px !important;
       }
 
-      .footer-section > div:last-child {
-        margin-left: auto;
+      section[style*="background-color: #253341"] > div:first-child {
+        font-size: 11px !important;
+      }
+
+      section[style*="background-color: #253341"] a.footer-link {
+        font-size: 11px !important;
       }
     }
+
+    @media (max-width: 480px) {
+      section[style*="background-color: #253341"] > div:first-child {
+        font-size: 10px !important;
+      }
+
+      section[style*="background-color: #253341"] a.footer-link {
+        font-size: 10px !important;
+      }
+    }
+
 
     /* Scroll to top button color */
     #scroll-top {
