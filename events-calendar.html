@@ -187,6 +187,7 @@
       width: 14.28%;
       vertical-align: top;
       transition: all 0.3s ease;
+      box-sizing: border-box;
     }
 
     .calendar-table td:hover {
@@ -265,19 +266,215 @@
 
 
     @media (max-width: 768px) {
-      .calendar-table td {
-        padding: 10px 5px;
-        font-size: 12px;
-        height: 60px;
+      /* Logo padding fix */
+      .logo {
+        transform: translateX(0) !important;
+        padding-left: 15px;
       }
-      
+
+      /* Calendar container responsive */
+      .calendar-container {
+        padding: 1rem;
+      }
+
+      /* Calendar navigation responsive */
+      .calendar-navigation {
+        padding: 1rem;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
       .calendar-navigation h2 {
         font-size: 18px;
+        order: 2;
+        width: 100%;
+        text-align: center;
       }
-      
+
       .calendar-navigation button {
         padding: 0.4rem 1rem;
         font-size: 14px;
+      }
+
+      .calendar-navigation button:first-of-type {
+        order: 1;
+      }
+
+      .calendar-navigation button:last-of-type {
+        order: 3;
+      }
+
+      /* Calendar grid responsive */
+      .calendar-grid {
+        padding: 1rem;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      /* Calendar table responsive - Force uniform sizes */
+      .calendar-table {
+        width: calc(7 * 71px + 8 * 5px) !important; /* Match cell widths exactly with outer gaps */
+        table-layout: fixed !important;
+        border-collapse: separate !important;
+        border-spacing: 5px !important;
+      }
+
+      .calendar-table tbody,
+      .calendar-table tr {
+        display: table !important;
+        width: 100% !important;
+        table-layout: fixed !important;
+      }
+
+      .calendar-table th {
+        width: calc(100% / 7) !important;
+        height: 40px !important;
+        padding: 5px !important;
+        font-size: 12px !important;
+        box-sizing: border-box !important;
+      }
+
+      .calendar-table td {
+        width: calc(100% / 7) !important;
+        height: 60px !important;
+        padding: 5px !important;
+        font-size: 12px !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
+        vertical-align: top !important;
+        position: relative !important;
+      }
+
+      /* Remove hover transform that can affect sizing */
+      .calendar-table td:hover {
+        transform: none !important;
+      }
+
+      /* Event text smaller on mobile */
+      .event-text {
+        font-size: 9px !important;
+      }
+
+      .event-text.highlighted {
+        font-size: 9px !important;
+        padding: 1px 2px;
+      }
+
+      /* Footer responsive styles */
+      section[style*="background-color: #253341"] {
+        flex-direction: column !important;
+        padding: 30px 15px !important;
+        text-align: center;
+        gap: 20px;
+      }
+
+      section[style*="background-color: #253341"] > div:first-child {
+        margin-bottom: 15px;
+        font-size: 13px !important;
+      }
+
+      /* Footer links section */
+      section[style*="background-color: #253341"] > div:nth-child(2) {
+        position: relative !important;
+        left: 0 !important;
+        transform: none !important;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 15px;
+      }
+
+      section[style*="background-color: #253341"] a.footer-link {
+        padding: 5px 10px !important;
+        font-size: 13px !important;
+      }
+
+      /* Hide divider lines on mobile */
+      section[style*="background-color: #253341"] span[style*="border-left"] {
+        display: none !important;
+      }
+    }
+
+    @media (max-width: 576px) {
+      /* Extra small devices */
+
+      /* Calendar navigation even smaller */
+      .calendar-navigation h2 {
+        font-size: 16px;
+      }
+
+      .calendar-navigation button {
+        padding: 0.3rem 0.8rem;
+        font-size: 12px;
+      }
+
+      /* Calendar table even smaller */
+      .calendar-table {
+        width: calc(7 * 57px + 6 * 5px) !important; /* Match cell widths exactly */
+        table-layout: fixed !important;
+      }
+
+      .calendar-table th {
+        width: calc(100% / 7) !important;
+        height: 35px !important;
+        padding: 3px !important;
+        font-size: 10px !important;
+      }
+
+      .calendar-table td {
+        width: calc(100% / 7) !important;
+        height: 50px !important;
+        padding: 3px !important;
+        font-size: 10px !important;
+      }
+
+      /* Event text even smaller */
+      .event-text {
+        font-size: 8px !important;
+      }
+
+      /* Footer even smaller text */
+      section[style*="background-color: #253341"] {
+        padding: 20px 10px !important;
+      }
+
+      section[style*="background-color: #253341"] > div:first-child {
+        font-size: 11px !important;
+      }
+
+      section[style*="background-color: #253341"] a.footer-link {
+        font-size: 11px !important;
+      }
+    }
+
+    @media (max-width: 400px) {
+      /* Very small devices */
+
+      /* Calendar table minimum width smaller */
+      .calendar-table {
+        width: calc(7 * 50px + 6 * 5px) !important; /* Match cell widths exactly */
+        table-layout: fixed !important;
+      }
+
+      .calendar-table th {
+        width: calc(100% / 7) !important;
+        height: 30px !important;
+        padding: 2px !important;
+        font-size: 9px !important;
+      }
+
+      .calendar-table td {
+        width: calc(100% / 7) !important;
+        height: 45px !important;
+        padding: 2px !important;
+        font-size: 9px !important;
+      }
+
+      /* Hide hover effects on very small devices */
+      .calendar-table td:hover {
+        transform: none;
+        box-shadow: none;
       }
     }
   </style>
@@ -419,6 +616,70 @@
 
   <!-- Main JS File -->
   <script src="assets/js/main.js"></script>
+
+  <style>
+    /* Mobile calendar uniform sizing override - MUST be after all other styles */
+    @media (max-width: 768px) and (min-width: 577px) {
+      /* Fix for 751px specific issue */
+      .calendar-table {
+        width: 537px !important; /* Exact width for 7*71px + gaps */
+        table-layout: fixed !important;
+      }
+
+      #calendar-body td {
+        width: 71px !important;
+        min-width: 71px !important;
+        max-width: 71px !important;
+        height: 60px !important;
+        min-height: 60px !important;
+        max-height: 60px !important;
+        box-sizing: border-box !important;
+      }
+
+      /* Remove any residual spacing */
+      #calendar-body {
+        display: table-row-group !important;
+      }
+
+      #calendar-body tr {
+        display: table-row !important;
+      }
+
+      #calendar-body td:last-child {
+        border-right: 1px solid #e0e0e0 !important;
+      }
+    }
+
+    @media (max-width: 576px) {
+      .calendar-table {
+        width: calc(7 * 57px + 6 * 5px) !important; /* 7 cells + 6 gaps */
+      }
+
+      #calendar-body td {
+        width: 57px !important;
+        min-width: 57px !important;
+        max-width: 57px !important;
+        height: 50px !important;
+        min-height: 50px !important;
+        max-height: 50px !important;
+      }
+    }
+
+    @media (max-width: 400px) {
+      .calendar-table {
+        width: calc(7 * 50px + 6 * 5px) !important; /* 7 cells + 6 gaps */
+      }
+
+      #calendar-body td {
+        width: 50px !important;
+        min-width: 50px !important;
+        max-width: 50px !important;
+        height: 45px !important;
+        min-height: 45px !important;
+        max-height: 45px !important;
+      }
+    }
+  </style>
 
   <!-- Calendar JavaScript -->
   <script>
