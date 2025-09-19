@@ -148,28 +148,52 @@
       background-color: #91203C !important;
     }
     
-    /* Responsive styles for custom sections */
-    @media (max-width: 768px) {
-      /* Info box responsive styles */
-      .info-box {
+    /* Feast section responsive styles */
+    @media (max-width: 1198px) {
+      .feast-schedule-box {
+        margin-left: 1in !important;
+        margin-right: 1in !important;
         height: auto !important;
-        min-height: 200px !important;
-        margin-left: 20px !important;
-        margin-right: 20px !important;
-        flex-direction: column !important;
+        min-height: 2in !important;
       }
 
-      .info-box > div:not(.divider) {
-        padding: 15px !important;
-        min-height: 150px;
+      .feast-schedule-box > div:not(.divider) {
+        padding: 15px 10px !important;
       }
 
-      .info-box .divider {
-        width: 100% !important;
-        height: 1px !important;
+      .feast-schedule-box h3 {
+        font-size: 16px !important;
+        margin-bottom: 10px !important;
       }
 
-      /* Feast section responsive styles */
+      .feast-schedule-box p {
+        font-size: 14px !important;
+        line-height: 1.5 !important;
+      }
+    }
+
+    @media (max-width: 991px) {
+      .feast-schedule-box {
+        margin-left: 0.5in !important;
+        margin-right: 0.5in !important;
+      }
+
+      .feast-schedule-box h3 {
+        font-size: 15px !important;
+      }
+
+      .feast-schedule-box p {
+        font-size: 13px !important;
+        line-height: 1.4 !important;
+      }
+
+      .feast-invite {
+        font-size: 18px !important;
+        letter-spacing: 1.5px !important;
+      }
+    }
+
+    @media (max-width: 768px) {
       .feast-section {
         min-height: auto !important;
         padding: 30px 15px !important;
@@ -201,14 +225,18 @@
         min-height: 180px;
       }
 
+      .feast-schedule-box h3 {
+        font-size: 18px !important;
+      }
+
+      .feast-schedule-box p {
+        font-size: 16px !important;
+        line-height: 1.8 !important;
+      }
+
       .feast-schedule-box .divider {
         width: 100% !important;
         height: 1px !important;
-      }
-
-      /* Where to Park link responsive */
-      .parking-link {
-        font-size: 14px !important;
       }
 
       /* Responsive padding for animated sections */
@@ -224,16 +252,16 @@
         padding: 1.5rem 0 !important;
       }
     }
-    
+
     @media (max-width: 480px) {
       .feast-title {
         font-size: 20px !important;
       }
-      
+
       .feast-date {
         font-size: 24px !important;
       }
-      
+
       .feast-invite {
         font-size: 14px !important;
       }
@@ -326,12 +354,300 @@
         opacity: 1;
       }
     }
-    
+
     .fade-in-border {
       opacity: 0;
       animation: fadeIn 2.5s ease-out 0.5s forwards; /* Same timing as drop-down animations */
     }
-    
+
+    /* Enhanced Mobile Responsive Styles */
+
+    /* 1. Logo padding fix for mobile */
+    @media (max-width: 768px) {
+      .header .logo {
+        transform: translateX(0) !important;
+        padding-left: 15px;
+      }
+
+      .header .container-fluid {
+        padding-left: 15px;
+        padding-right: 15px;
+      }
+    }
+
+    /* 2. Hero text responsive sizing */
+    @media (max-width: 991px) {
+      .typewriter-text {
+        font-size: 70px !important;
+      }
+      .typewriter-container {
+        min-height: 75px !important;
+      }
+      .drop-down-church {
+        font-size: 26px !important;
+      }
+      .drop-down-quote {
+        font-size: 18px !important;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .typewriter-text {
+        font-size: 50px !important;
+      }
+      .typewriter-container {
+        min-height: 55px !important;
+      }
+      .drop-down-church {
+        font-size: 22px !important;
+      }
+      .drop-down-quote {
+        font-size: 16px !important;
+      }
+
+      /* Adjust hero text container padding */
+      .fade-in-border {
+        padding: 40px 20px 30px 20px !important;
+      }
+
+      /* Adjust cross decoration for mobile */
+      .fade-in-border > div:first-child > div:nth-child(2) {
+        width: 30px !important;
+        height: 50px !important;
+      }
+
+      .fade-in-border > div:first-child > div:nth-child(2) > div:first-child {
+        height: 50px !important;
+      }
+
+      .fade-in-border > div:first-child > div:nth-child(2) > div:last-child {
+        width: 30px !important;
+      }
+    }
+
+    /* Fix for 640px width where text gets cut off */
+    @media (max-width: 640px) {
+      .typewriter-text {
+        font-size: 45px !important;
+      }
+      .typewriter-container {
+        min-height: 50px !important;
+      }
+
+      /* Reduce cross decoration size to save space */
+      .fade-in-border > div:first-child > div:nth-child(2) {
+        top: -15px !important;
+        height: 45px !important;
+      }
+
+      .fade-in-border > div:first-child > div:nth-child(2) > div:first-child {
+        height: 45px !important;
+      }
+
+      /* Adjust padding to prevent cutoff */
+      .fade-in-border {
+        padding: 35px 20px 30px 20px !important;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .typewriter-text {
+        font-size: 35px !important;
+      }
+      .typewriter-container {
+        min-height: 40px !important;
+      }
+      .drop-down-church {
+        font-size: 18px !important;
+      }
+      .drop-down-quote {
+        font-size: 14px !important;
+        padding: 0 10px;
+      }
+      .church-container {
+        min-height: 25px !important;
+      }
+      .quote-container {
+        min-height: 20px !important;
+      }
+
+      /* Even smaller padding on very small screens */
+      .fade-in-border {
+        padding: 30px 15px 25px 15px !important;
+      }
+    }
+
+    /* 3. Info box responsive improvements */
+    @media (max-width: 1199px) {
+      .info-box {
+        margin-left: 0.5in !important;
+        margin-right: 0.5in !important;
+        height: auto !important;
+        min-height: 2.5in !important;
+      }
+
+      .info-box > div:not(.divider) {
+        padding: 20px 15px !important;
+      }
+
+      .info-box h3 {
+        font-size: 16px !important;
+      }
+
+      .info-box p {
+        font-size: 14px !important;
+        line-height: 1.3 !important;
+      }
+
+      .parking-link {
+        font-size: 14px !important;
+      }
+    }
+
+    @media (max-width: 991px) {
+      .info-box {
+        margin-left: 1in !important;
+        margin-right: 1in !important;
+        height: auto !important;
+        min-height: 2.5in !important;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .info-box {
+        margin-left: 15px !important;
+        margin-right: 15px !important;
+        flex-direction: column !important;
+        height: auto !important;
+        min-height: auto !important;
+      }
+
+      .info-box > div:not(.divider) {
+        flex: none !important;
+        width: 100% !important;
+        padding: 25px 20px !important;
+        min-height: auto !important;
+      }
+
+      .info-box .divider {
+        width: 100% !important;
+        height: 1px !important;
+        background-color: #FEFAE0 !important;
+      }
+
+      .info-box h3 {
+        font-size: 16px !important;
+      }
+
+      .info-box p {
+        font-size: 14px !important;
+      }
+
+      .info-box i {
+        font-size: 20px !important;
+      }
+
+      .parking-link {
+        font-size: 14px !important;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .info-box {
+        margin-top: -0.3in !important;
+      }
+
+      .info-box > div:not(.divider) {
+        padding: 20px 15px !important;
+      }
+
+      .info-box h3 {
+        font-size: 15px !important;
+      }
+
+      .info-box p {
+        font-size: 13px !important;
+      }
+    }
+
+    /* 4. Footer responsive improvements */
+    @media (max-width: 991px) {
+      /* Stack footer elements vertically on tablets */
+      section[style*="background-color: #253341"] {
+        flex-direction: column !important;
+        text-align: center !important;
+        padding: 30px 20px !important;
+        min-height: auto !important;
+      }
+
+      /* Center copyright on its own line */
+      section[style*="background-color: #253341"] > div:first-child {
+        margin-bottom: 20px !important;
+        width: 100% !important;
+        justify-content: center !important;
+      }
+
+      /* Center links section and remove absolute positioning */
+      section[style*="background-color: #253341"] > div:nth-child(2) {
+        position: static !important;
+        transform: none !important;
+        margin-bottom: 20px !important;
+        width: 100% !important;
+      }
+
+      /* Center social links */
+      section[style*="background-color: #253341"] > div:last-child {
+        width: 100% !important;
+        justify-content: center !important;
+      }
+    }
+
+    @media (max-width: 768px) {
+      /* Smaller font sizes for footer text */
+      section[style*="background-color: #253341"] {
+        font-size: 13px !important;
+      }
+
+      section[style*="background-color: #253341"] a.footer-link {
+        font-size: 13px !important;
+        padding: 0 10px !important;
+      }
+
+      /* Hide divider spans on mobile */
+      section[style*="background-color: #253341"] span[style*="border-left"] {
+        display: none !important;
+      }
+
+      /* Stack footer links vertically */
+      section[style*="background-color: #253341"] > div:nth-child(2) {
+        flex-direction: column !important;
+        gap: 10px;
+      }
+
+      section[style*="background-color: #253341"] > div:nth-child(2) a {
+        display: block !important;
+        padding: 5px 0 !important;
+      }
+    }
+
+    @media (max-width: 480px) {
+      /* Even smaller font sizes for small phones */
+      section[style*="background-color: #253341"] {
+        font-size: 12px !important;
+        padding: 20px 15px !important;
+      }
+
+      section[style*="background-color: #253341"] a.footer-link {
+        font-size: 12px !important;
+      }
+
+      /* Reduce margins between sections */
+      section[style*="background-color: #253341"] > div:first-child,
+      section[style*="background-color: #253341"] > div:nth-child(2) {
+        margin-bottom: 15px !important;
+      }
+    }
+
     /* Mute/Unmute button styles */
     .audio-control {
       position: absolute;
