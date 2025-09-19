@@ -196,7 +196,21 @@
     }
 
     /* Responsive Styles */
+    @media (max-width: 1200px) {
+      /* Logo padding for medium to large screens */
+      .logo {
+        transform: translateX(0) !important;
+        padding-left: 15px;
+      }
+    }
+
     @media (max-width: 991px) {
+      /* Logo padding maintained */
+      .logo {
+        transform: translateX(0) !important;
+        padding-left: 15px;
+      }
+
       /* Tablet adjustments */
       .org-section h2 {
         font-size: 32px !important;
@@ -205,9 +219,43 @@
       .org-section h3 {
         font-size: 22px !important;
       }
+
+      /* Footer starts to compress at medium screens */
+      section[style*="background-color: #253341"] {
+        flex-direction: column !important;
+        padding: 30px 20px !important;
+        text-align: center !important;
+        gap: 20px !important;
+      }
+
+      section[style*="background-color: #253341"] > div:first-child {
+        margin-bottom: 15px !important;
+        font-size: 14px !important;
+      }
+
+      section[style*="background-color: #253341"] > div:nth-child(2) {
+        position: relative !important;
+        left: 0 !important;
+        transform: none !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 10px !important;
+        margin-bottom: 15px !important;
+      }
+
+      section[style*="background-color: #253341"] a.footer-link {
+        padding: 5px 15px !important;
+        font-size: 14px !important;
+      }
     }
 
     @media (max-width: 768px) {
+      /* Logo padding fix */
+      .logo {
+        transform: translateX(0) !important;
+        padding-left: 15px;
+      }
+
       /* Hero text responsive */
       .hero-title {
         font-size: 40px !important;
@@ -281,32 +329,36 @@
         font-size: 13px !important;
       }
 
-      /* Footer responsive */
-      .footer-section {
+      /* Footer responsive with better selectors */
+      section[style*="background-color: #253341"] {
         flex-direction: column !important;
-        padding: 30px 20px !important;
-        text-align: center;
+        padding: 30px 15px !important;
+        text-align: center !important;
+        gap: 20px !important;
       }
 
-      .footer-section > div:first-child {
-        margin-bottom: 20px;
+      section[style*="background-color: #253341"] > div:first-child {
+        margin-bottom: 15px !important;
+        font-size: 13px !important;
       }
 
-      .footer-section > div:nth-child(2) {
+      section[style*="background-color: #253341"] > div:nth-child(2) {
         position: relative !important;
         left: 0 !important;
         transform: none !important;
-        margin-bottom: 20px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 10px !important;
+        margin-bottom: 15px !important;
       }
 
-      .footer-section a.footer-link {
-        padding: 10px 0 !important;
+      section[style*="background-color: #253341"] a.footer-link {
+        padding: 5px 10px !important;
+        font-size: 13px !important;
       }
 
-      .footer-section span[style*="border-left"] {
+      section[style*="background-color: #253341"] span[style*="border-left"] {
         display: none !important;
       }
     }
@@ -374,6 +426,19 @@
 
       .content-image {
         border-radius: 5px;
+      }
+
+      /* Footer smaller text on small devices */
+      section[style*="background-color: #253341"] {
+        padding: 20px 10px !important;
+      }
+
+      section[style*="background-color: #253341"] > div:first-child {
+        font-size: 11px !important;
+      }
+
+      section[style*="background-color: #253341"] a.footer-link {
+        font-size: 11px !important;
       }
     }
 
