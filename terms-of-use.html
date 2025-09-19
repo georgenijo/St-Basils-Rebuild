@@ -122,6 +122,111 @@
     #scroll-top {
       background-color: #91203C !important;
     }
+
+    /* Mobile Responsive Styles */
+    @media (max-width: 768px) {
+      /* Fix logo padding on mobile */
+      .logo {
+        transform: translateX(0) !important;
+        padding-left: 15px;
+      }
+
+      /* Footer responsive styles */
+      .footer-section {
+        flex-direction: column !important;
+        padding: 30px 15px !important;
+        text-align: center;
+        gap: 20px;
+      }
+
+      .footer-section > div:first-child {
+        margin-bottom: 15px;
+        font-size: 13px !important;
+      }
+
+      /* Hide the middle footer links on mobile or make them stack */
+      .footer-section > div:nth-child(2) {
+        position: relative !important;
+        left: 0 !important;
+        transform: none !important;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 15px;
+      }
+
+      .footer-section a.footer-link {
+        padding: 5px 10px !important;
+        font-size: 13px !important;
+      }
+
+      /* Hide divider lines on mobile */
+      .footer-section span[style*="border-left"] {
+        display: none !important;
+      }
+
+      /* Social media icon section */
+      .footer-section > div:last-child {
+        margin-top: 10px;
+      }
+
+      /* Terms content padding adjustment */
+      .terms-content {
+        padding: 30px 20px !important;
+      }
+
+      .terms-content h2 {
+        font-size: 24px !important;
+      }
+
+      .terms-content h3 {
+        font-size: 20px !important;
+      }
+    }
+
+    @media (max-width: 576px) {
+      /* Extra small devices */
+      .footer-section {
+        padding: 20px 10px !important;
+      }
+
+      .footer-section > div:first-child {
+        font-size: 11px !important;
+      }
+
+      .footer-section a.footer-link {
+        font-size: 11px !important;
+      }
+
+      .terms-content {
+        padding: 20px 15px !important;
+      }
+
+      .terms-content h2 {
+        font-size: 20px !important;
+      }
+
+      .terms-content h3 {
+        font-size: 18px !important;
+      }
+
+      .terms-content p,
+      .terms-content li {
+        font-size: 14px !important;
+      }
+    }
+
+    @media (max-width: 400px) {
+      /* Very small devices */
+      .footer-section > div:first-child {
+        font-size: 10px !important;
+      }
+
+      .footer-section a.footer-link {
+        font-size: 10px !important;
+      }
+    }
   </style>
 
 </head>
