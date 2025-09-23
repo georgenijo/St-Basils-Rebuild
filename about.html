@@ -17,7 +17,7 @@
   <!-- Fonts -->
   <link href="https://fonts.googleapis.com" rel="preconnect">
   <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400;1,700;1,900&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Raleway:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
 
   <!-- Vendor CSS Files -->
   <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
@@ -28,10 +28,101 @@
 
   <!-- Main CSS File -->
   <link href="assets/css/main.css" rel="stylesheet">
-
+  
+  <!-- Custom Navigation Styles -->
   <style>
+    body {
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+      background-color: #FEFAE0;
+    }
+
+    /* Drop-in/fade-in animation */
+    @keyframes dropInFade {
+      0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) translateY(-30px);
+      }
+      100% {
+        opacity: 1;
+        transform: translate(-50%, -50%) translateY(0);
+      }
+    }
+
+    .hero-text {
+      opacity: 0;
+      animation: dropInFade 2s ease-out 0.3s forwards;
+    }
+
+    /* Fade in animation for scroll */
+    @keyframes fadeInUp {
+      0% {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .fade-in-scroll {
+      opacity: 0;
+      transition: opacity 1s ease-out;
+    }
+
+    .fade-in-scroll.visible {
+      animation: fadeInUp 1.5s ease-out forwards;
+    }
+
+    /* Header navigation font styles */
+    .navmenu a,
+    .navmenu a:focus {
+      font-family: 'Libre Baskerville', serif !important;
+      color: #253341 !important;
+    }
+    
+    /* Dropdown menu styles */
+    .navmenu .dropdown ul {
+      background: #FEFAE0 !important;
+    }
+
+    .navmenu .dropdown ul a,
+    .navmenu .dropdown ul a:link,
+    .navmenu .dropdown ul a:visited {
+      font-family: 'Libre Baskerville', serif !important;
+      color: #253341 !important;
+      background-color: transparent !important;
+    }
+
+    /* Dropdown hover states */
+    .navmenu .dropdown ul li:hover,
+    .navmenu .dropdown ul li a:hover {
+      background-color: rgba(196, 164, 132, 0.5) !important;
+    }
+
+    .navmenu .dropdown ul a:hover,
+    .navmenu .dropdown ul .active:hover,
+    .navmenu .dropdown ul li:hover>a {
+      font-family: 'Libre Baskerville', serif !important;
+      color: #253341 !important;
+      background-color: transparent !important;
+      opacity: 1 !important;
+    }
+    
+    /* Active and hover states for non-dropdown items */
+    .navmenu li:hover>a,
+    .navmenu .active,
+    .navmenu .active:focus {
+      font-family: 'Libre Baskerville', serif !important;
+      color: #253341 !important;
+      background-color: rgba(196, 164, 132, 0.2) !important;
+      opacity: 1 !important;
+    }
+    
     .header {
-      background-color: #67b0d1; /* Primary blue background color */
+      background-color: #FEFAE0; /* Light cream background color */
       opacity: 1; /* Remove transparency */
     }
 
@@ -50,6 +141,126 @@
     .center-content p {
       text-align: justify;
     }
+
+    /* Scroll to top button color */
+    #scroll-top {
+      background-color: #91203C !important;
+    }
+
+    /* Desktop-only styles */
+    @media (min-width: 769px) {
+      #our-faith-section {
+        padding: 30px 0 !important;
+      }
+    }
+
+    /* Mobile Responsiveness Fixes */
+    @media (max-width: 768px) {
+      /* Fix hero text */
+      #hero-title {
+        font-size: 28px !important;
+        white-space: normal !important;
+        padding: 0 20px !important;
+        line-height: 1.2 !important;
+      }
+
+      /* Fix content box positioning */
+      #content-box {
+        position: relative !important;
+        bottom: auto !important;
+        left: 0 !important;
+        right: 0 !important;
+        margin: 20px !important;
+      }
+
+      /* Fix main content margin */
+      #main-content {
+        margin-top: 20px !important;
+      }
+
+      /* Stack dark section vertically */
+      #dark-section {
+        flex-direction: column !important;
+        height: auto !important;
+      }
+
+      #dark-section > div {
+        width: 100% !important;
+        height: auto !important;
+        min-height: 250px !important;
+      }
+
+      /* Stack mission sections */
+      #mission-sections {
+        flex-direction: column !important;
+        gap: 30px !important;
+      }
+
+      /* Fix all content boxes and sections */
+      div[style*="1in"] {
+        padding: 20px !important;
+        margin-left: 20px !important;
+        margin-right: 20px !important;
+      }
+
+      /* Fix images */
+      img[style*="width: 45%"] {
+        width: 100% !important;
+        margin-bottom: 10px !important;
+      }
+
+      /* Fix font sizes */
+      h2[style*="font-size: 40px"] {
+        font-size: 24px !important;
+      }
+
+      h3[style*="font-size: 30px"] {
+        font-size: 20px !important;
+      }
+
+      p[style*="font-size: 20px"],
+      p[style*="font-size: 17px"],
+      p[style*="font-size: 18px"] {
+        font-size: 14px !important;
+      }
+
+      /* Footer fixes */
+      section[style*="padding: 20px 1in"] {
+        padding: 20px !important;
+        flex-direction: column !important;
+        text-align: center !important;
+        gap: 20px !important;
+      }
+
+      section[style*="padding: 20px 1in"] > div[style*="position: absolute"] {
+        position: relative !important;
+        left: auto !important;
+        transform: none !important;
+      }
+
+      /* Hide separators */
+      span[style*="border-left"] {
+        display: none !important;
+      }
+    }
+
+    @media (max-width: 480px) {
+      #hero-title {
+        font-size: 20px !important;
+      }
+
+      h2[style*="font-size"] {
+        font-size: 20px !important;
+      }
+
+      h3[style*="font-size"] {
+        font-size: 18px !important;
+      }
+
+      p {
+        font-size: 13px !important;
+      }
+    }
   </style>
 
   <!-- =======================================================
@@ -66,82 +277,236 @@
     <header id="header" class="header d-flex align-items-center fixed-top">
         <div class="container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
     
-          <a href="index.html" class="logo d-flex align-items-center">
-            <!-- Uncomment the line below if you also wish to use an image logo -->
-            <!-- <img src="assets/img/logo.png" alt=""> -->
-            <h1 class="sitename">St.Basil's Syrian Orthodox Church</h1>
+          <a href="index.html" class="logo d-flex align-items-center" style="transform: translateX(-10px);">
+            <img src="assets/img/sbb logo, blue .png" alt="St. Basil's Syrian Orthodox Church" class="logo-img" style="height: 75px; max-height: 75px;">
           </a>
     
-          <nav id="navmenu" class="navmenu">
+                    <nav id="navmenu" class="navmenu">
             <ul>
-              <li><a href="index.html#hero" class="active">Home</a></li>
-              <li><a href="index.html#services">Services</a></li>
-              <li><a href="about.html">About</a></li>
-              <li class="dropdown"><a href="#"><span>Our Organizations</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
+              <li><a href="index.html">Home</a></li>
+              <li class="dropdown"><a href="about.html" class="active"><span>About</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
                 <ul>
-                  <li><a href="sunday-school.html">Sunday School</a></li>
-                  <li><a href="stpauls-mensfellow.html">St. Pauls Mens Fellowship</a></li>
-                  <li><a href="stmarys-womens.html">St. Marys Womens League</a></li>
-                  <li><a href="#">Managing Committee</a></li>
-                  <li><a href="#">Spiritual Council</a></li>
-                  <li><a href="spiritual-leader.html">Spiritual Leaders</a></li>
+                  <li><a href="about.html" class="active">Our History</a></li>
+                  <li><a href="spiritual-leader.html">Our Spiritual Fathers</a></li>
+                  <li><a href="our-clergy.html">Our Clergy</a></li>
+                  <li><a href="office-bearers.html">Our Office Bearers</a></li>
+                  <li><a href="acolytes-choir.html">Our Acolytes &amp; Choir</a></li>
+                  <li><a href="our-organizations.html">Our Organizations</a></li>
                 </ul>
               </li>
-              <li><a href="#contact">Contact</a></li>
+              <li class="dropdown"><a href="first-time.html"><span>Resources</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
+                <ul>
+                  <li><a href="events-calendar.html">Events Calendar</a></li>
+                  <li><a href="useful-links.html">Useful Links</a></li>
+                  <li><a href="first-time.html">First Time Visiting?</a></li>
+                </ul>
+              </li>
+              <li><a href="giving.html">Giving</a></li>
+              <li><a href="contact-us.html">Contact Us</a></li>
             </ul>
-            
+
             <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
           </nav>
     
         </div>
       </header>
-  <main class="main">
-    <section id="about" class="about section">
 
-      <!-- Section Title -->
-      <div class="container section-title center-content" data-aos="fade-up">
-        <h2>About the Church</h2>
-      </div><!-- End Section Title -->
+  <!-- Hero Image Section -->
+  <div id="hero-container" style="position: relative; width: 100%; margin-top: 75px;">
+    <img src="assets/img/Our History/pre reno.JPG" style="width: 100%; height: auto; display: block;" alt="Church Pre-Renovation">
+    <div id="hero-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5);"></div>
+    <h1 id="hero-title" class="hero-text" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-family: 'Poppins', sans-serif; font-weight: bold; font-size: 80px; color: #FAEDCD; text-transform: uppercase; margin: 0; padding: 0; text-align: center; z-index: 1; white-space: nowrap;">OUR CHURCH HISTORY</h1>
+  </div>
 
-      <div class="container" data-aos="fade-up" data-aos-delay="100">
-        <div class="row justify-content-center gy-5">
-          <div class="col-md-9 center-content">
-            <img class="center img-fluid mb-4" src="assets/img/parking/church-exterior.png" alt="Church Exterior" width="75%">
-            <p>St. Basil’s Syriac Orthodox Church of Boston is located in the city of Newton, very close to Boston and easily accessible by public transport system from Boston area. Also easily accessible by road, just off I95 interstate high way, very convenient for anyone live in closer to Boston city center as well as live in the suburbs.</p>
-            <p>This Malayalee Church mainly consists of the SOCA members from South India (Kerala) who speak the Malayalam language. We belong to the very ancient church called ‘Syriac Orthodox Church of Antioch (SOCA)’, one of the members of the Oriental Orthodox Church family. The Syriac Orthodox Church is held to be the first church of Christianity established by the Apostle St. Peter.</p>
-            <p>Our church is named after St. Baseliose Eldho, who is entombed at Kothamangalam Mar Thoma Cheriapally in Kerala, India.</p>
-            <p>Our Parish, St. Basils Syriac Orthodox Church was founded in the city of Newton near Boston, Massachussets in August 2009. It was by the dedication, prayers and efforts of several SOCA families from India, that this church was formed in Newton, Massachusetts. The Archbishop of the Malankara Syriac Orthodox Church in N. America. officially inaugurated the church and conducted the first Holy Qurbono (Mass) in Malayalam on August 30, 2009.</p>
-            <p>Newton is a city in Middlesex County, Massachusetts and well connected with public transport system. Church is a 10 mins walk from Eliot Station in Newton.</p>
+  <!-- Rectangular Box with Title and Content (overlaying bottom of image) -->
+  <div id="content-box" style="position: absolute; bottom: -18in; left: 1in; right: 1in; z-index: 2;">
+      <div style="background-color: #FAEDCD; height: auto; min-height: 10in; border-radius: 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); padding: 0.5in 1in 0.5in 1in; overflow-y: auto;">
+        <h2 class="fade-in-scroll" style="font-family: 'Poppins', sans-serif; font-size: 40px; color: #253341; text-align: center; margin: 0; margin-bottom: 0.5in;">
+          Founded in <span style="font-weight: bold;">Faith</span>, Blessed by <span style="font-weight: bold;">Providence</span>
+        </h2>
 
-            <h4>Our Faith</h4>
-            <p>Our parish belongs to oriental orthodox church family called Malankara Jacobite Syrian Orthodox Church.</p>
-            <p>Visit our Archdiocese page for more details of history of the Malankara Archdiocese of the Syrian Orthodox Church in North America:</p>
-            <p>
-              <a href="https://malankara.com" style="color:blue">1. Malankara Archdiocese of the Syrian Orthodox Church in North America →</a><br>
-              <a href="https://malankara.com/index.php/briefoverviewofthechurch.html" style="color:blue">2. A Brief Overview Of The Holy Syriac Orthodox Church →</a>
-            </p>
+        <div class="fade-in-scroll" style="font-family: 'Poppins', sans-serif; font-size: 16px; line-height: 1.8; color: #253341; text-align: justify;">
+          <p style="margin-bottom: 1.2em;">
+            By God's grace and divine providence, St. Basil's Syriac Orthodox Church was born from the faithful prayers and earnest desire of Malayalee Jacobite families who gathered in 2009. Recognizing the absence of a Jacobite Syriac Orthodox Church in Massachusetts, these devoted believers felt called to establish a spiritual home where our ancient traditions could flourish.
+          </p>
 
-            <h4>Major Milestones</h4>
-            <p>Inaugurated: August 30, 2009 by The Archbishop His Eminence Mor Titus Yeldho</p>
-            <p>Consecrated after renovation: October 01, 2022 by The Archbishop His Eminence Mor Titus Yeldho</p>
+          <p style="margin-bottom: 1.2em;">
+            As we reflect on our blessed beginnings, we humbly remember the seven faithful families whom the Lord used as the foundation stones of our church: Abraham Varghese & Family, Kuriakose Maniattukudiyil & Family, Sinu John Punnesseril & Family, Sebeyon Kingsview & Family, John Jacob & Family, Joby Eldo & Family, and Roy Varghese & Family (now Fr. Roy Varghese). These devoted servants, under the guidance and blessing of His Eminence Mor Titus Yeldho, Archbishop and Patriarchal Vicar of the Malankara Archdiocese of the Syrian Orthodox Church in North America, answered God's call to plant seeds of faith that would flourish into the thriving congregation we know today.
+          </p>
 
-            <h4>Our Mission</h4>
-            <p>The Mission of the St. Basil’s Syriac Orthodox Church is to be a part of the redemptive grace and mercy of our Savior Jesus Christ, the Son of God the Father, through the indwelling and communion of the Holy Spirit, through which all people may be saved and come to the knowledge of the truth.</p>
-            <p>To worship, the Holy Trinity, which is uncreated, self-existent, eternal, adorable and of one essence and to provide the community a place of worship in accordance to the faith and traditions of the Syriac Orthodox Church for the sanctification and eternal salvation of all.</p>
-            <p>To preach, the fullness of the gospel of the Kingdom of God, especially the message of the angel, the birth of our Lord and Savior Jesus Christ in the flesh, His baptism in the Jordan River, His fast of forty days, His voluntary passion and His ascending the Cross, His life-giving death and revered burial, His glorious resurrection, His ascension into heaven, His sitting on the right hand of God the Father and His glorious second coming.</p>
-            <p>To serve and witness to the truth, through acts of kindness.</p>
+          <!-- Founding Members Images -->
+          <div id="founding-images" class="fade-in-scroll" style="display: flex; justify-content: center; gap: 0.5in; margin-bottom: 1.2em;">
+            <img src="assets/img/Our History/founding mem 1.jpeg" style="width: 45%; height: auto; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);" alt="Founding Members 1">
+            <img src="assets/img/Our History/founding mem 2.jpeg" style="width: 45%; height: auto; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);" alt="Founding Members 2">
+          </div>
 
-            <h4>Our Service</h4>
-            <p>The Holy Qurbono is conducted every Sunday morning in Malayalam and English.</p>
-            <img class="center img-fluid" src="assets/img/thronose.jpeg" alt="Thronose" width="50%">
-            <h4><abc class="font">ഏവർക്കും ഹൃദയം നിറഞ്ഞ സ്വാഗതം</abc></h4>
+          <p style="margin-bottom: 1.2em;">
+            In those early days, the Lord blessed us with fellowship alongside our sister congregation, St. Stephen's Knanaya Church in Maynard, where we were blessed to meet the late Rev. Sr. Magdelene Vazhayil and the late Baby Ezhumalil (Babychayan), whose faithful service helped guide us to our current sacred dwelling place.
+          </p>
+
+          <p style="margin-bottom: 1.2em;">
+            Through divine appointment, we discovered this holy ground—then home to the Second Baptist Church of Newton under the pastoral care of Pastor John Bergerdorff. Pastor John and his beloved wife Ruth opened their hearts and their sanctuary to us with Christian hospitality that reflected the love of Christ. Their generous spirit allowed God's plan to unfold as they welcomed us to share in worship within these walls.
+          </p>
+
+          <p style="margin-bottom: 1.2em;">
+            On August 30, 2009, our prayers were answered when His Eminence Mor Titus Yeldho, blessed us with the official commencement of our worship, along with our first Vicar, Rev. Fr. Geevarghese Jacob Challissery. Our sacred journey began that evening with prayer at our beloved sister church, St. Stephen's, where our congregations gathered in fellowship. It was during this evening prayer that His Eminence graciously declared that our new church would bear the blessed name of St. Basil's, dedicated to Baselious Bava. The following morning brought the celebration of our very first Holy Qurbono as an established parish, marking the true beginning of our liturgical life.
+          </p>
+
+          <p style="margin-bottom: 1.2em;">
+            In those early years, the Lord provided us with a faithful shepherd in the late Very Rev. Fr. Punnoose Abraham Kallamparambil, whose devoted service became the cornerstone of our worship life. For our first seven years, due to logistical circumstances, we celebrated the Divine Liturgy on Saturdays rather than Sundays. Week after week, without fail, Achen journeyed to be with us, celebrating the sacred mysteries and nourishing our souls with the Word of God. From our very beginning until the Lord called him home to His heavenly embrace, Rev. Fr. Punnoose's unwavering dedication and pastoral love sustained our young congregation through its most formative years.
+          </p>
+
+          <p style="margin-bottom: 1.2em;">
+            By God's abundant mercy, our small fellowship has grown steadily, now numbering approximately thirty families who call St. Basil's their spiritual home.
+          </p>
+
+          <p style="margin-bottom: 1.2em;">
+            Years later, the Lord moved Pastor John and Ruth's hearts to offer us an extraordinary gift—the ownership of our beloved church building. On October 1, 2022, under the blessed leadership of His Eminence Mor Titus Yeldho, we consecrated this sacred space as our own, after a major renovation. After much prayer and patient perseverance, the Almighty brought this divine plan to completion when the church was officially transferred to our name, St. Basil's Syriac Orthodox Church, under the Malankara Archdiocese of the Syrian Orthodox Church in North America, on October 24, 2024.
+          </p>
+        </div>
+      </div>
+    </div>
+
+  <main id="main-content" class="main desktop-main" style="background-color: #FEFAE0; min-height: calc(100vh - 75px - 1in); padding: 0; margin-top: 16.5in;">
+    <!-- Dark section below rectangular box split into two -->
+    <div id="dark-section" style="background-color: #253341; height: 4in; width: 100%; margin: 0; padding: 0; display: flex;">
+      <!-- Left section with image -->
+      <div style="width: 50%; height: 100%; overflow: hidden;">
+        <img src="assets/img/Our History/group photo..jpg" style="width: 100%; height: 100%; object-fit: cover; display: block;" alt="Group Photo">
+      </div>
+      <!-- Right section with content -->
+      <div style="width: 50%; height: 100%; background-color: #253341; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 0.5in;">
+        <h3 class="fade-in-scroll" style="font-family: 'Poppins', sans-serif; font-size: 30px; color: #FEFAE0; text-align: center; margin: 0; margin-bottom: 0.25in;">
+          Small in <span style="font-weight: bold;">Number</span>, Mighty in <span style="font-weight: bold;">Faith</span>
+        </h3>
+        <div class="fade-in-scroll" style="font-family: 'Poppins', sans-serif; font-size: 14px; line-height: 1.6; color: #FEFAE0; text-align: justify;">
+          <p style="margin: 0; margin-bottom: 0.8em;">
+            Though we are few in number, we are rich in fellowship and strong in our devotion to our Lord and Savior Jesus Christ. By God's providence, our church's proximity to Boston has become one of our greatest blessings, as we find ourselves surrounded by vibrant young adults and blessed with the children of our faithful members. This youthful energy is truly our strength—these precious souls represent not only the continuation of our ancient Syriac Orthodox traditions but the bright future that the Lord has planned for St. Basil's.
+          </p>
+          <p style="margin: 0;">
+            Our church family continues to grow, not merely in membership but in spiritual depth and community bonds. We remain committed to preserving our sacred heritage while nurturing the next generation in faith, ensuring that our children and youth are equipped to carry forward the gospel light into their communities. Whether you are familiar with our ancient liturgy or new to Orthodox worship, whether you are young or old, <strong><em>you will find in St. Basil's a welcoming spiritual family ready to journey alongside you in faith</em></strong>.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Our Faith Section -->
+    <section id="our-faith-section" style="background-color: #FEFAE0; padding: 0;">
+      <div id="our-faith-wrapper" class="faith-wrapper-margin" style="margin: 0 1in;">
+        <div id="our-faith-box" style="background-color: #FAEDCD; min-height: 8in; border-radius: 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); padding: 0.5in 1in 0.3in 1in;">
+          <h2 class="fade-in-scroll" style="font-family: 'Poppins', sans-serif; font-size: 40px; font-weight: bold; color: #253341; text-align: center; margin: 0; margin-bottom: 0.5in;">
+            Our Faith
+          </h2>
+          <div class="fade-in-scroll" style="font-family: 'Poppins', sans-serif; font-size: 17px; line-height: 1.8; color: #253341; text-align: justify;">
+          <p style="margin-bottom: 1.5em;">
+            St. Basil's belongs to the ancient Syriac Orthodox Church, one of the earliest apostolic churches whose foundations trace back to the very dawn of Christianity. It was in Antioch, after all, that the followers of Jesus were called Christians, as Scripture tells us: "The disciples were first called Christians in Antioch" (Acts 11:26).
+          </p>
+          <p style="margin-bottom: 1.5em;">
+            Our church is part of the Oriental Orthodox family, holding fast to the faith established by the first three Ecumenical Councils of Nicea (325 AD), Constantinople (381 AD), and Ephesus (431 AD). We maintain the ancient Christian doctrine that Christ has one incarnate nature from two natures—fully divine and fully human united without separation or confusion.
+          </p>
+          <p style="margin-bottom: 1.5em;">
+            The Syriac Orthodox tradition preserves Christianity in its most Semitic form, employing in our liturgy the Syriac language—an Aramaic dialect akin to the language spoken by Christ and the Apostles. Through St. Thomas the Apostle's mission to India in 52 AD, our church has maintained an unbroken connection between the ancient faith of Antioch and the Malankara tradition of Kerala, India.
+          </p>
+          <p style="margin-bottom: 1.5em;">
+            Our parish belongs to the Malankara Archdiocese of the Syrian Orthodox Church in North America, under the spiritual authority of His Holiness Patriarch Mor Ignatius Aphrem II, the 123rd Patriarch of Antioch and All the East, and the pastoral care of His Eminence Mor Titus Yeldho, our Archbishop and Patriarchal Vicar.
+          </p>
+          <p style="margin-bottom: -0.2in;">
+            You can read more about our Archdiocese <a href="https://malankara.com/" style="color: #91203C; text-decoration: underline; font-weight: 500;" target="_blank">here</a> and our Syrian Orthodox church history <a href="https://malankara.com/briefoverviewofthechurch.html" style="color: #91203C; text-decoration: underline; font-weight: 500;" target="_blank">here</a>.
+          </p>
           </div>
         </div>
       </div>
-    </section><!-- /About Section -->
+    </section>
+
+    <!-- Our Mission Section -->
+    <section style="background-color: #91203C; padding: 0.3in 1in 0.5in 1in; margin: 0;">
+        <div style="height: auto; min-height: 5in;">
+          <h2 class="fade-in-scroll" style="font-family: 'Poppins', sans-serif; font-size: 35px; font-weight: bold; color: #FEFAE0; text-align: center; text-transform: uppercase; margin: 0; margin-bottom: 0.25in;">
+            Our Mission
+          </h2>
+          <p class="fade-in-scroll" style="font-family: 'Poppins', sans-serif; font-size: 20px; color: #FEFAE0; text-align: center; line-height: 1.6; margin: 0; margin-bottom: 0.5in;">
+            The mission of St. Basil's Syriac Orthodox Church is to be vessels of God's redemptive grace through Jesus Christ, guided by the Holy Spirit, so that all people may find salvation and come to know the truth. <strong><em>We exist to:</em></strong>
+          </p>
+
+          <!-- Three Mission Sections -->
+          <div id="mission-sections" class="fade-in-scroll" style="display: flex; justify-content: space-between; gap: 0.5in; margin-bottom: 0.5in;">
+            <!-- Worship Section -->
+            <div style="flex: 1; text-align: center;">
+              <i class="bi bi-heart-fill" style="font-size: 30px; color: #FEFAE0; margin-bottom: 0.2in; display: block;"></i>
+              <p style="font-family: 'Poppins', sans-serif; font-size: 16px; color: #FEFAE0; line-height: 1.4; margin: 0;">
+                <strong>Worship</strong> the Holy Trinity—Father, Son, and Holy Spirit—providing our community with authentic Orthodox liturgical worship that sanctifies souls and leads to eternal salvation.
+              </p>
+            </div>
+
+            <!-- Proclaim Section -->
+            <div style="flex: 1; text-align: center;">
+              <i class="bi bi-megaphone-fill" style="font-size: 30px; color: #FEFAE0; margin-bottom: 0.2in; display: block;"></i>
+              <p style="font-family: 'Poppins', sans-serif; font-size: 16px; color: #FEFAE0; line-height: 1.4; margin: 0;">
+                <strong>Proclaim</strong> the fullness of the Gospel: the Incarnation of our Lord Jesus Christ, His life, death, and resurrection, and His promised second coming.
+              </p>
+            </div>
+
+            <!-- Serve Section -->
+            <div style="flex: 1; text-align: center;">
+              <i class="bi bi-people-fill" style="font-size: 30px; color: #FEFAE0; margin-bottom: 0.2in; display: block;"></i>
+              <p style="font-family: 'Poppins', sans-serif; font-size: 16px; color: #FEFAE0; line-height: 1.4; margin: 0;">
+                <strong>Serve</strong> as witnesses to Christ's truth through acts of kindness, fellowship, and love, demonstrating God's mercy to our community and the world.
+              </p>
+            </div>
+          </div>
+
+          <!-- Closing Text -->
+          <p class="fade-in-scroll" style="font-family: 'Poppins', sans-serif; font-size: 18px; color: #FEFAE0; text-align: center; line-height: 1.6; margin: 0; padding-top: 0.3in; border-top: 1px solid rgba(254, 250, 224, 0.3);">
+            Through ancient liturgy, faithful fellowship, and compassionate service, we strive to be a beacon of Christ's light in our community, preserving our sacred traditions while welcoming all who seek to know God.
+          </p>
+        </div>
+    </section>
+
+    <!-- Empty content area -->
   </main>
 
+  <!-- Mobile Style Override Script -->
+  <script>
+    // Override Our Faith margins and padding on mobile
+    if (window.innerWidth <= 768) {
+      const faithWrapper = document.getElementById('our-faith-wrapper');
+      const faithSection = document.getElementById('our-faith-section');
 
+      if (faithWrapper) {
+        faithWrapper.style.margin = '0 7.5px';
+      }
+
+      if (faithSection) {
+        faithSection.style.padding = '10px 0';  // 10px top and bottom
+      }
+    }
+  </script>
+
+  <!-- Scroll Animation Script -->
+  <script>
+    // Function to check if element is in viewport
+    function isInViewport(element) {
+      const rect = element.getBoundingClientRect();
+      return (
+        rect.top <= (window.innerHeight || document.documentElement.clientHeight) &&
+        rect.bottom >= 0
+      );
+    }
+
+    // Add visible class when element is in viewport
+    function handleScroll() {
+      const fadeElements = document.querySelectorAll('.fade-in-scroll');
+      fadeElements.forEach(element => {
+        if (isInViewport(element) && !element.classList.contains('visible')) {
+          element.classList.add('visible');
+        }
+      });
+    }
+
+    // Listen for scroll events
+    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('load', handleScroll);
+  </script>
 
   <!-- Scroll Top -->
   <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
@@ -162,6 +527,150 @@
   <!-- Main JS File -->
   <script src="assets/js/main.js"></script>
 
+  <!-- Bottom Section -->
+  <style>
+    .footer-link:hover {
+      text-decoration: underline !important;
+    }
+  </style>
+  <section style="background-color: #253341; min-height: 1.2in; width: 100%; display: flex; align-items: center; justify-content: space-between; position: relative; padding: 20px 1in;">
+    <div style="font-family: 'Libre Baskerville', serif; color: #FEFAE0; font-size: 15px; display: flex; align-items: center;">
+      <span style="margin-right: 10px; font-size: 15px;">©</span>
+      <div style="line-height: 1.4;">
+        <div>2025 St. Basil's Syriac</div>
+        <div>Orthodox Church, All Rights Reserved.</div>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; font-family: 'Libre Baskerville', serif; color: #FEFAE0; font-size: 15px; position: absolute; left: 50%; transform: translateX(-50%);">
+      <a href="privacy-policy.html" class="footer-link" style="color: #FEFAE0; text-decoration: none; padding: 0 20px; font-size: 15px;">Privacy Policy</a>
+      <span style="border-left: 1px solid #FEFAE0; height: 30px; margin: 0 10px;"></span>
+      <a href="terms-of-use.html" class="footer-link" style="color: #FEFAE0; text-decoration: none; padding: 0 20px; font-size: 15px;">Terms of Use</a>
+      <span style="border-left: 1px solid #FEFAE0; height: 30px; margin: 0 10px;"></span>
+      <a href="contact-us.html" class="footer-link" style="color: #FEFAE0; text-decoration: none; padding: 0 20px; font-size: 15px;">Contact Us</a>
+    </div>
+    <div style="display: flex; align-items: center;">
+      <a href="https://www.facebook.com/StBasilsBoston" target="_blank" style="color: #FEFAE0; font-size: 20px;"><i class="bi bi-facebook"></i></a>
+    </div>
+  </section>
+
+  <!-- Mobile Override Styles - Placed at end for highest priority -->
+  <style>
+    @media only screen and (max-width: 768px) {
+      /* Fix hero container to contain only the image and overlay */
+      #hero-container {
+        position: relative !important;
+        overflow: hidden !important;
+      }
+
+      /* Keep overlay only on hero image */
+      #hero-overlay {
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        pointer-events: none !important;
+      }
+
+      /* Keep hero title positioned over the hero image */
+      #hero-title {
+        position: absolute !important;
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        font-size: 24px !important;
+        white-space: normal !important;
+        line-height: 1.3 !important;
+        padding: 0 10px !important;
+        z-index: 2 !important;
+      }
+
+      /* Move content box below hero image - must override absolute positioning */
+      #content-box {
+        position: relative !important;
+        margin: 0 !important;
+        bottom: auto !important;
+        left: auto !important;
+        right: auto !important;
+        top: auto !important;
+      }
+
+      /* Remove massive top margin */
+      #main-content {
+        margin-top: 20px !important;
+        min-height: auto !important;
+      }
+
+      /* Fix founding member images to show fully */
+      #founding-images {
+        flex-direction: column !important;
+        gap: 15px !important;
+      }
+
+      #founding-images img {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: auto !important;
+        object-fit: contain !important;
+      }
+
+      /* Override all inch-based measurements EXCEPT faith wrapper */
+      *[style*="1in"]:not(.faith-wrapper-margin) {
+        padding: 15px !important;
+        margin: 0 15px !important;
+      }
+
+      /* Our Faith section gets special treatment - 15px total (7.5px each side) */
+      .faith-wrapper-margin {
+        margin: 0 7.5px !important;
+      }
+
+      /* Our Faith box - remove min-height and set padding */
+      #our-faith-box {
+        padding: 15px 10px 20px 10px !important;  /* increased bottom to 20px to prevent overflow */
+        min-height: auto !important;
+        height: auto !important;
+      }
+
+      /* Make dark section stack */
+      #dark-section {
+        display: block !important;
+        height: auto !important;
+      }
+
+      #dark-section > div {
+        width: 100% !important;
+        height: auto !important;
+      }
+
+      /* Stack mission sections vertically */
+      #mission-sections {
+        display: block !important;
+      }
+
+      #mission-sections > div {
+        margin-bottom: 20px !important;
+      }
+
+      /* Force images to fit */
+      img {
+        max-width: 100% !important;
+        height: auto !important;
+      }
+
+      /* Make text smaller */
+      h1, h2, h3, h4, h5, h6 {
+        font-size: revert !important;
+      }
+
+      p {
+        font-size: 14px !important;
+        line-height: 1.5 !important;
+      }
+    }
+  </style>
+
 </body>
 
 </html>
+<!-- v18 - Reduced gap to 0.5in: kept content-box at -18in, moved main-content up to 14.5in -->

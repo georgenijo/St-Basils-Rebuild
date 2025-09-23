@@ -7,6 +7,7 @@
   <title>St.Basil's Syrian Orthodox Church</title>
   <meta name="description" content="">
   <meta name="keywords" content="">
+  
 
   <!-- Favicons -->
   <link href="assets/img/favicon.png" rel="icon">
@@ -15,7 +16,7 @@
   <!-- Fonts -->
   <link href="https://fonts.googleapis.com" rel="preconnect">
   <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Raleway:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400;1,700;1,900&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Raleway:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
 
   <!-- Vendor CSS Files -->
   <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
@@ -26,6 +27,691 @@
 
   <!-- Main CSS File -->
   <link href="assets/css/main.css" rel="stylesheet">
+  
+  <!-- Custom Navigation Styles -->
+  <style>
+    /* Transparent header for index page */
+    .index-page .header:not(.scrolled) {
+      background-color: transparent !important;
+      box-shadow: none !important;
+    }
+    
+    /* Ensure header becomes visible on scroll */
+    .index-page .header.scrolled {
+      background-color: #FEFAE0 !important;
+      box-shadow: 0px 0 18px rgba(0, 0, 0, 0.1) !important;
+    }
+    
+    /* Header navigation font styles */
+    .navmenu a,
+    .navmenu a:focus {
+      font-family: 'Libre Baskerville', serif !important;
+      color: #283618 !important;
+    }
+    
+    /* Black text for transparent header (but not dropdown) */
+    .index-page .header:not(.scrolled) .navmenu > ul > li > a,
+    .index-page .header:not(.scrolled) .navmenu > ul > li > a:focus {
+      color: #000000 !important;
+    }
+    
+    /* Dark text for dropdown even in transparent header */
+    .index-page .header:not(.scrolled) .navmenu .dropdown ul a,
+    .index-page .header:not(.scrolled) .navmenu .dropdown ul a:focus {
+      color: #253341 !important;
+    }
+    
+    /* Dropdown menu styles */
+    .navmenu .dropdown ul {
+      background: #FEFAE0 !important;
+    }
+    
+    .navmenu .dropdown ul a,
+    .navmenu .dropdown ul a:link,
+    .navmenu .dropdown ul a:visited {
+      font-family: 'Libre Baskerville', serif !important;
+      color: #253341 !important;
+      background-color: transparent !important;
+    }
+    
+    /* Active and hover states */
+    .navmenu li:hover>a,
+    .navmenu .active,
+    .navmenu .active:focus {
+      font-family: 'Libre Baskerville', serif !important;
+      color: #000000 !important;
+      background-color: rgba(204, 213, 174, 0.2) !important;
+      opacity: 1 !important;
+    }
+    
+    /* Dropdown hover states */
+    .navmenu .dropdown ul li:hover,
+    .navmenu .dropdown ul li a:hover {
+      background-color: rgba(196, 164, 132, 0.5) !important;
+    }
+    
+    .navmenu .dropdown ul a:hover,
+    .navmenu .dropdown ul .active:hover,
+    .navmenu .dropdown ul li:hover>a {
+      font-family: 'Libre Baskerville', serif !important;
+      color: #253341 !important;
+      background-color: transparent !important;
+      opacity: 1 !important;
+    }
+    
+    /* Hover states for transparent header */
+    .index-page .header:not(.scrolled) .navmenu li:hover>a,
+    .index-page .header:not(.scrolled) .navmenu .active,
+    .index-page .header:not(.scrolled) .navmenu .active:focus {
+      background-color: rgba(204, 213, 174, 0.3) !important;
+      color: #F2FDFF !important;
+    }
+    
+    /* Hover states for scrolled/opaque header */
+    .index-page .header.scrolled .navmenu li:hover>a {
+      background-color: rgba(196, 164, 132, 0.2) !important; /* C4A484 with 20% opacity */
+      color: #253341 !important;
+    }
+    
+    .index-page .header.scrolled .navmenu .dropdown ul a:hover,
+    .index-page .header.scrolled .navmenu .dropdown ul li:hover>a {
+      background-color: rgba(196, 164, 132, 0.5) !important; /* C4A484 with 50% opacity for dropdown */
+      color: #253341 !important;
+    }
+    
+    /* Fade-in animation with delay */
+    @keyframes fadeInDelayed {
+      0% {
+        opacity: 0;
+      }
+      100% {
+        opacity: 1;
+      }
+    }
+    
+    .fade-in-delayed {
+      opacity: 0;
+      animation: fadeInDelayed 1s ease-in forwards;
+      animation-delay: 0.8s;
+    }
+    
+    /* Page background color */
+    body.index-page {
+      background-color: #FEFAE0;
+    }
+    
+    #services {
+      background-color: #FEFAE0;
+    }
+    
+    /* Back to top button color */
+    .scroll-top {
+      background-color: #91203C !important;
+    }
+    
+    /* Feast section responsive styles */
+    @media (max-width: 1198px) {
+      .feast-schedule-box {
+        margin-left: 1in !important;
+        margin-right: 1in !important;
+        height: auto !important;
+        min-height: 2in !important;
+      }
+
+      .feast-schedule-box > div:not(.divider) {
+        padding: 15px 10px !important;
+      }
+
+      .feast-schedule-box h3 {
+        font-size: 16px !important;
+        margin-bottom: 10px !important;
+      }
+
+      .feast-schedule-box p {
+        font-size: 14px !important;
+        line-height: 1.5 !important;
+      }
+    }
+
+    @media (max-width: 991px) {
+      .feast-schedule-box {
+        margin-left: 0.5in !important;
+        margin-right: 0.5in !important;
+      }
+
+      .feast-schedule-box h3 {
+        font-size: 15px !important;
+      }
+
+      .feast-schedule-box p {
+        font-size: 13px !important;
+        line-height: 1.4 !important;
+      }
+
+      .feast-invite {
+        font-size: 18px !important;
+        letter-spacing: 1.5px !important;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .feast-section {
+        min-height: auto !important;
+        padding: 30px 15px !important;
+      }
+
+      .feast-title {
+        font-size: 24px !important;
+      }
+
+      .feast-date {
+        font-size: 28px !important;
+      }
+
+      .feast-invite {
+        font-size: 16px !important;
+        letter-spacing: 1px !important;
+        padding: 0 15px;
+      }
+
+      .feast-schedule-box {
+        height: auto !important;
+        margin-left: 15px !important;
+        margin-right: 15px !important;
+        flex-direction: column !important;
+      }
+
+      .feast-schedule-box > div:not(.divider) {
+        padding: 20px 15px !important;
+        min-height: 180px;
+      }
+
+      .feast-schedule-box h3 {
+        font-size: 18px !important;
+      }
+
+      .feast-schedule-box p {
+        font-size: 16px !important;
+        line-height: 1.8 !important;
+      }
+
+      .feast-schedule-box .divider {
+        width: 100% !important;
+        height: 1px !important;
+      }
+
+      /* Responsive padding for animated sections */
+      .col-lg-6[data-aos] {
+        padding-left: 15px !important;
+        padding-right: 15px !important;
+      }
+
+      /* Adjust Events Calendar section height */
+      section[style*="height: 2in"] {
+        height: auto !important;
+        min-height: 2in !important;
+        padding: 1.5rem 0 !important;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .feast-title {
+        font-size: 20px !important;
+      }
+
+      .feast-date {
+        font-size: 24px !important;
+      }
+
+      .feast-invite {
+        font-size: 14px !important;
+      }
+    }
+    
+    /* Typewriter animation for "Come As You Are" */
+    @keyframes typewriter {
+      from {
+        width: 0;
+      }
+      to {
+        width: 100%;
+      }
+    }
+    
+    @keyframes blinkCursor {
+      50% {
+        border-color: transparent;
+      }
+    }
+    
+    @keyframes removeCursor {
+      to {
+        border-right-color: transparent;
+      }
+    }
+    
+    .typewriter-text {
+      display: inline-block;
+      overflow: hidden;
+      white-space: nowrap;
+      width: 0;
+      border-right: 3px solid #F2FDFF;
+      padding-right: 3px; /* Reserve space for cursor */
+      animation: 
+        typewriter 2.5s steps(15, end) 0.5s forwards,
+        blinkCursor 0.75s step-end 0.5s 4,
+        removeCursor 0s 3.5s forwards; /* Remove cursor after 3.5s total (0.5s delay + 2.5s animation + 0.5s extra) */
+    }
+    
+    /* Container to maintain layout */
+    .typewriter-container {
+      display: block;
+      text-align: center;
+      min-height: 90px; /* Matches font size to prevent layout shift */
+    }
+    
+    /* Drop-down animation for church name and Matthew quote */
+    @keyframes dropDown {
+      from {
+        opacity: 0;
+        transform: translateY(-30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .drop-down-church {
+      display: inline-block;
+      opacity: 0;
+      animation: dropDown 2.5s ease-out 0.5s forwards; /* Slower animation (2.5s) */
+    }
+    
+    .drop-down-quote {
+      display: inline-block;
+      opacity: 0;
+      animation: dropDown 2.5s ease-out 0.5s forwards; /* Slower animation (2.5s) */
+    }
+    
+    .quote-container {
+      display: block;
+      text-align: center;
+      min-height: 25px; /* Prevent layout shift */
+    }
+    
+    .church-container {
+      display: block;
+      text-align: center;
+      min-height: 35px; /* Prevent layout shift */
+    }
+    
+    /* Fade-in animation for borders and cross */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    .fade-in-border {
+      opacity: 0;
+      animation: fadeIn 2.5s ease-out 0.5s forwards; /* Same timing as drop-down animations */
+    }
+
+    /* Enhanced Mobile Responsive Styles */
+
+    /* 1. Logo padding fix for mobile */
+    @media (max-width: 768px) {
+      .header .logo {
+        transform: translateX(0) !important;
+        padding-left: 15px;
+        max-width: 60% !important;
+      }
+
+      .header .logo img {
+        max-width: 100% !important;
+        height: auto !important;
+        max-height: 60px !important;
+      }
+
+      .header .container-fluid {
+        padding-left: 15px;
+        padding-right: 15px;
+      }
+    }
+
+    /* 2. Hero text responsive sizing */
+    @media (max-width: 991px) {
+      .typewriter-text {
+        font-size: 70px !important;
+      }
+      .typewriter-container {
+        min-height: 75px !important;
+      }
+      .drop-down-church {
+        font-size: 26px !important;
+      }
+      .drop-down-quote {
+        font-size: 18px !important;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .typewriter-text {
+        font-size: 50px !important;
+      }
+      .typewriter-container {
+        min-height: 55px !important;
+      }
+      .drop-down-church {
+        font-size: 22px !important;
+      }
+      .drop-down-quote {
+        font-size: 16px !important;
+      }
+
+      /* Adjust hero text container padding */
+      .fade-in-border {
+        padding: 40px 20px 30px 20px !important;
+      }
+
+      /* Adjust cross decoration for mobile */
+      .fade-in-border > div:first-child > div:nth-child(2) {
+        width: 30px !important;
+        height: 50px !important;
+      }
+
+      .fade-in-border > div:first-child > div:nth-child(2) > div:first-child {
+        height: 50px !important;
+      }
+
+      .fade-in-border > div:first-child > div:nth-child(2) > div:last-child {
+        width: 30px !important;
+      }
+    }
+
+    /* Fix for 640px width where text gets cut off */
+    @media (max-width: 640px) {
+      .typewriter-text {
+        font-size: 45px !important;
+      }
+      .typewriter-container {
+        min-height: 50px !important;
+      }
+
+      /* Reduce cross decoration size to save space */
+      .fade-in-border > div:first-child > div:nth-child(2) {
+        top: -15px !important;
+        height: 45px !important;
+      }
+
+      .fade-in-border > div:first-child > div:nth-child(2) > div:first-child {
+        height: 45px !important;
+      }
+
+      /* Adjust padding to prevent cutoff */
+      .fade-in-border {
+        padding: 35px 20px 30px 20px !important;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .typewriter-text {
+        font-size: 35px !important;
+      }
+      .typewriter-container {
+        min-height: 40px !important;
+      }
+      .drop-down-church {
+        font-size: 18px !important;
+      }
+      .drop-down-quote {
+        font-size: 14px !important;
+        padding: 0 10px;
+      }
+      .church-container {
+        min-height: 25px !important;
+      }
+      .quote-container {
+        min-height: 20px !important;
+      }
+
+      /* Even smaller padding on very small screens */
+      .fade-in-border {
+        padding: 30px 15px 25px 15px !important;
+      }
+    }
+
+    /* 3. Info box responsive improvements */
+    @media (max-width: 1199px) {
+      .info-box {
+        margin-left: 0.5in !important;
+        margin-right: 0.5in !important;
+        height: auto !important;
+        min-height: 2.5in !important;
+      }
+
+      .info-box > div:not(.divider) {
+        padding: 20px 15px !important;
+      }
+
+      .info-box h3 {
+        font-size: 16px !important;
+      }
+
+      .info-box p {
+        font-size: 14px !important;
+        line-height: 1.3 !important;
+      }
+
+      .parking-link {
+        font-size: 14px !important;
+      }
+    }
+
+    @media (max-width: 991px) {
+      .info-box {
+        margin-left: 1in !important;
+        margin-right: 1in !important;
+        height: auto !important;
+        min-height: 2.5in !important;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .info-box {
+        margin-left: 15px !important;
+        margin-right: 15px !important;
+        flex-direction: column !important;
+        height: auto !important;
+        min-height: auto !important;
+      }
+
+      .info-box > div:not(.divider) {
+        flex: none !important;
+        width: 100% !important;
+        padding: 25px 20px !important;
+        min-height: auto !important;
+      }
+
+      .info-box .divider {
+        width: 100% !important;
+        height: 1px !important;
+        background-color: #FEFAE0 !important;
+      }
+
+      .info-box h3 {
+        font-size: 16px !important;
+      }
+
+      .info-box p {
+        font-size: 14px !important;
+      }
+
+      .info-box i {
+        font-size: 20px !important;
+      }
+
+      .parking-link {
+        font-size: 14px !important;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .info-box {
+        margin-top: -0.3in !important;
+      }
+
+      .info-box > div:not(.divider) {
+        padding: 20px 15px !important;
+      }
+
+      .info-box h3 {
+        font-size: 15px !important;
+      }
+
+      .info-box p {
+        font-size: 13px !important;
+      }
+    }
+
+    /* 4. Footer responsive improvements */
+    @media (max-width: 991px) {
+      /* Stack footer elements vertically on tablets */
+      section[style*="background-color: #253341"] {
+        flex-direction: column !important;
+        text-align: center !important;
+        padding: 30px 20px !important;
+        min-height: auto !important;
+      }
+
+      /* Center copyright on its own line */
+      section[style*="background-color: #253341"] > div:first-child {
+        margin-bottom: 20px !important;
+        width: 100% !important;
+        justify-content: center !important;
+      }
+
+      /* Center links section and remove absolute positioning */
+      section[style*="background-color: #253341"] > div:nth-child(2) {
+        position: static !important;
+        transform: none !important;
+        margin-bottom: 20px !important;
+        width: 100% !important;
+      }
+
+      /* Center social links */
+      section[style*="background-color: #253341"] > div:last-child {
+        width: 100% !important;
+        justify-content: center !important;
+      }
+    }
+
+    @media (max-width: 768px) {
+      /* Smaller font sizes for footer text */
+      section[style*="background-color: #253341"] {
+        font-size: 13px !important;
+      }
+
+      section[style*="background-color: #253341"] a.footer-link {
+        font-size: 13px !important;
+        padding: 0 10px !important;
+      }
+
+      /* Hide divider spans on mobile */
+      section[style*="background-color: #253341"] span[style*="border-left"] {
+        display: none !important;
+      }
+
+      /* Stack footer links vertically */
+      section[style*="background-color: #253341"] > div:nth-child(2) {
+        flex-direction: column !important;
+        gap: 10px;
+      }
+
+      section[style*="background-color: #253341"] > div:nth-child(2) a {
+        display: block !important;
+        padding: 5px 0 !important;
+      }
+    }
+
+    @media (max-width: 480px) {
+      /* Even smaller font sizes for small phones */
+      section[style*="background-color: #253341"] {
+        font-size: 12px !important;
+        padding: 20px 15px !important;
+      }
+
+      section[style*="background-color: #253341"] a.footer-link {
+        font-size: 12px !important;
+      }
+
+      /* Reduce margins between sections */
+      section[style*="background-color: #253341"] > div:first-child,
+      section[style*="background-color: #253341"] > div:nth-child(2) {
+        margin-bottom: 15px !important;
+      }
+    }
+
+    /* Mute/Unmute button styles */
+    .audio-control {
+      position: absolute;
+      bottom: 30px;
+      left: 30px;
+      z-index: 20;
+      background-color: rgba(0, 0, 0, 0.5);
+      border: 1px solid #F2FDFF;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .audio-control:hover {
+      background-color: rgba(0, 0, 0, 0.7);
+      transform: scale(1.1);
+    }
+    
+    .audio-control i {
+      color: #F2FDFF;
+      font-size: 20px;
+    }
+
+    /* Typewriter animation styles */
+    @keyframes typewriter {
+      from { width: 0; }
+      to { width: 100%; }
+    }
+
+    @keyframes blink {
+      50% { border-color: transparent; }
+    }
+
+    @keyframes fadeInBox {
+      from {
+        opacity: 0;
+        transform: scale(0.8);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    /* Fix: Ensure hamburger menu icon displays */
+    .mobile-nav-toggle.bi-list::before {
+      content: "\2630" !important;
+      font-family: inherit !important;
+      font-weight: normal !important;
+    }
+  </style>
 
   <!-- =======================================================
   * Template Name: Squadfree
@@ -41,30 +727,34 @@
   <header id="header" class="header d-flex align-items-center fixed-top">
     <div class="container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
 
-      <a href="index.html" class="logo d-flex align-items-center">
-        <!-- Uncomment the line below if you also wish to use an image logo -->
-        <!-- <img src="assets/img/logo.png" alt=""> -->
-        <h1 class="sitename">St.Basil's Syrian Orthodox Church</h1>
+      <a href="index.html" class="logo d-flex align-items-center" style="transform: translateX(-10px);">
+        <img src="assets/img/sbb logo, blue .png" alt="St. Basil's Syrian Orthodox Church" class="logo-img" style="height: 75px; max-height: 75px;">
       </a>
 
       <nav id="navmenu" class="navmenu">
         <ul>
           <li><a href="#hero" class="active">Home</a></li>
-          <li><a href="#services">Services</a></li>
-          <li><a href="about.html">About</a></li>
-          <li class="dropdown"><a href="#"><span>Our Organizations</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
+          <li class="dropdown"><a href="about.html"><span>About</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
             <ul>
-              <li><a href="sunday-school.html">Sunday School</a></li>
-              <li><a href="stpauls-mensfellow.html">St. Pauls Mens Fellowship</a></li>
-              <li><a href="stmarys-womens.html">St. Marys Womens League</a></li>
-              <li><a href="#">Managing Committee</a></li>
-              <li><a href="#">Spiritual Council</a></li>
-              <li><a href="spiritual-leader.html">Spiritual Leaders</a></li>
+              <li><a href="about.html">Our History</a></li>
+              <li><a href="spiritual-leader.html">Our Spiritual Fathers</a></li>
+              <li><a href="our-clergy.html">Our Clergy</a></li>
+              <li><a href="office-bearers.html">Our Office Bearers</a></li>
+              <li><a href="acolytes-choir.html">Our Acolytes &amp; Choir</a></li>
+              <li><a href="our-organizations.html">Our Organizations</a></li>
             </ul>
           </li>
-          <li><a href="#contact">Contact</a></li>
+          <li class="dropdown"><a href="first-time.html"><span>Resources</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
+            <ul>
+              <li><a href="events-calendar.html">Events Calendar</a></li>
+              <li><a href="useful-links.html">Useful Links</a></li>
+              <li><a href="first-time.html">First Time Visiting?</a></li>
+            </ul>
+          </li>
+          <li><a href="giving.html">Giving</a></li>
+          <li><a href="contact-us.html">Contact Us</a></li>
         </ul>
-        
+
         <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
       </nav>
 
@@ -74,149 +764,428 @@
   <main class="main">
 
     <!-- Hero Section -->
-    <section id="hero" class="hero section accent-background">
+    <section id="hero" class="hero section accent-background" style="position: relative; overflow: hidden;">
 
-      <img src="assets/img/open-bible.jpg" alt="" data-aos="fade-in">
+      <video src="assets/img/intro vid.mp4" autoplay loop muted playsinline data-aos="fade-in" style="position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; z-index: 1; filter: brightness(0.8);"></video>
+      
+      <!-- Background Audio -->
+      <audio id="backgroundMusic" autoplay loop>
+        <source src="assets/img/audio/our father audio.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+      </audio>
+      
+      <!-- Mute/Unmute Button -->
+      <button class="audio-control" onclick="toggleAudio()" aria-label="Toggle audio">
+        <i id="audioIcon" class="bi bi-volume-up-fill"></i>
+      </button>
+      
 
-      <div class="container text-center" data-aos="fade-up" data-aos-delay="100">
-        <h2>Welcome to<br>St. Basil's<br>Syriac Orthodox Church</h2>
-        <p style="padding-bottom: 150px;"></p>
-        <!--<p>We are team of talented designers making websites with Bootstrap</p>-->
-        <a href="#services" class="btn-scroll" title="Scroll Down"><i class="bi bi-chevron-down"></i></a>
+      <!-- Hero Text Content -->
+      <div style="position: absolute; top: calc(50% + 80px); left: 50%; transform: translate(-50%, -50%); text-align: center; z-index: 10; max-width: 900px; width: 90%;">
+        <!-- Border box with cross decoration -->
+        <div class="fade-in-border" style="position: relative; border-left: 1px solid #F2FDFF; border-right: 1px solid #F2FDFF; border-bottom: 1px solid #F2FDFF; padding: 60px 40px 40px 40px;">
+          <!-- Top border with cross -->
+          <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px;">
+            <!-- Left line -->
+            <div style="position: absolute; top: 0; left: 0; width: calc(50% - 60px); height: 1px; background-color: #F2FDFF;"></div>
+            <!-- Cross made from two lines -->
+            <div style="position: absolute; top: -20px; left: 50%; transform: translateX(-50%); width: 40px; height: 60px;">
+              <!-- Vertical line of cross -->
+              <div style="position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 1px; height: 60px; background-color: #F2FDFF;"></div>
+              <!-- Horizontal line of cross (aligned with border) -->
+              <div style="position: absolute; top: 20px; left: 0; width: 40px; height: 1px; background-color: #F2FDFF;"></div>
+            </div>
+            <!-- Right line -->
+            <div style="position: absolute; top: 0; right: 0; width: calc(50% - 60px); height: 1px; background-color: #F2FDFF;"></div>
+          </div>
+          
+          <div class="church-container">
+            <h2 class="drop-down-church" style="font-family: 'Poppins', sans-serif; color: #F2FDFF; font-size: 30px; font-weight: 700; margin: 0 auto 10px auto; text-shadow: none; text-transform: none;">St. Basil's Syriac Orthodox Church</h2>
+          </div>
+          <div class="typewriter-container">
+            <h1 class="typewriter-text" style="font-family: 'Libre Baskerville', serif; color: #F2FDFF; font-size: 90px; font-weight: 700; margin: 0 auto; text-shadow: none; text-transform: none;">Come As You Are</h1>
+          </div>
+          <div class="quote-container">
+            <p class="drop-down-quote" style="font-family: 'Poppins', sans-serif; color: #F2FDFF; font-size: 20px; font-style: italic; margin: 20px auto 0 auto; text-shadow: none; text-transform: none;">"Taste and see that the Lord is good; blessed is the one who takes refuge in him." - Psalms 34:8</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="position-absolute bottom-0 w-100" style="padding-bottom: 20px;">
+        <a href="#services" class="btn-scroll position-absolute bottom-0 start-50 translate-middle-x" title="Scroll Down"><i class="bi bi-chevron-down"></i></a>
       </div>
 
     </section><!-- /Hero Section -->
 
     <!-- Services Section -->
-    <section id="services" class="services section">
-      <div class="container" data-aos="fade-up">
-        <div class="row justify-content-center mb-4">
-          <div class="col-md-8 text-center">
-            <h4>Every Sunday</h4>
-            <ul class="list-unstyled">
-              <li>Morning Prayer: 8:30 AM EST</li>
-              <li>Holy Qurbono: 9:15 AM EST</li>
-            </ul>
+    <section id="services" class="services section" style="padding-top: 0; position: relative;">
+      <div class="container" style="position: relative;">
+        <!-- Rectangular box with overlap -->
+        <div class="info-box" style="
+          background-color: #C4A484;
+          height: 2.5in;
+          margin-left: 2in;
+          margin-right: 2in;
+          margin-top: -0.5in;
+          position: relative;
+          z-index: 5;
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+          display: flex;
+        " data-aos="fade-up">
+          <!-- First section -->
+          <div style="
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 20px;
+            padding-top: 40px;
+            text-align: center;
+          ">
+            <!-- Map icon -->
+            <i class="bi bi-geo-alt-fill" style="
+              font-size: 24px;
+              color: #253341;
+              margin-bottom: 8px;
+            "></i>
+            
+            <!-- LOCATION text -->
+            <h3 style="
+              font-family: 'Poppins', sans-serif;
+              font-weight: bold;
+              color: #253341;
+              text-decoration: underline;
+              margin: 0 0 15px 0;
+              font-size: 18px;
+            ">LOCATION</h3>
+            
+            <!-- Address -->
+            <p style="
+              color: #FEFAE0;
+              margin: 0;
+              font-size: 16px;
+              font-weight: bold;
+              line-height: 1.4;
+            ">
+              73 Ellis Street<br>
+              Newton, MA 02464
+            </p>
+            
+            <!-- Parking Directions link -->
+            <a href="contact-us.html" class="parking-link" style="
+              color: #FEFAE0;
+              text-decoration: underline;
+              font-family: 'Poppins', sans-serif;
+              font-style: italic;
+              font-weight: bold;
+              font-size: 16px;
+              margin-top: 10px;
+              display: inline-block;
+            ">Where to Park</a>
           </div>
-        </div>
-        <h2 class="text-center mb-4" style="text-decoration: underline;">St. Basil's Church Perunnal</h2>
-
-        <!-- New Service Schedule -->
-
-
-        <div class="row justify-content-center gx-4">
-          <div class="col-md-5 col-lg-4">
-            <div class="service-item p-3 shadow-sm">
-              <h5 class="text-center mb-2">Sat. Oct. 5th</h5>
-              <div class="event-list">
-                <div>6:00 PM: Flag Hoisting</div>
-                <div>6:30 PM: Evening Prayer</div>
-                <div>8:00 PM: Devotional Address</div>
-              </div>
-            </div>
+          
+          <!-- First divider -->
+          <div class="divider" style="
+            width: 1px;
+            background-color: #FEFAE0;
+            height: 100%;
+          "></div>
+          
+          <!-- Second section -->
+          <div style="
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 20px;
+            padding-top: 40px;
+            text-align: center;
+          ">
+            <!-- Clock icon -->
+            <i class="bi bi-clock-fill" style="
+              font-size: 24px;
+              color: #253341;
+              margin-bottom: 8px;
+            "></i>
+            
+            <!-- HOLY QURBONO TIMINGS text -->
+            <h3 style="
+              font-family: 'Poppins', sans-serif;
+              font-weight: bold;
+              color: #253341;
+              text-decoration: underline;
+              margin: 0 0 15px 0;
+              font-size: 18px;
+            ">HOLY QURBONO TIMINGS</h3>
+            
+            <!-- Service Times -->
+            <p style="
+              color: #FEFAE0;
+              margin: 0;
+              font-size: 16px;
+              font-weight: bold;
+              line-height: 1.4;
+            ">
+              Sunday 8:30AM EST: Morning Prayer<br>
+              Sunday 9:15AM EST: Holy Qurbono
+            </p>
           </div>
-          <div class="col-md-5 col-lg-4">
-            <div class="service-item p-3 shadow-sm">
-              <h5 class="text-center mb-2">Sun. Oct. 6th</h5>
-              <div class="event-list">
-                <div>8:30 AM: Morning Prayer</div>
-                <div>9:15 AM: H.Q.</div>
-                <div>12:00 PM: Benediction & Nercha</div>
-              </div>
-            </div>
+          
+          <!-- Second divider -->
+          <div class="divider" style="
+            width: 1px;
+            background-color: #FEFAE0;
+            height: 100%;
+          "></div>
+          
+          <!-- Third section -->
+          <div style="
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 20px;
+            padding-top: 40px;
+            text-align: center;
+          ">
+            <!-- Contact icon -->
+            <i class="bi bi-telephone-fill" style="
+              font-size: 24px;
+              color: #253341;
+              margin-bottom: 8px;
+            "></i>
+            
+            <!-- CONTACT US text -->
+            <h3 style="
+              font-family: 'Poppins', sans-serif;
+              font-weight: bold;
+              color: #253341;
+              text-decoration: underline;
+              margin: 0 0 15px 0;
+              font-size: 18px;
+            ">CONTACT US</h3>
+            
+            <!-- Contact Information -->
+            <p style="
+              color: #FEFAE0;
+              margin: 0;
+              font-size: 16px;
+              font-weight: bold;
+              line-height: 1.4;
+            ">
+              Ph: +1 (478) 227-4572<br>
+              stbasilsboston@gmail.com
+            </p>
           </div>
         </div>
       </div>
     </section><!-- /Services Section -->
 
-    <!-- Contact Section -->
-    <section id="contact" class="contact section">
-
-      <!-- Section Title -->
-      <div class="container section-title" data-aos="fade-up">
-        <h2>Contact</h2>
-        <p>Where are we located?</p>
-        <p><a href="parking.html" style="text-decoration: underline;">How to get to the parking lot?</a></p>
-      </div><!-- End Section Title -->
-
-      <div class="container" data-aos="fade-up" data-aos-delay="100">
-
-        <div class="row gy-4">
-
-          <div class="col-lg-5">
-
-            <div class="info-wrap">
-              <div class="info-item d-flex" data-aos="fade-up" data-aos-delay="200">
-                <i class="bi bi-geo-alt flex-shrink-0"></i>
-                <div>
-                  <h3>Address</h3>
-                  <p>65 Ellis St, Newton, MA 02464</p>
-                </div>
-              </div><!-- End Info Item -->
-
-              <div class="info-item d-flex" data-aos="fade-up" data-aos-delay="300">
-                <i class="bi bi-telephone flex-shrink-0"></i>
-                <div>
-                  <h3>Call Us</h3>
-                  <p>+1 (478) 227-4572</p>
-                </div>
-              </div><!-- End Info Item -->
-
-              <div class="info-item d-flex" data-aos="fade-up" data-aos-delay="400">
-                <i class="bi bi-envelope flex-shrink-0"></i>
-                <div>
-                  <h3>Email Us</h3>
-                  <p>StBasilsBoston@gmail.com</p>
-                </div>
-              </div><!-- End Info Item -->
-
-              <div class="map-container">
-                <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2950.304972507958!2d-71.2258473!3d42.3146936!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89e3823ace2afab9%3A0xb2d57ccb2d21ed3d!2sSt.%20Basil%E2%80%99s%20Malankara%20Syriac%20Orthodox%20Church!5e0!3m2!1sen!2sus!4v1727794435586!5m2!1sen!2sus" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
-              </div>
-            </div>
+    <!-- New Section -->
+    <section class="new-section feast-section" style="background-color: #91203C; min-height: 8in; padding: 40px 0; display: flex; align-items: center;">
+      <div class="container" data-aos="fade-up" style="text-align: center;">
+        <h2 class="feast-title" style="
+          font-family: 'Poppins', sans-serif;
+          font-weight: bold;
+          font-size: 30px;
+          color: #FEFAE0;
+          margin: 0;
+          margin-bottom: 5px;
+        ">Gather with Us for Our Church Feast</h2>
+        <img src="assets/img/index page/banner.png" alt="Church Feast Banner" style="
+          max-width: 100%;
+          height: auto;
+          display: block;
+          margin: 0 auto;
+          margin-top: 0;
+        ">
+        <p class="feast-date" style="
+          font-family: 'Poppins', sans-serif;
+          font-weight: bold;
+          font-size: 40px;
+          color: #FFFFFF;
+          margin: 0;
+          margin-top: 3px;
+          text-align: center;
+          text-transform: uppercase;
+        ">September 27 & 28, 2025</p>
+        <p class="feast-invite" style="
+          font-family: 'Poppins', sans-serif;
+          font-weight: normal;
+          font-style: italic;
+          font-size: 20px;
+          color: #FEFAE0;
+          margin: 20px auto 0 auto;
+          text-align: center;
+          max-width: 1000px;
+          line-height: 1.6;
+          letter-spacing: 2px;
+        ">We extend to you all our warmest invitation to join us in this blessed celebration and receive the divine grace through the intercession of St. Baselious Yeldho Bava. Our festivities will be graced by the esteemed presence of our beloved<br>Archbishop & Patriarchal Vicar of the Malankara Archdiocese of the Syrian Orthodox Church in North America, <strong>His Eminence Mor Titus Yeldho</strong>.</p>
+        
+        <!-- Rectangular box with two sections -->
+        <div class="feast-schedule-box" style="
+          background-color: #A72545;
+          height: 2in;
+          margin-left: 2in;
+          margin-right: 2in;
+          margin-top: 20px;
+          box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+          display: flex;
+        ">
+          <!-- First section -->
+          <div style="
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            text-align: center;
+          ">
+            <h3 style="
+              font-family: 'Libre Baskerville', serif;
+              font-weight: bold;
+              color: #FEFAE0;
+              margin: 0 0 15px 0;
+              font-size: 18px;
+              text-decoration: underline;
+            ">Saturday, Sept. 27th</h3>
+            <p style="
+              font-family: 'Poppins', sans-serif;
+              font-weight: bold;
+              color: #FEFAE0;
+              margin: 0;
+              font-size: 16px;
+              line-height: 1.8;
+            ">
+              6PM: Flag Hoisting<br>
+              6:30PM: Evening Prayer<br>
+              8PM: Devotional Address - Fr. Toney Korah<br>
+              9PM: Dinner
+            </p>
           </div>
-
-          <div class="col-lg-7">
-            <form action="forms/contact.php" method="post" class="php-email-form" data-aos="fade-up" data-aos-delay="200">
-              <div class="row gy-4">
-
-                <div class="col-md-6">
-                  <label for="name-field" class="pb-2">Your Name</label>
-                  <input type="text" name="name" id="name-field" class="form-control" required="">
-                </div>
-
-                <div class="col-md-6">
-                  <label for="email-field" class="pb-2">Your Email</label>
-                  <input type="email" class="form-control" name="email" id="email-field" required="">
-                </div>
-
-                <div class="col-md-12">
-                  <label for="subject-field" class="pb-2">Subject</label>
-                  <input type="text" class="form-control" name="subject" id="subject-field" required="">
-                </div>
-
-                <div class="col-md-12">
-                  <label for="message-field" class="pb-2">Message</label>
-                  <textarea class="form-control" name="message" rows="10" id="message-field" required=""></textarea>
-                </div>
-
-                <div class="col-md-12 text-center">
-                  <div class="loading">Loading</div>
-                  <div class="error-message"></div>
-                  <div class="sent-message">Your message has been sent. Thank you!</div>
-
-                  <button type="submit">Send Message</button>
-                </div>
-
-              </div>
-            </form>
-          </div><!-- End Contact Form -->
-
+          
+          <!-- Divider -->
+          <div class="divider" style="
+            width: 1px;
+            background-color: #91203C;
+            height: 100%;
+          "></div>
+          
+          <!-- Second section -->
+          <div style="
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            text-align: center;
+          ">
+            <h3 style="
+              font-family: 'Libre Baskerville', serif;
+              font-weight: bold;
+              color: #FEFAE0;
+              margin: 0 0 15px 0;
+              font-size: 18px;
+              text-decoration: underline;
+            ">Sunday, Sept. 28th</h3>
+            <p style="
+              font-family: 'Poppins', sans-serif;
+              font-weight: bold;
+              color: #FEFAE0;
+              margin: 0;
+              font-size: 16px;
+              line-height: 1.8;
+            ">
+              8:30AM: Morning Prayer<br>
+              9:30AM: Holy Qurbono, H.E. Mor Titus Yeldho<br>
+              11:30AM: Procession & Benediction<br>
+              1PM: Lunch
+            </p>
+          </div>
         </div>
-
       </div>
+    </section><!-- /New Section -->
 
-    </section><!-- /Contact Section -->
+    <!-- New FEFAE0 Section -->
+    <section style="background-color: #FEFAE0; min-height: 3in; width: 100%; padding: 2rem 0;">
+      <div class="container h-100">
+        <div class="row align-items-center h-100">
+          <!-- Text Content on Left -->
+          <div class="col-lg-5" style="padding-left: 0.5in;" data-aos="fade-right" data-aos-duration="1000">
+            <h4 style="font-family: 'Poppins', sans-serif; font-weight: bold; color: #253341; margin-bottom: 1rem; letter-spacing: 1px;">
+              St. Basil's Syriac Orthodox Church, Newton
+            </h4>
+            <p style="font-family: 'Poppins', sans-serif; font-weight: 400; color: #253341; margin-bottom: 1rem; letter-spacing: 1px;">
+              was established in 2009. Since our founding, we have flourished as a vibrant community united by deep fellowship and unwavering faith. Our church stands as a living testament to God's presence—a sacred space where worship, prayer, and spiritual growth thrive.
+            </p>
+            <p style="font-family: 'Poppins', sans-serif; font-weight: 400; color: #253341; margin-bottom: 1rem; letter-spacing: 1px;">
+              We welcome people of all ages through our diverse ministries, including Sunday School for children, Youth League for young adults, Men's Prayer Fellowship, and Women's League. Each group plays a vital role in preserving our rich Orthodox traditions while fostering meaningful connections within our church family.
+            </p>
+            <p style="font-family: 'Poppins', sans-serif; font-weight: 400; color: #253341; letter-spacing: 1px;">
+              Whether you're seeking spiritual guidance, community fellowship, or a deeper connection to ancient Christian traditions, <span style="font-weight: bold; font-style: italic; letter-spacing: 1px;">St. Basil's offers a warm home where faith comes alive.</span>
+            </p>
+          </div>
+          <!-- Image on Right -->
+          <div class="col-lg-7" style="padding-right: 0.5in; padding-left: 0.5in;" data-aos="fade-left" data-aos-duration="1000" data-aos-delay="200">
+            <img src="assets/img/index page/church photo.jpg" alt="St. Basil's Church" style="width: 100%; height: auto; border-radius: 8px; max-height: 500px; object-fit: cover;">
+          </div>
+        </div>
+      </div>
+    </section><!-- /FEFAE0 Section -->
+
+    <!-- New FAEDCD Section -->
+    <section style="background-color: #FAEDCD; height: 2in; width: 100%; display: flex; align-items: center;">
+      <div class="container">
+        <div class="row align-items-center">
+          <!-- Events Calendar Title on Left -->
+          <div class="col-lg-4 d-flex justify-content-center align-items-center" data-aos="fade-right" data-aos-duration="1000">
+            <a href="events-calendar.html" style="text-decoration: none;" onmouseover="this.querySelector('div').style.backgroundColor='#253341'; this.querySelector('p').style.color='#FAEDCD';" onmouseout="this.querySelector('div').style.backgroundColor='transparent'; this.querySelector('p').style.color='#253341';">
+              <div style="border: 1px solid #253341; padding: 0.75rem 1.5rem; display: inline-block; transition: all 0.3s ease; cursor: pointer;">
+                <p style="font-family: 'Poppins', sans-serif; font-weight: 400; color: #253341; text-transform: uppercase; margin: 0; font-size: 20px; letter-spacing: 1px; transition: color 0.3s ease;">
+                  <i class="bi bi-calendar3" style="margin-right: 8px;"></i>Events Calendar
+                </p>
+              </div>
+            </a>
+          </div>
+          <!-- Text Content on Right -->
+          <div class="col-lg-8 d-flex align-items-center" data-aos="fade-left" data-aos-duration="1000" data-aos-delay="200">
+            <p style="font-family: 'Poppins', sans-serif; font-weight: 400; color: #253341; font-size: 20px; margin: 0; letter-spacing: 1px;">
+              At St. Basil's, we're more than a congregation—we're a family bound together by God's love. Join us for upcoming events that celebrate our faith and deepen our community bonds.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section><!-- /FAEDCD Section -->
+
+    <!-- New Maroon Section -->
+    <section id="office-bearers-section" style="background-color: #91203C; min-height: 2in; width: 100%; display: flex; align-items: center; padding: 2rem 0;">
+      <div class="container">
+        <div class="row align-items-center">
+          <!-- Text Content on Left -->
+          <div class="col-lg-8 d-flex align-items-center">
+            <p id="office-bearers-text" style="font-family: 'Poppins', sans-serif; font-weight: 400; font-style: italic; color: #FEFAE0; font-size: 20px; margin: 0; letter-spacing: 1px; opacity: 0; transition: opacity 1.5s ease-in-out;">
+              Get to know the devoted leaders who serve as our Church Office Bearers. Elected by our congregation, these individuals provide essential guidance and oversight that keeps our church community strong and vibrant.
+            </p>
+          </div>
+          <!-- Office Bearers Title on Right -->
+          <div class="col-lg-4 d-flex justify-content-center align-items-center">
+            <a href="office-bearers.html" style="text-decoration: none;" onmouseover="this.querySelector('div').style.backgroundColor='#FEFAE0'; this.querySelector('p').style.color='#91203C';" onmouseout="this.querySelector('div').style.backgroundColor='transparent'; this.querySelector('p').style.color='#FEFAE0';">
+              <div id="office-bearers-box" style="border: 1px solid #FEFAE0; padding: 0.75rem 1.5rem; display: inline-block; opacity: 0; transition: all 0.3s ease; cursor: pointer;">
+                <p style="font-family: 'Poppins', sans-serif; font-weight: 400; color: #FEFAE0; text-transform: uppercase; margin: 0; font-size: 20px; letter-spacing: 1px; transition: color 0.3s ease;">
+                  <i class="bi bi-people" style="margin-right: 8px;"></i>Our Office Bearers
+                </p>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section><!-- /Maroon Section -->
+
 
   </main>
 
@@ -226,6 +1195,32 @@
 
   <!-- Preloader -->
   <div id="preloader"></div>
+
+  <script>
+    // Set initial volume and handle mute/unmute
+    window.addEventListener('DOMContentLoaded', function() {
+      const audio = document.getElementById('backgroundMusic');
+      const audioIcon = document.getElementById('audioIcon');
+      
+      // Set initial volume to 30%
+      if (audio) {
+        audio.volume = 0.3;
+      }
+    });
+    
+    function toggleAudio() {
+      const audio = document.getElementById('backgroundMusic');
+      const audioIcon = document.getElementById('audioIcon');
+      
+      if (audio.paused) {
+        audio.play();
+        audioIcon.className = 'bi bi-volume-up-fill';
+      } else {
+        audio.pause();
+        audioIcon.className = 'bi bi-volume-mute-fill';
+      }
+    }
+  </script>
 
   <!-- Vendor JS Files -->
   <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
@@ -239,6 +1234,69 @@
 
   <!-- Main JS File -->
   <script src="assets/js/main.js"></script>
+
+  <!-- Fade In Animation Script -->
+  <script>
+    // Fade in effect for office bearers section
+    let hasAnimated = false;
+    
+    function checkScroll() {
+      if (hasAnimated) return;
+      
+      const section = document.getElementById('office-bearers-section');
+      const textElement = document.getElementById('office-bearers-text');
+      const boxElement = document.getElementById('office-bearers-box');
+      
+      if (!section || !textElement || !boxElement) return;
+      
+      const sectionTop = section.getBoundingClientRect().top;
+      const windowHeight = window.innerHeight;
+      
+      // Trigger when section top enters viewport
+      if (sectionTop < windowHeight) {
+        hasAnimated = true;
+        
+        // Fade in the text
+        textElement.style.opacity = '1';
+        
+        // Fade in the box after a slight delay
+        setTimeout(() => {
+          boxElement.style.animation = 'fadeInBox 0.8s ease forwards';
+          boxElement.style.opacity = '1';
+        }, 300);
+      }
+    }
+    
+    // Listen for scroll events
+    window.addEventListener('scroll', checkScroll);
+    window.addEventListener('load', checkScroll);
+  </script>
+
+  <!-- Bottom Section -->
+  <style>
+    .footer-link:hover {
+      text-decoration: underline !important;
+    }
+  </style>
+  <section style="background-color: #253341; min-height: 1.2in; width: 100%; display: flex; align-items: center; justify-content: space-between; position: relative; padding: 20px 1in;">
+    <div style="font-family: 'Libre Baskerville', serif; color: #FEFAE0; font-size: 15px; display: flex; align-items: center;">
+      <span style="margin-right: 10px;">©</span>
+      <div>
+        <div>2025 St. Basil's Syriac</div>
+        <div>Orthodox Church, All Rights Reserved.</div>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; font-family: 'Libre Baskerville', serif; color: #FEFAE0; font-size: 15px; position: absolute; left: 50%; transform: translateX(-50%);">
+      <a href="privacy-policy.html" class="footer-link" style="color: #FEFAE0; text-decoration: none; padding: 0 20px; font-size: 15px;">Privacy Policy</a>
+      <span style="border-left: 1px solid #FEFAE0; height: 30px; margin: 0 10px;"></span>
+      <a href="terms-of-use.html" class="footer-link" style="color: #FEFAE0; text-decoration: none; padding: 0 20px; font-size: 15px;">Terms of Use</a>
+      <span style="border-left: 1px solid #FEFAE0; height: 30px; margin: 0 10px;"></span>
+      <a href="contact-us.html" class="footer-link" style="color: #FEFAE0; text-decoration: none; padding: 0 20px; font-size: 15px;">Contact Us</a>
+    </div>
+    <div style="display: flex; align-items: center;">
+      <a href="https://www.facebook.com/StBasilsBoston" target="_blank" style="color: #FEFAE0; font-size: 20px;"><i class="bi bi-facebook"></i></a>
+    </div>
+  </section>
 
 </body>
 

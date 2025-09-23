@@ -17,6 +17,7 @@
     const selectHeader = document.querySelector('#header');
     if (!selectHeader.classList.contains('scroll-up-sticky') && !selectHeader.classList.contains('sticky-top') && !selectHeader.classList.contains('fixed-top')) return;
     window.scrollY > 100 ? selectBody.classList.add('scrolled') : selectBody.classList.remove('scrolled');
+    window.scrollY > 100 ? selectHeader.classList.add('scrolled') : selectHeader.classList.remove('scrolled');
   }
 
   document.addEventListener('scroll', toggleScrolled);

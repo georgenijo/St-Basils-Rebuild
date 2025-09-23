@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>Our Organizations - St.Basil's Syrian Orthodox Church</title>
+  <meta name="description" content="Organizations of St. Basil's Syriac Orthodox Church in Boston, Massachusetts">
+  <meta name="keywords" content="Organizations, St Basils, Syrian Orthodox Church, Boston, Newton">
+  <meta name="robots" content="index,follow">
+  <meta name="author" content="George Nijo">
+
+  <!-- Favicons -->
+  <link href="assets/img/favicon.png" rel="icon">
+  <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com" rel="preconnect">
+  <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400;1,700;1,900&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Raleway:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+
+  <!-- Vendor CSS Files -->
+  <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="assets/vendor/aos/aos.css" rel="stylesheet">
+  <link href="assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
+  <link href="assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
+
+  <!-- Main CSS File -->
+  <link href="assets/css/main.css" rel="stylesheet">
+
+  <!-- Custom Navigation Styles -->
+  <style>
+    @keyframes dropIn {
+      0% {
+        opacity: 0;
+        transform: translate(-50%, -80%);
+      }
+      100% {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+      }
+    }
+
+    .drop-in-text {
+      animation: dropIn 2.5s ease-out;
+    }
+
+    /* Fade in animation */
+    @keyframes fadeIn {
+      0% {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .fade-in {
+      opacity: 0;
+      animation: fadeIn 1.5s ease-out forwards;
+    }
+
+    .fade-in-delay-1 {
+      animation-delay: 0.3s;
+    }
+
+    .fade-in-delay-2 {
+      animation-delay: 0.6s;
+    }
+
+    /* Smooth scrolling for anchor links */
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background-color: #FEFAE0 !important;
+    }
+
+    .main {
+      background-color: #FEFAE0 !important;
+      padding-top: 0;
+    }
+
+    section:not(.footer-section) {
+      background-color: #FEFAE0 !important;
+    }
+
+    /* Header navigation font styles */
+    .navmenu a,
+    .navmenu a:focus {
+      font-family: 'Libre Baskerville', serif !important;
+      color: #253341 !important;
+    }
+
+    /* Dropdown menu styles */
+    .navmenu .dropdown ul {
+      background: #FEFAE0 !important;
+    }
+
+    .navmenu .dropdown ul a,
+    .navmenu .dropdown ul a:link,
+    .navmenu .dropdown ul a:visited {
+      font-family: 'Libre Baskerville', serif !important;
+      color: #253341 !important;
+      background-color: transparent !important;
+    }
+
+    /* Dropdown hover states */
+    .navmenu .dropdown ul li:hover,
+    .navmenu .dropdown ul li a:hover {
+      background-color: rgba(196, 164, 132, 0.5) !important;
+    }
+
+    .navmenu .dropdown ul a:hover,
+    .navmenu .dropdown ul .active:hover,
+    .navmenu .dropdown ul li:hover>a {
+      font-family: 'Libre Baskerville', serif !important;
+      color: #253341 !important;
+      background-color: transparent !important;
+      opacity: 1 !important;
+    }
+
+    /* Active and hover states for non-dropdown items */
+    .navmenu li:hover>a,
+    .navmenu .active,
+    .navmenu .active:focus {
+      font-family: 'Libre Baskerville', serif !important;
+      color: #253341 !important;
+      background-color: rgba(196, 164, 132, 0.2) !important;
+      opacity: 1 !important;
+    }
+
+    .header {
+      background-color: #FEFAE0;
+      opacity: 1;
+    }
+
+    /* Content styling */
+    .content-section {
+      padding: 60px 0.5in !important;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .content-section-v2 {
+      padding: 60px 0.5in !important;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .content-padding-update {
+      padding-left: 0.5in !important;
+      padding-right: 0.5in !important;
+    }
+
+    .content-text {
+      font-family: 'Poppins', sans-serif;
+      font-size: 18px;
+      line-height: 1.8;
+      color: #253341;
+      text-align: center;
+      font-style: italic;
+      margin-bottom: 40px;
+      padding: 0;
+    }
+
+    .content-image {
+      width: 100%;
+      max-width: 900px;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+      border-radius: 10px;
+      box-shadow: 0 5px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Footer styles */
+    .footer-link:hover {
+      text-decoration: underline !important;
+    }
+
+    /* Scroll to top button color */
+    #scroll-top {
+      background-color: #91203C !important;
+    }
+
+    /* Hover effect for Learn More buttons */
+    .org-card a:hover {
+      background-color: #7a1b33 !important;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+
+    /* Responsive Styles */
+    @media (max-width: 1200px) {
+      /* Logo padding for medium to large screens */
+      .logo {
+        transform: translateX(0) !important;
+        padding-left: 15px;
+      }
+    }
+
+    @media (max-width: 991px) {
+      /* Logo padding maintained */
+      .logo {
+        transform: translateX(0) !important;
+        padding-left: 15px;
+      }
+
+      /* Tablet adjustments */
+      .org-section h2 {
+        font-size: 32px !important;
+      }
+
+      .org-section h3 {
+        font-size: 22px !important;
+      }
+
+      /* Footer starts to compress at medium screens */
+      section[style*="background-color: #253341"] {
+        flex-direction: column !important;
+        padding: 30px 20px !important;
+        text-align: center !important;
+        gap: 20px !important;
+      }
+
+      section[style*="background-color: #253341"] > div:first-child {
+        margin-bottom: 15px !important;
+        font-size: 14px !important;
+      }
+
+      section[style*="background-color: #253341"] > div:nth-child(2) {
+        position: relative !important;
+        left: 0 !important;
+        transform: none !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 10px !important;
+        margin-bottom: 15px !important;
+      }
+
+      section[style*="background-color: #253341"] a.footer-link {
+        padding: 5px 15px !important;
+        font-size: 14px !important;
+      }
+    }
+
+    @media (max-width: 768px) {
+      /* Logo padding fix */
+      .logo {
+        transform: translateX(0) !important;
+        padding-left: 15px;
+      }
+
+      /* Hero text responsive */
+      .hero-title {
+        font-size: 40px !important;
+        padding: 0 20px;
+        white-space: normal !important;
+        line-height: 1.2;
+      }
+
+      /* Content section responsive */
+      .content-section-v2 {
+        padding: 40px 20px !important;
+      }
+
+      .content-text {
+        font-size: 15px !important;
+        line-height: 1.6 !important;
+      }
+
+      /* Organization sections responsive */
+      .org-section {
+        padding: 40px 0 !important;
+      }
+
+      .org-section .container {
+        padding: 0 20px;
+      }
+
+      .org-section h2 {
+        font-size: 28px !important;
+        margin-bottom: 20px !important;
+      }
+
+      .org-section h3 {
+        font-size: 20px !important;
+        margin-top: 20px !important;
+      }
+
+      .org-section p {
+        font-size: 14px !important;
+        line-height: 1.7 !important;
+      }
+
+      .org-section img {
+        margin-bottom: 25px;
+        max-height: 350px !important;
+      }
+
+      /* Stack columns on mobile */
+      .org-section .row {
+        margin: 0;
+      }
+
+      .org-section .col-lg-6 {
+        padding: 0 !important;
+      }
+
+      /* Adjust padding for mobile */
+      .org-section .ps-lg-5,
+      .org-section .pe-lg-5 {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+      }
+
+      /* Quote styles on mobile */
+      .org-section div[style*="border-left: 4px solid"] {
+        margin-top: 20px !important;
+        padding-left: 15px !important;
+      }
+
+      .org-section div[style*="border-left: 4px solid"] p {
+        font-size: 13px !important;
+      }
+
+      /* Footer responsive with better selectors */
+      section[style*="background-color: #253341"] {
+        flex-direction: column !important;
+        padding: 30px 15px !important;
+        text-align: center !important;
+        gap: 20px !important;
+      }
+
+      section[style*="background-color: #253341"] > div:first-child {
+        margin-bottom: 15px !important;
+        font-size: 13px !important;
+      }
+
+      section[style*="background-color: #253341"] > div:nth-child(2) {
+        position: relative !important;
+        left: 0 !important;
+        transform: none !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 10px !important;
+        margin-bottom: 15px !important;
+      }
+
+      section[style*="background-color: #253341"] a.footer-link {
+        padding: 5px 10px !important;
+        font-size: 13px !important;
+      }
+
+      section[style*="background-color: #253341"] span[style*="border-left"] {
+        display: none !important;
+      }
+    }
+
+    @media (max-width: 480px) {
+      /* Extra small devices */
+      .hero-title {
+        font-size: 32px !important;
+        padding: 0 15px;
+      }
+
+      /* Content section on small screens */
+      .content-section-v2 {
+        padding: 30px 15px !important;
+      }
+
+      .content-text {
+        font-size: 14px !important;
+        text-align: left !important;
+      }
+
+      /* Organization sections on small screens */
+      .org-section {
+        padding: 30px 0 !important;
+      }
+
+      .org-section .container {
+        padding: 0 15px;
+      }
+
+      .org-section h2 {
+        font-size: 24px !important;
+        margin-bottom: 15px !important;
+      }
+
+      .org-section h3 {
+        font-size: 18px !important;
+        margin-top: 15px !important;
+        margin-bottom: 10px !important;
+      }
+
+      .org-section p {
+        font-size: 13px !important;
+        line-height: 1.6 !important;
+        margin-bottom: 15px !important;
+      }
+
+      .org-section img {
+        max-height: 250px !important;
+        margin-bottom: 20px;
+        border-radius: 5px !important;
+      }
+
+      /* Adjust quote on very small screens */
+      .org-section div[style*="border-left: 4px solid"] {
+        border-left-width: 3px !important;
+        padding-left: 12px !important;
+        margin-top: 15px !important;
+      }
+
+      .org-section div[style*="border-left: 4px solid"] p {
+        font-size: 12px !important;
+        line-height: 1.5 !important;
+      }
+
+      .content-image {
+        border-radius: 5px;
+      }
+
+      /* Footer smaller text on small devices */
+      section[style*="background-color: #253341"] {
+        padding: 20px 10px !important;
+      }
+
+      section[style*="background-color: #253341"] > div:first-child {
+        font-size: 11px !important;
+      }
+
+      section[style*="background-color: #253341"] a.footer-link {
+        font-size: 11px !important;
+      }
+    }
+
+    @media (max-width: 375px) {
+      /* iPhone SE and smaller */
+      .hero-title {
+        font-size: 28px !important;
+      }
+
+      .org-section h2 {
+        font-size: 22px !important;
+      }
+
+      .org-section h3 {
+        font-size: 17px !important;
+      }
+
+      .org-section p {
+        font-size: 12px !important;
+      }
+    }
+  </style>
+
+</head>
+
+<body class="index-page">
+
+    <header id="header" class="header d-flex align-items-center fixed-top">
+        <div class="container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
+
+          <a href="index.html" class="logo d-flex align-items-center" style="transform: translateX(-10px);">
+            <img src="assets/img/sbb logo, blue .png" alt="St. Basil's Syrian Orthodox Church" class="logo-img" style="height: 75px; max-height: 75px;">
+          </a>
+
+                    <nav id="navmenu" class="navmenu">
+            <ul>
+              <li><a href="index.html">Home</a></li>
+              <li class="dropdown"><a href="about.html" class="active"><span>About</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
+                <ul>
+                  <li><a href="about.html">Our History</a></li>
+                  <li><a href="spiritual-leader.html">Our Spiritual Fathers</a></li>
+                  <li><a href="our-clergy.html">Our Clergy</a></li>
+                  <li><a href="office-bearers.html">Our Office Bearers</a></li>
+                  <li><a href="acolytes-choir.html">Our Acolytes &amp; Choir</a></li>
+                  <li><a href="our-organizations.html" class="active">Our Organizations</a></li>
+                </ul>
+              </li>
+              <li class="dropdown"><a href="first-time.html"><span>Resources</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
+                <ul>
+                  <li><a href="events-calendar.html">Events Calendar</a></li>
+                  <li><a href="useful-links.html">Useful Links</a></li>
+                  <li><a href="first-time.html">First Time Visiting?</a></li>
+                </ul>
+              </li>
+              <li><a href="giving.html">Giving</a></li>
+              <li><a href="contact-us.html">Contact Us</a></li>
+            </ul>
+
+            <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
+          </nav>
+
+        </div>
+      </header>
+
+  <!-- Top Header Image Section with Parallax -->
+  <div style="height: calc(100vh - 75px); width: 100%; position: relative; top: 75px; overflow: hidden;">
+    <!-- Fixed background image with dimming filter -->
+    <div style="position: fixed; top: 75px; left: 0; width: 100%; height: calc(100vh - 75px); background-image: url('assets/img/Our History/group photo..jpg'); background-size: cover; background-position: center; background-repeat: no-repeat; z-index: -1;"></div>
+    <!-- Fixed dimming overlay -->
+    <div style="position: fixed; top: 75px; left: 0; width: 100%; height: calc(100vh - 75px); background-color: rgba(0, 0, 0, 0.5); z-index: -1;"></div>
+    <!-- Title Text centered in viewport -->
+    <h1 class="drop-in-text hero-title" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-family: 'Poppins', sans-serif; font-weight: bold; font-size: 80px; color: #FAEDCD; text-transform: uppercase; margin: 0; padding: 0; text-align: center; z-index: 1; white-space: nowrap;">Our Organizations</h1>
+  </div>
+
+  <main class="main">
+    <!-- Content Section -->
+    <section class="content-section-v2" style="padding-top: 60px !important; padding-bottom: 0.35in !important; padding-left: 1in !important; padding-right: 1in !important; max-width: none; margin: 0;">
+      <p class="content-text fade-in fade-in-delay-1" style="padding-left: 0 !important; padding-right: 0 !important; margin-left: 0 !important; margin-right: 0 !important; max-width: none;">
+        Our ministries provide opportunities for spiritual growth, fellowship, and service across all ages and stages of life. From nurturing children in Orthodox faith through Sunday School to supporting adults in their spiritual journey, these organizations strengthen our church family and deepen our connection to Christ and one another.
+      </p>
+    </section>
+
+    <!-- Sunday School Section -->
+    <section class="org-section" style="padding: 0.35in 0 0.5in 0; background-color: #FEFAE0;">
+      <div class="container">
+        <div class="row align-items-center">
+          <div class="col-lg-6 mb-4 mb-lg-0" data-aos="fade-right">
+            <img src="assets/img/Our Orgs/kids.JPG" alt="Sunday School" class="img-fluid rounded" style="box-shadow: 0 10px 30px rgba(0,0,0,0.1); max-height: 500px; width: 100%; object-fit: cover;">
+          </div>
+          <div class="col-lg-6 ps-lg-5" data-aos="fade-left">
+            <h2 style="font-family: 'Libre Baskerville', serif; font-size: 36px; color: #253341; margin-bottom: 25px; font-weight: 700;">Sunday School</h2>
+            <p style="font-family: 'Poppins', sans-serif; font-size: 16px; line-height: 1.8; color: #253341; margin-bottom: 20px;">
+              Our Sunday School program is dedicated to raising our children in the faith of our Lord Jesus Christ, passing on Orthodox traditions and building strong spiritual foundations. Students learn through Bible teachings and materials from the Malankara Syrian Orthodox Sunday School Association, participating in Divine Liturgy before attending 30-45 minute classes after the divine liturgy.
+            </p>
+            <h3 style="font-family: 'Libre Baskerville', serif; font-size: 24px; color: #91203C; margin-bottom: 15px; margin-top: 30px;">Our Mission</h3>
+            <p style="font-family: 'Poppins', sans-serif; font-size: 16px; line-height: 1.8; color: #253341;">
+              To develop biblical understanding, help children recognize God's plan for their lives, lead them to personal commitment to Jesus, and teach them to worship through prayer and song. We provide a structured learning environment where children can experience God's love while staying connected to their Orthodox heritage and Christian values.
+            </p>
+            <p style="font-family: 'Poppins', sans-serif; font-size: 16px; line-height: 1.8; color: #253341; margin-top: 20px;">
+              For more information and access to Sunday School resources, you can find them on our Archdiocesan website <a href="https://malankara.com/sundayschool.html" style="color: #91203C; text-decoration: underline;">here</a>.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Youth Section -->
+    <section class="org-section" style="padding: 0.5in 0; background-color: #F5F0E6;">
+      <div class="container">
+        <div class="row align-items-center">
+          <div class="col-lg-6 order-lg-2 mb-4 mb-lg-0" data-aos="fade-left">
+            <img src="assets/img/Our Orgs/youth.jpg" alt="Youth Ministry" class="img-fluid rounded" style="box-shadow: 0 10px 30px rgba(0,0,0,0.1); max-height: 500px; width: 100%; object-fit: cover;">
+          </div>
+          <div class="col-lg-6 order-lg-1 pe-lg-5" data-aos="fade-right">
+            <h2 style="font-family: 'Libre Baskerville', serif; font-size: 36px; color: #253341; margin-bottom: 25px; font-weight: 700;">Youth Ministry</h2>
+            <p style="font-family: 'Poppins', sans-serif; font-size: 16px; line-height: 1.8; color: #253341; margin-bottom: 20px;">
+              Our Youth Ministry nurtures the spiritual growth of teenagers and young adults, providing a supportive environment to deepen faith, build friendships, and develop leadership skills while staying connected to Orthodox heritage. Through worship, fellowship, service, and spiritual formation activities, we help youth navigate modern challenges while remaining grounded in faith.
+            </p>
+            <h3 style="font-family: 'Libre Baskerville', serif; font-size: 24px; color: #91203C; margin-bottom: 15px; margin-top: 30px;">Our Mission</h3>
+            <p style="font-family: 'Poppins', sans-serif; font-size: 16px; line-height: 1.8; color: #253341; margin-bottom: 25px;">
+              To foster strong Orthodox Christian identity, provide opportunities for spiritual growth through prayer and study, build a supportive community of young believers, encourage service to church and community, and develop future church leaders.
+            </p>
+            <div style="border-left: 4px solid #91203C; padding-left: 20px; margin-top: 25px;">
+              <p style="font-family: 'Poppins', sans-serif; font-size: 15px; font-style: italic; line-height: 1.8; color: #253341;">
+                "Let no one despise your youth, but be an example to the believers in word, in conduct, in love, in spirit, in faith, in purity." - 1 Timothy 4:12
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- St. Paul's Men's Fellowship Section -->
+    <section class="org-section" style="padding: 0.5in 0; background-color: #FEFAE0;">
+      <div class="container">
+        <div class="row align-items-center">
+          <div class="col-lg-6 mb-4 mb-lg-0" data-aos="fade-right">
+            <img src="assets/img/Our Orgs/men.JPG" alt="St. Paul's Men's Fellowship" class="img-fluid rounded" style="box-shadow: 0 10px 30px rgba(0,0,0,0.1); max-height: 500px; width: 100%; object-fit: cover;">
+          </div>
+          <div class="col-lg-6 ps-lg-5" data-aos="fade-left">
+            <h2 style="font-family: 'Libre Baskerville', serif; font-size: 36px; color: #253341; margin-bottom: 25px; font-weight: 700;">St. Paul's Men's Fellowship</h2>
+            <p style="font-family: 'Poppins', sans-serif; font-size: 16px; line-height: 1.8; color: #253341; margin-bottom: 20px;">
+              St. Paul's Men's Fellowship, established in 2002 under our Archdiocese, provides spiritual nurturing and growth opportunities for men in our church community. Recognizing that men also deserve dedicated spiritual development, this fellowship works alongside St. Mary's Women's League to strengthen family life, study the Gospel, and support those in need of social and spiritual care.
+            </p>
+            <p style="font-family: 'Poppins', sans-serif; font-size: 16px; line-height: 1.8; color: #253341;">
+              The Fellowship organizes joint activities focused on family life, raising children in church tradition, spiritual growth, and serving others. Men meet regularly for prayer, study, and planning service projects that benefit both our church and the wider community.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- St. Mary's Women's League Section -->
+    <section class="org-section" style="padding: 0.5in 0; background-color: #F5F0E6;">
+      <div class="container">
+        <div class="row align-items-center">
+          <div class="col-lg-6 order-lg-2 mb-4 mb-lg-0" data-aos="fade-left">
+            <img src="assets/img/Our Orgs/women.JPG" alt="St. Mary's Women's League" class="img-fluid rounded" style="box-shadow: 0 10px 30px rgba(0,0,0,0.1); max-height: 500px; width: 100%; object-fit: cover;">
+          </div>
+          <div class="col-lg-6 order-lg-1 pe-lg-5" data-aos="fade-right">
+            <h2 style="font-family: 'Libre Baskerville', serif; font-size: 36px; color: #253341; margin-bottom: 25px; font-weight: 700;">St. Mary's Women's League</h2>
+            <p style="font-family: 'Poppins', sans-serif; font-size: 16px; line-height: 1.8; color: #253341; margin-bottom: 20px;">
+              Our women's ministry focuses on deepening spiritual lives through studying God's Word and applying biblical teachings to daily life. Members meet monthly after Divine Liturgy to read Scripture, sing devotional songs, and pray for those in need, complementing the overall spiritual life of our church.
+            </p>
+            <p style="font-family: 'Poppins', sans-serif; font-size: 16px; line-height: 1.8; color: #253341; margin-bottom: 25px;">
+              The Samajam organizes annual Lenten retreats, fundraising activities, and various service projects, with proceeds supporting those in need. Through fellowship, prayer, and service, our women strengthen both their personal faith and our church community.
+            </p>
+            <div style="border-left: 4px solid #91203C; padding-left: 20px; margin-top: 25px;">
+              <p style="font-family: 'Poppins', sans-serif; font-size: 15px; font-style: italic; line-height: 1.8; color: #253341;">
+                "Favor is deceitful, and beauty is vain: but the woman that feareth the Lord, shall be praised." - Proverbs 31:30
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer Section -->
+  <section class="footer-section" style="background-color: #253341 !important; min-height: 1.2in; width: 100%; display: flex; align-items: center; justify-content: space-between; position: relative; padding: 20px 1in; margin-top: 0; z-index: 100;">
+    <div style="font-family: 'Libre Baskerville', serif; color: #FEFAE0; font-size: 15px; display: flex; align-items: center;">
+      <span style="margin-right: 10px;">©</span>
+      <div>
+        <div>2025 St. Basil's Syriac</div>
+        <div>Orthodox Church, All Rights Reserved.</div>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; font-family: 'Libre Baskerville', serif; color: #FEFAE0; font-size: 15px; position: absolute; left: 50%; transform: translateX(-50%);">
+      <a href="privacy-policy.html" class="footer-link" style="color: #FEFAE0; text-decoration: none; padding: 0 20px; font-size: 15px;">Privacy Policy</a>
+      <span style="border-left: 1px solid #FEFAE0; height: 30px; margin: 0 10px;"></span>
+      <a href="terms-of-use.html" class="footer-link" style="color: #FEFAE0; text-decoration: none; padding: 0 20px; font-size: 15px;">Terms of Use</a>
+      <span style="border-left: 1px solid #FEFAE0; height: 30px; margin: 0 10px;"></span>
+      <a href="contact-us.html" class="footer-link" style="color: #FEFAE0; text-decoration: none; padding: 0 20px; font-size: 15px;">Contact Us</a>
+    </div>
+    <div style="display: flex; align-items: center;">
+      <a href="https://www.facebook.com/StBasilsBoston" target="_blank" style="color: #FEFAE0; font-size: 20px;"><i class="bi bi-facebook"></i></a>
+    </div>
+  </section>
+
+  <!-- Scroll Top -->
+  <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+
+  <!-- Preloader -->
+  <div id="preloader"></div>
+
+  <!-- Vendor JS Files -->
+  <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="assets/vendor/php-email-form/validate.js"></script>
+  <script src="assets/vendor/aos/aos.js"></script>
+  <script src="assets/vendor/purecounter/purecounter_vanilla.js"></script>
+  <script src="assets/vendor/glightbox/js/glightbox.min.js"></script>
+  <script src="assets/vendor/imagesloaded/imagesloaded.pkgd.min.js"></script>
+  <script src="assets/vendor/isotope-layout/isotope.pkgd.min.js"></script>
+  <script src="assets/vendor/swiper/swiper-bundle.min.js"></script>
+
+  <!-- Main JS File -->
+  <script src="assets/js/main.js"></script>
+
+</body>
+
+</html>

@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>St.Basil's Syrian Orthodox Church - Office Bearers</title>
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+
+  <!-- Favicons -->
+  <link href="assets/img/favicon.png" rel="icon">
+  <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com" rel="preconnect">
+  <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400;1,700;1,900&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Raleway:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+
+  <!-- Vendor CSS Files -->
+  <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="assets/vendor/aos/aos.css" rel="stylesheet">
+  <link href="assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
+  <link href="assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
+
+  <!-- Main CSS File -->
+  <link href="assets/css/main.css" rel="stylesheet">
+
+
+  <!-- Custom Navigation Styles -->
+  <style>
+    /* Page background */
+    body {
+      background-color: #FEFAE0 !important;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header navigation font styles */
+    .navmenu a,
+    .navmenu a:focus {
+      font-family: 'Libre Baskerville', serif !important;
+      color: #253341 !important;
+    }
+
+    /* Dropdown menu styles */
+    .navmenu .dropdown ul {
+      background: #FEFAE0 !important;
+    }
+
+    .navmenu .dropdown ul a,
+    .navmenu .dropdown ul a:link,
+    .navmenu .dropdown ul a:visited {
+      font-family: 'Libre Baskerville', serif !important;
+      color: #253341 !important;
+      background-color: transparent !important;
+    }
+
+    /* Dropdown hover states */
+    .navmenu .dropdown ul li:hover,
+    .navmenu .dropdown ul li a:hover {
+      background-color: rgba(196, 164, 132, 0.5) !important;
+    }
+
+    .navmenu .dropdown ul a:hover,
+    .navmenu .dropdown ul .active:hover,
+    .navmenu .dropdown ul li:hover>a {
+      font-family: 'Libre Baskerville', serif !important;
+      color: #253341 !important;
+      background-color: transparent !important;
+      opacity: 1 !important;
+    }
+
+    /* Active and hover states for non-dropdown items */
+    .navmenu li:hover>a,
+    .navmenu .active,
+    .navmenu .active:focus {
+      font-family: 'Libre Baskerville', serif !important;
+      color: #253341 !important;
+      background-color: rgba(196, 164, 132, 0.2) !important;
+      opacity: 1 !important;
+    }
+
+    .header {
+      background-color: #FEFAE0;
+      opacity: 1;
+    }
+
+    .main {
+      padding-top: 100px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Team section background */
+    #team {
+      background-color: #FEFAE0 !important;
+      flex: 1;
+      min-height: calc(100vh - 400px);
+    }
+
+    /* Drop-in fade-in animation */
+    @keyframes dropInFade {
+      0% {
+        opacity: 0;
+        transform: translateY(-30px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .drop-in-fade {
+      animation: dropInFade 1.5s ease-out forwards;
+    }
+
+    /* Officer Card Styles */
+    .officer-card {
+      background-color: #fff;
+      border-radius: 15px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      padding: 30px 20px;
+      text-align: center;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .officer-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+    }
+
+    .officer-photo-placeholder {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background-color: #C4A484;
+      margin: 0 auto 20px auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .executive-card .officer-photo-placeholder {
+      width: 150px;
+      height: 150px;
+    }
+
+    .officer-photo-placeholder i {
+      color: #FEFAE0;
+      font-size: 48px;
+    }
+
+    .executive-card .officer-photo-placeholder i {
+      font-size: 60px;
+    }
+
+    .officer-name {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 600;
+      color: #253341;
+      font-size: 18px;
+      margin-bottom: 8px;
+      line-height: 1.3;
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .executive-card .officer-name {
+      font-size: 22px;
+      min-height: 56px;
+    }
+
+    .officer-role {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 400;
+      color: #91203C;
+      font-size: 14px;
+      font-style: italic;
+    }
+
+    .executive-card .officer-role {
+      font-size: 16px;
+      font-weight: 500;
+    }
+
+    /* Grid optimization */
+    .officer-grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 1rem;
+    }
+
+    /* Introduction text styles */
+    .intro-text {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 400;
+      color: #253341;
+      font-size: 18px;
+      line-height: 1.8;
+      font-style: italic;
+      padding: 0 15px;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 1200px) {
+      /* Logo padding for medium to large screens */
+      .logo {
+        transform: translateX(0) !important;
+        padding-left: 15px;
+      }
+
+      .main-title {
+        font-size: 35px !important;
+      }
+
+      .intro-text {
+        font-size: 17px;
+      }
+    }
+
+    @media (max-width: 991px) {
+      /* Logo padding maintained */
+      .logo {
+        transform: translateX(0) !important;
+        padding-left: 15px;
+      }
+
+      .main-title {
+        font-size: 32px !important;
+      }
+
+      .intro-text {
+        font-size: 16px;
+      }
+
+      /* Adjust card spacing */
+      .officer-card {
+        padding: 25px 15px;
+      }
+
+      /* Footer starts to compress at medium screens */
+      section[style*="background-color: #253341"] {
+        flex-direction: column !important;
+        padding: 30px 20px !important;
+        text-align: center !important;
+        gap: 20px !important;
+      }
+
+      section[style*="background-color: #253341"] > div:first-child {
+        margin-bottom: 15px !important;
+        font-size: 14px !important;
+      }
+
+      section[style*="background-color: #253341"] > div:nth-child(2) {
+        position: relative !important;
+        left: 0 !important;
+        transform: none !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 10px !important;
+        margin-bottom: 15px !important;
+      }
+
+      section[style*="background-color: #253341"] a.footer-link {
+        padding: 5px 15px !important;
+        font-size: 14px !important;
+      }
+    }
+
+    @media (max-width: 768px) {
+      /* Logo padding maintained for mobile */
+      .logo {
+        transform: translateX(0) !important;
+        padding-left: 15px;
+      }
+
+      /* Header section adjustments */
+      .hero-section {
+        height: auto !important;
+        min-height: 120px;
+        padding: 30px 20px;
+      }
+
+      .main-title {
+        font-size: 26px !important;
+        padding: 0 15px;
+        line-height: 1.3;
+      }
+
+      .intro-text {
+        font-size: 15px;
+        padding: 0 10px;
+        line-height: 1.6;
+      }
+
+      /* Make all cards same size on tablet */
+      .officer-photo-placeholder,
+      .executive-card .officer-photo-placeholder {
+        width: 110px;
+        height: 110px;
+      }
+
+      .officer-name,
+      .executive-card .officer-name {
+        font-size: 17px;
+        min-height: 44px;
+      }
+
+      .officer-role,
+      .executive-card .officer-role {
+        font-size: 14px;
+      }
+
+      /* Card grid adjustments */
+      .officer-card {
+        padding: 20px 15px;
+      }
+
+      /* Section padding */
+      #team {
+        padding-top: 40px !important;
+        padding-bottom: 40px !important;
+      }
+
+      /* Footer responsive with better selectors */
+      section[style*="background-color: #253341"] {
+        flex-direction: column !important;
+        padding: 30px 15px !important;
+        text-align: center !important;
+        gap: 20px !important;
+      }
+
+      section[style*="background-color: #253341"] > div:first-child {
+        margin-bottom: 15px !important;
+        font-size: 13px !important;
+      }
+
+      section[style*="background-color: #253341"] > div:nth-child(2) {
+        position: relative !important;
+        left: 0 !important;
+        transform: none !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 10px !important;
+        margin-bottom: 15px !important;
+      }
+
+      section[style*="background-color: #253341"] a.footer-link {
+        padding: 5px 10px !important;
+        font-size: 13px !important;
+      }
+
+      section[style*="background-color: #253341"] span[style*="border-left"] {
+        display: none !important;
+      }
+    }
+
+    @media (max-width: 576px) {
+      .main-title {
+        font-size: 22px !important;
+      }
+
+      .intro-text {
+        font-size: 14px;
+        padding: 0 5px;
+      }
+
+      .officer-card {
+        margin-bottom: 15px;
+        padding: 20px 10px;
+      }
+
+      /* Photo sizes on mobile */
+      .officer-photo-placeholder,
+      .executive-card .officer-photo-placeholder {
+        width: 100px;
+        height: 100px;
+      }
+
+      .officer-name,
+      .executive-card .officer-name {
+        font-size: 16px;
+        min-height: 40px;
+      }
+
+      .officer-role,
+      .executive-card .officer-role {
+        font-size: 13px;
+      }
+
+      /* Ensure full width cards on mobile */
+      .col-lg-4,
+      .col-md-6 {
+        padding-left: 10px;
+        padding-right: 10px;
+      }
+
+      /* Section headings */
+      h2 {
+        font-size: 22px !important;
+      }
+    }
+
+    @media (max-width: 400px) {
+      .main-title {
+        font-size: 20px !important;
+      }
+
+      .intro-text {
+        font-size: 13px;
+      }
+
+      /* Smaller photos on very small devices */
+      .officer-photo-placeholder,
+      .executive-card .officer-photo-placeholder {
+        width: 90px;
+        height: 90px;
+      }
+
+      .officer-name,
+      .executive-card .officer-name {
+        font-size: 15px;
+      }
+
+      .officer-role,
+      .executive-card .officer-role {
+        font-size: 12px;
+      }
+
+      h2 {
+        font-size: 20px !important;
+      }
+
+      section[style*="background-color: #253341"] {
+        padding: 20px 10px !important;
+      }
+
+      section[style*="background-color: #253341"] > div:first-child {
+        font-size: 11px !important;
+      }
+
+      section[style*="background-color: #253341"] a.footer-link {
+        font-size: 11px !important;
+      }
+    }
+
+    @media (max-width: 480px) {
+      section[style*="background-color: #253341"] > div:first-child {
+        font-size: 10px !important;
+      }
+
+      section[style*="background-color: #253341"] a.footer-link {
+        font-size: 10px !important;
+      }
+    }
+
+    /* Touch device optimizations */
+    @media (hover: none) {
+      .officer-card:hover {
+        transform: none;
+      }
+    }
+
+    /* High resolution displays */
+    @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+      .officer-photo-placeholder img {
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
+      }
+    }
+
+    /* Scroll to top button color */
+    #scroll-top {
+      background-color: #91203C !important;
+    }
+  </style>
+
+  <!-- =======================================================
+  * Template Name: Squadfree
+  * Template URL: https://bootstrapmade.com/squadfree-free-bootstrap-template-creative/
+  * Updated: Aug 07 2024 with Bootstrap v5.3.3
+  * Author: BootstrapMade.com
+  * License: https://bootstrapmade.com/license/
+  ======================================================== -->
+</head>
+
+<body class="index-page">
+
+  <header id="header" class="header d-flex align-items-center fixed-top">
+    <div class="container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
+
+      <a href="index.html" class="logo d-flex align-items-center" style="transform: translateX(-10px);">
+        <img src="assets/img/sbb logo, blue .png" alt="St. Basil's Syrian Orthodox Church" class="logo-img" style="height: 75px; max-height: 75px;">
+      </a>
+
+                <nav id="navmenu" class="navmenu">
+            <ul>
+              <li><a href="index.html">Home</a></li>
+              <li class="dropdown"><a href="about.html" class="active"><span>About</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
+                <ul>
+                  <li><a href="about.html">Our History</a></li>
+                  <li><a href="spiritual-leader.html">Our Spiritual Fathers</a></li>
+                  <li><a href="our-clergy.html">Our Clergy</a></li>
+                  <li><a href="office-bearers.html" class="active">Our Office Bearers</a></li>
+                  <li><a href="acolytes-choir.html">Our Acolytes &amp; Choir</a></li>
+                  <li><a href="our-organizations.html">Our Organizations</a></li>
+                </ul>
+              </li>
+              <li class="dropdown"><a href="first-time.html"><span>Resources</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
+                <ul>
+                  <li><a href="events-calendar.html">Events Calendar</a></li>
+                  <li><a href="useful-links.html">Useful Links</a></li>
+                  <li><a href="first-time.html">First Time Visiting?</a></li>
+                </ul>
+              </li>
+              <li><a href="giving.html">Giving</a></li>
+              <li><a href="contact-us.html">Contact Us</a></li>
+            </ul>
+
+            <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
+          </nav>
+
+    </div>
+  </header>
+
+  <main class="main">
+    <!-- Maroon Section with Title -->
+    <section class="hero-section" style="background-color: #91203C; height: 2in; width: 100%; display: flex; align-items: center; justify-content: center;">
+      <h1 class="drop-in-fade main-title" style="font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 40px; color: #FEFAE0; text-transform: uppercase; margin: 0; text-align: center;">Meet our 2025 Office Bearers</h1>
+    </section>
+
+    <section id="team" class="team section" style="padding-top: 60px; padding-bottom: 60px;">
+
+      <div class="container">
+
+        <!-- Introduction Text -->
+        <div class="row mb-5" data-aos="fade-up">
+          <div class="col-lg-10 mx-auto text-center">
+            <p class="intro-text">
+              These faithful members of our congregation serve as elected stewards of St. Basil's, providing essential leadership and guidance that helps our church community thrive in faith and fellowship.
+            </p>
+          </div>
+        </div>
+
+        <!-- Executive Officers Section -->
+        <div class="row mb-5" data-aos="fade-up" data-aos-delay="100">
+          <div class="col-12 text-center mb-4">
+            <h2 style="font-family: 'Poppins', sans-serif; font-weight: 600; color: #253341; font-size: 28px; text-decoration: underline; text-decoration-color: #91203C;">Executive Officers</h2>
+          </div>
+          <div class="row justify-content-center">
+            <!-- Vice President Card -->
+            <div class="col-lg-4 col-md-6 mb-4">
+              <div class="officer-card executive-card">
+                <div class="officer-photo-placeholder" style="background: none; overflow: hidden;">
+                  <img src="assets/img/Office Bearers/mark.png" alt="Vice President" loading="lazy" style="width: 100%; height: 100%; object-fit: cover; object-position: center 25%;">
+                </div>
+                <h4 class="officer-name">Mr. Mark Alexander</h4>
+                <p class="officer-role">Vice President</p>
+              </div>
+            </div>
+            <!-- Secretary Card -->
+            <div class="col-lg-4 col-md-6 mb-4">
+              <div class="officer-card executive-card">
+                <div class="officer-photo-placeholder" style="background: none; overflow: hidden;">
+                  <img src="assets/img/Office Bearers/alex 2.png" alt="Secretary" loading="lazy" style="width: 100%; height: 100%; object-fit: cover;">
+                </div>
+                <h4 class="officer-name">Mr. Alex Thomas</h4>
+                <p class="officer-role">Secretary</p>
+              </div>
+            </div>
+            <!-- Treasurer Card -->
+            <div class="col-lg-4 col-md-6 mb-4">
+              <div class="officer-card executive-card">
+                <div class="officer-photo-placeholder" style="background: none; overflow: hidden;">
+                  <img src="assets/img/Office Bearers/joby.png" alt="Treasurer" loading="lazy" style="width: 100%; height: 100%; object-fit: cover; object-position: center 25%;">
+                </div>
+                <h4 class="officer-name">Dr. Joby Eldo</h4>
+                <p class="officer-role">Treasurer</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Board Members Section -->
+        <div class="row" data-aos="fade-up" data-aos-delay="200">
+          <div class="col-12 text-center mb-4">
+            <h2 style="font-family: 'Poppins', sans-serif; font-weight: 600; color: #253341; font-size: 28px; text-decoration: underline; text-decoration-color: #91203C;">Board Members</h2>
+          </div>
+          <div class="row justify-content-center">
+            <!-- Board Member 1 -->
+            <div class="col-lg-4 col-md-6 mb-4">
+              <div class="officer-card">
+                <div class="officer-photo-placeholder" style="background: none; overflow: hidden;">
+                  <img src="assets/img/Office Bearers/marykutty.png" alt="Board Member" loading="lazy" style="width: 100%; height: 100%; object-fit: cover;">
+                </div>
+                <h4 class="officer-name">Dr. Marykutty Thomas</h4>
+                <p class="officer-role">Board Member</p>
+              </div>
+            </div>
+            <!-- Board Member 2 -->
+            <div class="col-lg-4 col-md-6 mb-4">
+              <div class="officer-card">
+                <div class="officer-photo-placeholder" style="background: none; overflow: hidden;">
+                  <img src="assets/img/Office Bearers/jacob.png" alt="Board Member" loading="lazy" style="width: 100%; height: 100%; object-fit: cover;">
+                </div>
+                <h4 class="officer-name">Mr. Jacob Koshy</h4>
+                <p class="officer-role">Board Member</p>
+              </div>
+            </div>
+            <!-- Board Member 3 -->
+            <div class="col-lg-4 col-md-6 mb-4">
+              <div class="officer-card">
+                <div class="officer-photo-placeholder" style="background: none; overflow: hidden;">
+                  <img src="assets/img/Office Bearers/neethu.png" alt="Board Member" loading="lazy" style="width: 100%; height: 100%; object-fit: cover;">
+                </div>
+                <h4 class="officer-name">Miss Neethu John</h4>
+                <p class="officer-role">Board Member</p>
+              </div>
+            </div>
+            <!-- Board Member 4 -->
+            <div class="col-lg-4 col-md-6 mb-4">
+              <div class="officer-card">
+                <div class="officer-photo-placeholder" style="background: none; overflow: hidden;">
+                  <img src="assets/img/Office Bearers/geyo.png" alt="Board Member" loading="lazy" style="width: 100%; height: 100%; object-fit: cover;">
+                </div>
+                <h4 class="officer-name">Mr. Geyo Jacob</h4>
+                <p class="officer-role">Board Member</p>
+              </div>
+            </div>
+            <!-- Board Member 5 -->
+            <div class="col-lg-4 col-md-6 mb-4">
+              <div class="officer-card">
+                <div class="officer-photo-placeholder" style="background: none; overflow: hidden;">
+                  <img src="assets/img/Office Bearers/jewel.png" alt="Board Member" loading="lazy" style="width: 100%; height: 100%; object-fit: cover;">
+                </div>
+                <h4 class="officer-name">Mr. Jewel Mathew</h4>
+                <p class="officer-role">Board Member</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </section><!-- /Team Section -->
+  </main>
+
+  <!-- Spacer Section -->
+  <section style="background-color: #FEFAE0; height: 48px; width: 100%;"></section>
+
+  <!-- Scroll Top -->
+  <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+
+  <!-- Preloader -->
+  <div id="preloader"></div>
+
+  <!-- Vendor JS Files -->
+  <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="assets/vendor/php-email-form/validate.js"></script>
+  <script src="assets/vendor/aos/aos.js"></script>
+  <script src="assets/vendor/purecounter/purecounter_vanilla.js"></script>
+  <script src="assets/vendor/glightbox/js/glightbox.min.js"></script>
+  <script src="assets/vendor/imagesloaded/imagesloaded.pkgd.min.js"></script>
+  <script src="assets/vendor/isotope-layout/isotope.pkgd.min.js"></script>
+  <script src="assets/vendor/swiper/swiper-bundle.min.js"></script>
+
+  <!-- Main JS File -->
+  <script src="assets/js/main.js"></script>
+
+  <!-- Bottom Section -->
+  <style>
+    .footer-link:hover {
+      text-decoration: underline !important;
+    }
+  </style>
+  <section class="footer-section" style="background-color: #253341; min-height: 1.2in; width: 100%; display: flex; align-items: center; justify-content: space-between; position: relative; padding: 20px 1in;">
+    <div style="font-family: 'Libre Baskerville', serif; color: #FEFAE0; font-size: 15px; display: flex; align-items: center;">
+      <span style="margin-right: 10px;">©</span>
+      <div class="footer-copyright">
+        <div>2025 St. Basil's Syriac</div>
+        <div>Orthodox Church, All Rights Reserved.</div>
+      </div>
+    </div>
+    <div class="footer-links" style="display: flex; align-items: center; font-family: 'Libre Baskerville', serif; color: #FEFAE0; font-size: 15px; position: absolute; left: 50%; transform: translateX(-50%);">
+      <a href="privacy-policy.html" class="footer-link" style="color: #FEFAE0; text-decoration: none; padding: 0 20px; font-size: 15px;">Privacy Policy</a>
+      <span style="border-left: 1px solid #FEFAE0; height: 30px; margin: 0 10px;"></span>
+      <a href="terms-of-use.html" class="footer-link" style="color: #FEFAE0; text-decoration: none; padding: 0 20px; font-size: 15px;">Terms of Use</a>
+      <span style="border-left: 1px solid #FEFAE0; height: 30px; margin: 0 10px;"></span>
+      <a href="contact-us.html" class="footer-link" style="color: #FEFAE0; text-decoration: none; padding: 0 20px; font-size: 15px;">Contact Us</a>
+    </div>
+    <div style="display: flex; align-items: center;">
+      <a href="https://www.facebook.com/StBasilsBoston" target="_blank" style="color: #FEFAE0; font-size: 20px;"><i class="bi bi-facebook"></i></a>
+    </div>
+  </section>
+
+</body>
+
+</html>

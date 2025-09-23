@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>Giving - St.Basil's Syrian Orthodox Church</title>
+  <meta name="description" content="Support St. Basil's Syriac Orthodox Church in Boston, Massachusetts">
+  <meta name="keywords" content="Giving, Donation, Support, St Basils, Syrian Orthodox Church, Boston, Newton">
+  <meta name="robots" content="index,follow">
+  <meta name="author" content="George Nijo">
+
+  <!-- Favicons -->
+  <link href="assets/img/favicon.png" rel="icon">
+  <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com" rel="preconnect">
+  <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400;1,700;1,900&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Raleway:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+
+  <!-- Vendor CSS Files -->
+  <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="assets/vendor/aos/aos.css" rel="stylesheet">
+  <link href="assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
+  <link href="assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
+
+  <!-- Main CSS File -->
+  <link href="assets/css/main.css" rel="stylesheet">
+
+  <!-- Custom Navigation Styles -->
+  <style>
+    @keyframes dropIn {
+      0% {
+        opacity: 0;
+        transform: translate(-50%, -80%);
+      }
+      100% {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+      }
+    }
+
+    .drop-in-text {
+      animation: dropIn 2.5s ease-out;
+    }
+
+    /* Smooth scrolling for anchor links */
+    html {
+      scroll-behavior: smooth;
+    }
+
+    /* Fade drop in animation for content */
+    @keyframes fadeDropIn {
+      0% {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Flip card styles */
+    .flip-card {
+      background-color: transparent;
+      width: 100%;
+      height: 250px;
+      perspective: 1000px;
+    }
+
+    .flip-card-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      text-align: center;
+      transition: transform 0.6s;
+      transform-style: preserve-3d;
+    }
+
+    .flip-card:hover .flip-card-inner {
+      transform: rotateY(180deg);
+    }
+
+    .flip-card-front, .flip-card-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
+      background-color: #FAEDCD;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .flip-card-back {
+      transform: rotateY(180deg);
+    }
+
+    body {
+      background-color: #FEFAE0 !important;
+    }
+
+    .main {
+      background-color: #FEFAE0 !important;
+    }
+
+    section:not(.footer-section) {
+      background-color: #FEFAE0 !important;
+    }
+
+    /* Header navigation font styles */
+    .navmenu a,
+    .navmenu a:focus {
+      font-family: 'Libre Baskerville', serif !important;
+      color: #253341 !important;
+    }
+
+    /* Dropdown menu styles */
+    .navmenu .dropdown ul {
+      background: #FEFAE0 !important;
+    }
+
+    .navmenu .dropdown ul a,
+    .navmenu .dropdown ul a:link,
+    .navmenu .dropdown ul a:visited {
+      font-family: 'Libre Baskerville', serif !important;
+      color: #253341 !important;
+      background-color: transparent !important;
+    }
+
+    /* Dropdown hover states */
+    .navmenu .dropdown ul li:hover,
+    .navmenu .dropdown ul li a:hover {
+      background-color: rgba(196, 164, 132, 0.5) !important;
+    }
+
+    .navmenu .dropdown ul a:hover,
+    .navmenu .dropdown ul .active:hover,
+    .navmenu .dropdown ul li:hover>a {
+      font-family: 'Libre Baskerville', serif !important;
+      color: #253341 !important;
+      background-color: transparent !important;
+      opacity: 1 !important;
+    }
+
+    /* Active and hover states for non-dropdown items */
+    .navmenu li:hover>a,
+    .navmenu .active,
+    .navmenu .active:focus {
+      font-family: 'Libre Baskerville', serif !important;
+      color: #253341 !important;
+      background-color: rgba(196, 164, 132, 0.2) !important;
+      opacity: 1 !important;
+    }
+
+    .header {
+      background-color: #FEFAE0; /* Light cream background color */
+      opacity: 1; /* Remove transparency */
+    }
+
+    .main {
+      padding-top: 0; /* Remove padding to show maroon section */
+    }
+
+    /* Scroll to top button color */
+    #scroll-top {
+      background-color: #91203C !important;
+    }
+
+    /* Mobile Responsive Styles */
+    @media (max-width: 768px) {
+      /* Fix logo padding on mobile */
+      .logo {
+        transform: translateX(0) !important;
+        padding-left: 15px;
+      }
+
+      /* Hero title responsive */
+      h1.drop-in-text {
+        font-size: 50px !important;
+      }
+
+      /* Our Heart for Service blue section fix */
+      div[style*="height: 3in"][style*="background-color: #253341"] {
+        height: auto !important;
+        min-height: auto !important;
+        padding: 40px 20px !important;
+      }
+
+      div[style*="height: 3in"][style*="background-color: #253341"] h2 {
+        font-size: 28px !important;
+        margin-bottom: 20px !important;
+      }
+
+      div[style*="height: 3in"][style*="background-color: #253341"] p {
+        font-size: 15px !important;
+        padding: 0 10px !important;
+      }
+
+      /* Grid layout for charity cards on mobile */
+      div[style*="grid-template-columns: repeat(3, 1fr)"] {
+        grid-template-columns: 1fr !important;
+        gap: 20px !important;
+        padding: 20px !important;
+        overflow: visible !important;
+        min-height: auto !important;
+      }
+
+      /* Ensure the cream container shows all cards */
+      div[style*="background-color: #FEFAE0"] {
+        overflow: visible !important;
+        height: auto !important;
+        min-height: auto !important;
+        padding-bottom: 30px !important;
+      }
+
+      /* Flip cards responsive */
+      .flip-card {
+        height: 200px !important;
+        margin-bottom: 20px;
+      }
+
+      .flip-card h3 {
+        font-size: 18px !important;
+      }
+
+      .flip-card p {
+        font-size: 14px !important;
+      }
+
+      /* Footer responsive styles */
+      .footer-section {
+        flex-direction: column !important;
+        padding: 30px 15px !important;
+        text-align: center;
+        gap: 20px;
+      }
+
+      .footer-section > div:first-child {
+        margin-bottom: 15px;
+        font-size: 13px !important;
+      }
+
+      /* Footer links section */
+      .footer-section > div:nth-child(2) {
+        position: relative !important;
+        left: 0 !important;
+        transform: none !important;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 15px;
+      }
+
+      .footer-section a.footer-link {
+        padding: 5px 10px !important;
+        font-size: 13px !important;
+      }
+
+      /* Hide divider lines on mobile */
+      .footer-section span[style*="border-left"] {
+        display: none !important;
+      }
+
+      /* Ways to Give section responsive */
+      div[style*="padding: 60px 1in"] h2 {
+        font-size: 32px !important;
+      }
+
+      div[style*="padding: 60px 1in"] {
+        padding: 40px 20px !important;
+      }
+    }
+
+    @media (max-width: 576px) {
+      /* Extra small devices */
+      /* Hero title smaller */
+      h1.drop-in-text {
+        font-size: 36px !important;
+        padding: 0 15px;
+      }
+
+      .footer-section {
+        padding: 20px 10px !important;
+      }
+
+      .footer-section > div:first-child {
+        font-size: 11px !important;
+      }
+
+      .footer-section a.footer-link {
+        font-size: 11px !important;
+      }
+
+      /* Our Heart for Service section smaller text */
+      div[style*="height: 3in"][style*="background-color: #253341"] h2 {
+        font-size: 24px !important;
+      }
+
+      div[style*="height: 3in"][style*="background-color: #253341"] p {
+        font-size: 13px !important;
+      }
+
+      /* Flip cards smaller */
+      .flip-card {
+        height: 180px !important;
+      }
+
+      .flip-card h3 {
+        font-size: 16px !important;
+      }
+
+      .flip-card p {
+        font-size: 12px !important;
+      }
+
+      .flip-card i {
+        font-size: 30px !important;
+      }
+    }
+
+    @media (max-width: 400px) {
+      /* Very small devices */
+      h1.drop-in-text {
+        font-size: 28px !important;
+        white-space: normal !important;
+        line-height: 1.2 !important;
+      }
+
+      .footer-section > div:first-child {
+        font-size: 10px !important;
+      }
+
+      .footer-section a.footer-link {
+        font-size: 10px !important;
+      }
+
+      div[style*="height: 3in"][style*="background-color: #253341"] h2 {
+        font-size: 20px !important;
+      }
+
+      div[style*="height: 3in"][style*="background-color: #253341"] p {
+        font-size: 12px !important;
+      }
+    }
+  </style>
+
+</head>
+
+<body class="index-page">
+
+    <header id="header" class="header d-flex align-items-center fixed-top">
+        <div class="container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
+
+          <a href="index.html" class="logo d-flex align-items-center" style="transform: translateX(-10px);">
+            <img src="assets/img/sbb logo, blue .png" alt="St. Basil's Syrian Orthodox Church" class="logo-img" style="height: 75px; max-height: 75px;">
+          </a>
+
+                    <nav id="navmenu" class="navmenu">
+            <ul>
+              <li><a href="index.html">Home</a></li>
+              <li class="dropdown"><a href="about.html"><span>About</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
+                <ul>
+                  <li><a href="about.html">Our History</a></li>
+                  <li><a href="spiritual-leader.html">Our Spiritual Fathers</a></li>
+                  <li><a href="our-clergy.html">Our Clergy</a></li>
+                  <li><a href="office-bearers.html">Our Office Bearers</a></li>
+                  <li><a href="acolytes-choir.html">Our Acolytes &amp; Choir</a></li>
+                  <li><a href="our-organizations.html">Our Organizations</a></li>
+                </ul>
+              </li>
+              <li class="dropdown"><a href="first-time.html"><span>Resources</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
+                <ul>
+                  <li><a href="events-calendar.html">Events Calendar</a></li>
+                  <li><a href="useful-links.html">Useful Links</a></li>
+                  <li><a href="first-time.html">First Time Visiting?</a></li>
+                </ul>
+              </li>
+              <li><a href="giving.html" class="active">Giving</a></li>
+              <li><a href="contact-us.html">Contact Us</a></li>
+            </ul>
+
+            <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
+          </nav>
+
+        </div>
+      </header>
+
+  <!-- Top Header Image Section with Parallax -->
+  <div style="height: auto; width: 100%; position: relative; top: 75px; overflow: hidden;">
+    <!-- Fixed background image -->
+    <div style="position: fixed; top: 75px; left: 0; width: 100%; height: calc(100vh - 75px); background-image: url('assets/img/Giving/giving hero.png'); background-size: cover; background-position: center; background-repeat: no-repeat; z-index: -1;"></div>
+    <!-- Invisible image for maintaining height -->
+    <img src="assets/img/Giving/giving hero.png" style="width: 100%; height: auto; opacity: 0; display: block; position: relative;">
+    <!-- Dimming filter overlay that scrolls with content -->
+    <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5);"></div>
+    <!-- Giving Text that scrolls normally -->
+    <h1 class="drop-in-text" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-family: 'Poppins', sans-serif; font-weight: bold; font-size: 80px; color: #FAEDCD; text-transform: uppercase; margin: 0; padding: 0; text-align: center; z-index: 1;">GIVING</h1>
+  </div>
+
+  <main class="main" style="padding-top: 0;">
+    <!-- Single Unified Section with Giving Text -->
+    <section style="background-color: #FAEDCD; display: flex; align-items: center; justify-content: center; position: relative; padding: 60px 40px; margin: 0;">
+      <div style="max-width: 1200px; width: 100%; text-align: center; animation: fadeDropIn 1.5s ease-out;">
+        <p style="font-family: 'Poppins', sans-serif; font-size: 20px; color: #91203C; text-align: center; margin-bottom: 20px; line-height: 1.5;">
+          Giving is an act of worship and a reflection of God's abundant love for us. As we have been blessed, we are called to bless others through our faithful stewardship. Your generous offerings support our church's ministry, help us care for our community, and enable us to share Christ's love through charitable works.
+        </p>
+        <p style="font-family: 'Poppins', sans-serif; font-size: 20px; font-weight: bold; font-style: italic; color: #91203C; text-align: center; margin-bottom: 20px; line-height: 1.5;">
+          For your convenience, offerings may be sent to our Zelle account: stbasilsboston.trsr@gmail.com.
+        </p>
+        <p style="font-family: 'Poppins', sans-serif; font-size: 20px; color: #91203C; text-align: center; margin: 0; line-height: 1.5;">
+          For questions about giving or other ways to support our ministry, please reach out through our <a href="contact-us.html" style="color: #91203C; text-decoration: underline;">Contact Us</a> page
+        </p>
+      </div>
+    </section>
+
+    <!-- Blue section -->
+    <div style="width: 100%; height: 3in; background-color: #253341; padding: 1in 2in; display: flex; flex-direction: column; justify-content: center;">
+      <!-- Section Title -->
+      <h2 style="font-size: 45px; color: #FAEDCD; text-transform: uppercase; text-align: center; margin-bottom: 30px; letter-spacing: 1px; animation: fadeDropIn 1.5s ease-out;">
+        <span style="font-family: 'Poppins', sans-serif; font-weight: bold;">OUR HEART FOR SERVICE</span>
+      </h2>
+      <!-- Description Text -->
+      <p style="font-family: 'Poppins', sans-serif; font-weight: 300; font-size: 17px; color: #FAEDCD; text-align: center; letter-spacing: 1px; line-height: 1.4; margin: 0 auto; padding: 0 1in; max-width: 100%; animation: fadeDropIn 1.8s ease-out;">
+        Following Christ's call to serve "the least of these," St. Basil's has been blessed to support various charitable causes and organizations over the years. Through the faithful generosity of our church family, we have been able to extend God's love beyond our parish walls, caring for those in need both locally and globally. <span style="font-weight: bold;">The examples below represent some of the ministries and causes we have had the privilege to support—contact us to learn more about our ongoing outreach efforts.</span>
+      </p>
+    </div>
+
+    <!-- New cream section for charities -->
+    <div style="width: 100%; background-color: #FEFAE0; padding: 3px 3px 0.5in 3px;">
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; width: 100%; margin: 0; animation: fadeDropIn 2s ease-out;">
+
+        <!-- Card 1 -->
+        <div class="flip-card">
+          <div class="flip-card-inner">
+            <div class="flip-card-front">
+              <i class="bi bi-house-door-fill" style="font-size: 40px; color: #91203C; margin-bottom: 15px;"></i>
+              <h3 style="font-family: 'Poppins', sans-serif; font-weight: bold; font-size: 22px; color: #253341; margin: 10px 0;">Housing Ministry in India</h3>
+            </div>
+            <div class="flip-card-back">
+              <p style="font-family: 'Poppins', sans-serif; font-size: 14px; color: #253341; line-height: 1.6;">
+                Through God's provision and the generosity of our congregation, we have been blessed to contribute toward building homes for families in need throughout India. These modest dwellings provide shelter, dignity, and a foundation for families to build their lives upon, reflecting Christ's love through practical care.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="flip-card">
+          <div class="flip-card-inner">
+            <div class="flip-card-front">
+              <i class="bi bi-person-heart" style="font-size: 40px; color: #91203C; margin-bottom: 15px;"></i>
+              <h3 style="font-family: 'Poppins', sans-serif; font-weight: bold; font-size: 20px; color: #253341; margin: 10px 0;">Caring for Our Community</h3>
+            </div>
+            <div class="flip-card-back">
+              <p style="font-family: 'Poppins', sans-serif; font-size: 13px; color: #253341; line-height: 1.5;">
+                Our church family believes in supporting one another through life's most difficult moments. When someone who had been instrumental in our church's early development faced serious health challenges and later passed away, we felt moved by Christian love to provide assistance with medical and memorial expenses. This act of care reflects our understanding that we are called to bear one another's burdens and show compassion to those who have blessed our lives through their kindness.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="flip-card">
+          <div class="flip-card-inner">
+            <div class="flip-card-front">
+              <i class="bi bi-person-badge-fill" style="font-size: 40px; color: #91203C; margin-bottom: 15px;"></i>
+              <h3 style="font-family: 'Poppins', sans-serif; font-weight: bold; font-size: 22px; color: #253341; margin: 10px 0;">Clergy Housing Support</h3>
+            </div>
+            <div class="flip-card-back">
+              <p style="font-family: 'Poppins', sans-serif; font-size: 14px; color: #253341; line-height: 1.6;">
+                Learning of a newly ordained deacon in India facing difficult living conditions, our congregation felt moved to help provide him with a proper home. More than just shelter, this space enables him to prepare spiritually for the Divine Liturgy and serve his community with dignity, ensuring God's servants have the support they need to minister effectively.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 4 -->
+        <div class="flip-card">
+          <div class="flip-card-inner">
+            <div class="flip-card-front">
+              <i class="bi bi-heart-pulse-fill" style="font-size: 40px; color: #91203C; margin-bottom: 15px;"></i>
+              <h3 style="font-family: 'Poppins', sans-serif; font-weight: bold; font-size: 22px; color: #253341; margin: 10px 0;">Medical Emergency Relief</h3>
+            </div>
+            <div class="flip-card-back">
+              <p style="font-family: 'Poppins', sans-serif; font-size: 14px; color: #253341; line-height: 1.6;">
+                Over the years, we have received heartfelt requests from individuals and families in India facing serious medical challenges—kidney transplants, cancer treatments, and other urgent procedures. Through our congregation's compassionate giving, we have been able to provide financial assistance for life-saving treatments, standing with our brothers and sisters in their moments of greatest need.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 5 -->
+        <div class="flip-card">
+          <div class="flip-card-inner">
+            <div class="flip-card-front">
+              <i class="bi bi-balloon-heart-fill" style="font-size: 40px; color: #91203C; margin-bottom: 15px;"></i>
+              <h3 style="font-family: 'Poppins', sans-serif; font-weight: bold; font-size: 20px; color: #253341; margin: 10px 0;">Partnership with Solace Charity</h3>
+            </div>
+            <div class="flip-card-back">
+              <p style="font-family: 'Poppins', sans-serif; font-size: 14px; color: #253341; line-height: 1.6;">
+                We are honored to support Solace Charity, an organization dedicated to caring for severely ill and underprivileged children in Kerala, India. Solace provides comprehensive support—from funding critical medical procedures to offering emotional support groups for families. Our partnership allows us to extend Christ's healing love to children and families facing unimaginable challenges.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 6 -->
+        <div class="flip-card">
+          <div class="flip-card-inner">
+            <div class="flip-card-front">
+              <i class="bi bi-universal-access-circle" style="font-size: 40px; color: #91203C; margin-bottom: 15px;"></i>
+              <h3 style="font-family: 'Poppins', sans-serif; font-weight: bold; font-size: 20px; color: #253341; margin: 10px 0;">The Pelican Centre Ministry</h3>
+            </div>
+            <div class="flip-card-back">
+              <p style="font-family: 'Poppins', sans-serif; font-size: 13px; color: #253341; line-height: 1.5;">
+                The Pelican Centre, in Kerala, India, serves as "an open door for the needy and mentally challenged people of our society," providing rehabilitation and care that enables individuals to lead fuller, more independent lives. Our support of this vital ministry reflects our belief that every person is created in God's image and deserves compassion, dignity, and the opportunity to thrive.
+              </p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+
+
+  <!-- Bottom Section -->
+  <style>
+    .footer-link:hover {
+      text-decoration: underline !important;
+    }
+
+    /* Scroll to top button color */
+    #scroll-top {
+      background-color: #91203C !important;
+    }
+  </style>
+  <section class="footer-section" style="background-color: #253341 !important; min-height: 1.2in; width: 100%; display: flex; align-items: center; justify-content: space-between; position: relative; padding: 20px 1in; margin-top: 0; z-index: 100;">
+    <div style="font-family: 'Libre Baskerville', serif; color: #FEFAE0; font-size: 15px; display: flex; align-items: center;">
+      <span style="margin-right: 10px;">©</span>
+      <div>
+        <div>2025 St. Basil's Syriac</div>
+        <div>Orthodox Church, All Rights Reserved.</div>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; font-family: 'Libre Baskerville', serif; color: #FEFAE0; font-size: 15px; position: absolute; left: 50%; transform: translateX(-50%);">
+      <a href="privacy-policy.html" class="footer-link" style="color: #FEFAE0; text-decoration: none; padding: 0 20px; font-size: 15px;">Privacy Policy</a>
+      <span style="border-left: 1px solid #FEFAE0; height: 30px; margin: 0 10px;"></span>
+      <a href="terms-of-use.html" class="footer-link" style="color: #FEFAE0; text-decoration: none; padding: 0 20px; font-size: 15px;">Terms of Use</a>
+      <span style="border-left: 1px solid #FEFAE0; height: 30px; margin: 0 10px;"></span>
+      <a href="contact-us.html" class="footer-link" style="color: #FEFAE0; text-decoration: none; padding: 0 20px; font-size: 15px;">Contact Us</a>
+    </div>
+    <div style="display: flex; align-items: center;">
+      <a href="https://www.facebook.com/StBasilsBoston" target="_blank" style="color: #FEFAE0; font-size: 20px;"><i class="bi bi-facebook"></i></a>
+    </div>
+  </section>
+
+  <!-- Scroll Top -->
+  <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+
+  <!-- Preloader -->
+  <div id="preloader"></div>
+
+  <!-- Vendor JS Files -->
+  <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="assets/vendor/php-email-form/validate.js"></script>
+  <script src="assets/vendor/aos/aos.js"></script>
+  <script src="assets/vendor/purecounter/purecounter_vanilla.js"></script>
+  <script src="assets/vendor/glightbox/js/glightbox.min.js"></script>
+  <script src="assets/vendor/imagesloaded/imagesloaded.pkgd.min.js"></script>
+  <script src="assets/vendor/isotope-layout/isotope.pkgd.min.js"></script>
+  <script src="assets/vendor/swiper/swiper-bundle.min.js"></script>
+
+  <!-- Main JS File -->
+  <script src="assets/js/main.js"></script>
+
+
+</body>
+
+</html>

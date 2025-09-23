@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>Acolytes & Choir - St.Basil's Syrian Orthodox Church</title>
+  <meta name="description" content="Acolytes and Choir of St. Basil's Syriac Orthodox Church in Boston, Massachusetts">
+  <meta name="keywords" content="Acolytes, Choir, St Basils, Syrian Orthodox Church, Boston, Newton">
+  <meta name="robots" content="index,follow">
+  <meta name="author" content="George Nijo">
+
+  <!-- Favicons -->
+  <link href="assets/img/favicon.png" rel="icon">
+  <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com" rel="preconnect">
+  <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400;1,700;1,900&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Raleway:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+
+  <!-- Vendor CSS Files -->
+  <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="assets/vendor/aos/aos.css" rel="stylesheet">
+  <link href="assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
+  <link href="assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
+
+  <!-- Main CSS File -->
+  <link href="assets/css/main.css" rel="stylesheet">
+
+  <!-- Custom Navigation Styles -->
+  <style>
+    @keyframes dropIn {
+      0% {
+        opacity: 0;
+        transform: translate(-50%, -80%);
+      }
+      100% {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+      }
+    }
+
+    .drop-in-text {
+      animation: dropIn 2.5s ease-out;
+    }
+
+    /* Fade in animation */
+    @keyframes fadeIn {
+      0% {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .fade-in {
+      opacity: 0;
+      animation: fadeIn 1.5s ease-out forwards;
+    }
+
+    .fade-in-delay-1 {
+      animation-delay: 0.3s;
+    }
+
+    .fade-in-delay-2 {
+      animation-delay: 0.6s;
+    }
+
+    /* Smooth scrolling for anchor links */
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background-color: #FEFAE0 !important;
+    }
+
+    .main {
+      background-color: #FEFAE0 !important;
+      padding-top: 0;
+    }
+
+    section:not(.footer-section) {
+      background-color: #FEFAE0 !important;
+    }
+
+    /* Header navigation font styles */
+    .navmenu a,
+    .navmenu a:focus {
+      font-family: 'Libre Baskerville', serif !important;
+      color: #253341 !important;
+    }
+
+    /* Dropdown menu styles */
+    .navmenu .dropdown ul {
+      background: #FEFAE0 !important;
+    }
+
+    .navmenu .dropdown ul a,
+    .navmenu .dropdown ul a:link,
+    .navmenu .dropdown ul a:visited {
+      font-family: 'Libre Baskerville', serif !important;
+      color: #253341 !important;
+      background-color: transparent !important;
+    }
+
+    /* Dropdown hover states */
+    .navmenu .dropdown ul li:hover,
+    .navmenu .dropdown ul li a:hover {
+      background-color: rgba(196, 164, 132, 0.5) !important;
+    }
+
+    .navmenu .dropdown ul a:hover,
+    .navmenu .dropdown ul .active:hover,
+    .navmenu .dropdown ul li:hover>a {
+      font-family: 'Libre Baskerville', serif !important;
+      color: #253341 !important;
+      background-color: transparent !important;
+      opacity: 1 !important;
+    }
+
+    /* Active and hover states for non-dropdown items */
+    .navmenu li:hover>a,
+    .navmenu .active,
+    .navmenu .active:focus {
+      font-family: 'Libre Baskerville', serif !important;
+      color: #253341 !important;
+      background-color: rgba(196, 164, 132, 0.2) !important;
+      opacity: 1 !important;
+    }
+
+    .header {
+      background-color: #FEFAE0;
+      opacity: 1;
+    }
+
+    /* Content styling */
+    .content-section {
+      padding: 60px 0.5in !important;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .content-section-v2 {
+      padding: 60px 0.5in !important;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .content-padding-update {
+      padding-left: 0.5in !important;
+      padding-right: 0.5in !important;
+    }
+
+    .content-text {
+      font-family: 'Poppins', sans-serif;
+      font-size: 18px;
+      line-height: 1.8;
+      color: #253341;
+      text-align: center;
+      font-style: italic;
+      margin-bottom: 40px;
+      padding: 0;
+    }
+
+    .content-image {
+      width: 100%;
+      max-width: 900px;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+      border-radius: 10px;
+      box-shadow: 0 5px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Footer styles */
+    .footer-link:hover {
+      text-decoration: underline !important;
+    }
+
+    /* Scroll to top button color */
+    #scroll-top {
+      background-color: #91203C !important;
+    }
+
+    /* Mobile responsive styles */
+    @media (max-width: 1200px) {
+      /* Logo padding for medium to large screens */
+      .logo {
+        transform: translateX(0) !important;
+        padding-left: 15px;
+      }
+    }
+
+    @media (max-width: 991px) {
+      /* Logo padding maintained */
+      .logo {
+        transform: translateX(0) !important;
+        padding-left: 15px;
+      }
+
+      /* Footer starts to compress at medium screens */
+      section[style*="background-color: #253341"] {
+        flex-direction: column !important;
+        padding: 30px 20px !important;
+        text-align: center !important;
+        gap: 20px !important;
+      }
+
+      section[style*="background-color: #253341"] > div:first-child {
+        margin-bottom: 15px !important;
+        font-size: 14px !important;
+      }
+
+      section[style*="background-color: #253341"] > div:nth-child(2) {
+        position: relative !important;
+        left: 0 !important;
+        transform: none !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 10px !important;
+        margin-bottom: 15px !important;
+      }
+
+      section[style*="background-color: #253341"] a.footer-link {
+        padding: 5px 15px !important;
+        font-size: 14px !important;
+      }
+    }
+
+    @media (max-width: 768px) {
+      /* Logo padding maintained for mobile */
+      .logo {
+        transform: translateX(0) !important;
+        padding-left: 15px;
+      }
+
+      /* Hero text responsive */
+      .hero-title {
+        font-size: 40px !important;
+        padding: 0 20px;
+        white-space: normal !important;
+        line-height: 1.2;
+      }
+
+      /* Content section responsive - 20px padding on sides */
+      .content-section-v2 {
+        padding: 40px 20px !important;
+      }
+
+      .content-text {
+        font-size: 16px !important;
+        line-height: 1.6 !important;
+      }
+
+      /* Make image bigger on mobile */
+      .content-image {
+        width: 100% !important;
+        max-width: none !important;
+      }
+
+      /* Footer responsive with better selectors */
+      section[style*="background-color: #253341"] {
+        flex-direction: column !important;
+        padding: 30px 15px !important;
+        text-align: center !important;
+        gap: 20px !important;
+      }
+
+      section[style*="background-color: #253341"] > div:first-child {
+        margin-bottom: 15px !important;
+        font-size: 13px !important;
+      }
+
+      section[style*="background-color: #253341"] > div:nth-child(2) {
+        position: relative !important;
+        left: 0 !important;
+        transform: none !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 10px !important;
+        margin-bottom: 15px !important;
+      }
+
+      section[style*="background-color: #253341"] a.footer-link {
+        padding: 5px 10px !important;
+        font-size: 13px !important;
+      }
+
+      section[style*="background-color: #253341"] span[style*="border-left"] {
+        display: none !important;
+      }
+    }
+
+    @media (max-width: 576px) {
+      section[style*="background-color: #253341"] {
+        padding: 20px 10px !important;
+      }
+
+      section[style*="background-color: #253341"] > div:first-child {
+        font-size: 11px !important;
+      }
+
+      section[style*="background-color: #253341"] a.footer-link {
+        font-size: 11px !important;
+      }
+    }
+
+    @media (max-width: 480px) {
+      /* Extra small devices */
+      .hero-title {
+        font-size: 32px !important;
+      }
+
+      .content-text {
+        font-size: 14px !important;
+      }
+
+      .content-image {
+        border-radius: 5px;
+      }
+
+      section[style*="background-color: #253341"] > div:first-child {
+        font-size: 10px !important;
+      }
+
+      section[style*="background-color: #253341"] a.footer-link {
+        font-size: 10px !important;
+      }
+    }
+  </style>
+
+</head>
+
+<body class="index-page">
+
+    <header id="header" class="header d-flex align-items-center fixed-top">
+        <div class="container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
+
+          <a href="index.html" class="logo d-flex align-items-center" style="transform: translateX(-10px);">
+            <img src="assets/img/sbb logo, blue .png" alt="St. Basil's Syrian Orthodox Church" class="logo-img" style="height: 75px; max-height: 75px;">
+          </a>
+
+                    <nav id="navmenu" class="navmenu">
+            <ul>
+              <li><a href="index.html">Home</a></li>
+              <li class="dropdown"><a href="about.html" class="active"><span>About</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
+                <ul>
+                  <li><a href="about.html">Our History</a></li>
+                  <li><a href="spiritual-leader.html">Our Spiritual Fathers</a></li>
+                  <li><a href="our-clergy.html">Our Clergy</a></li>
+                  <li><a href="office-bearers.html">Our Office Bearers</a></li>
+                  <li><a href="acolytes-choir.html" class="active">Our Acolytes &amp; Choir</a></li>
+                  <li><a href="our-organizations.html">Our Organizations</a></li>
+                </ul>
+              </li>
+              <li class="dropdown"><a href="first-time.html"><span>Resources</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
+                <ul>
+                  <li><a href="events-calendar.html">Events Calendar</a></li>
+                  <li><a href="useful-links.html">Useful Links</a></li>
+                  <li><a href="first-time.html">First Time Visiting?</a></li>
+                </ul>
+              </li>
+              <li><a href="giving.html">Giving</a></li>
+              <li><a href="contact-us.html">Contact Us</a></li>
+            </ul>
+
+            <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
+          </nav>
+
+        </div>
+      </header>
+
+  <!-- Top Header Image Section with Parallax -->
+  <div style="height: calc(100vh - 75px); width: 100%; position: relative; top: 75px; overflow: hidden;">
+    <!-- Fixed background image with dimming filter -->
+    <div style="position: fixed; top: 75px; left: 0; width: 100%; height: calc(100vh - 75px); background-image: url('assets/img/acolytes-choir/choir.jpeg'); background-size: cover; background-position: center; background-repeat: no-repeat; z-index: -1;"></div>
+    <!-- Fixed dimming overlay -->
+    <div style="position: fixed; top: 75px; left: 0; width: 100%; height: calc(100vh - 75px); background-color: rgba(0, 0, 0, 0.5); z-index: -1;"></div>
+    <!-- Title Text centered in viewport -->
+    <h1 class="drop-in-text hero-title" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-family: 'Poppins', sans-serif; font-weight: bold; font-size: 80px; color: #FAEDCD; text-transform: uppercase; margin: 0; padding: 0; text-align: center; z-index: 1; white-space: nowrap;">ACOLYTES &amp; CHOIR</h1>
+  </div>
+
+  <main class="main">
+    <!-- Content Section -->
+    <section id="content-section" class="content-section-v2" style="padding-top: 60px !important; padding-bottom: 60px !important; padding-left: 1in !important; padding-right: 1in !important; max-width: none; margin: 0;">
+      <p class="content-text fade-in fade-in-delay-1" style="padding-left: 0 !important; padding-right: 0 !important; margin-left: 0 !important; margin-right: 0 !important; max-width: none;">
+        Our <strong style="color: #91203C;">dedicated acolytes</strong> serve as essential assistants during the Divine Liturgy, helping to prepare the altar, light candles, and support our clergy in the sacred mysteries that unite us in worship. These faithful servants, ranging from children to adults, learn the ancient traditions of our Orthodox faith while contributing to the reverent atmosphere that makes our liturgical celebrations so meaningful. Our <strong style="color: #91203C;">choir</strong> leads our congregation in the beautiful chants and hymns that have echoed through Syriac Orthodox churches for centuries, preserving our musical heritage while helping every voice join in praise to the Almighty. Together, these ministries embody the spirit of service and devotion that strengthens our church family, ensuring that our worship reflects both the majesty of our ancient traditions and the heartfelt participation of our community.
+      </p>
+
+      <img id="choir-image" src="assets/img/acolytes-choir/gang.png" alt="Acolytes and Choir" class="content-image fade-in fade-in-delay-2">
+    </section>
+  </main>
+
+  <!-- Mobile Override Script -->
+  <script>
+    // Override padding and image size on mobile
+    if (window.innerWidth <= 768) {
+      const contentSection = document.getElementById('content-section');
+      const choirImage = document.getElementById('choir-image');
+
+      if (contentSection) {
+        contentSection.style.paddingLeft = '20px';
+        contentSection.style.paddingRight = '20px';
+      }
+
+      if (choirImage) {
+        choirImage.style.width = '100%';
+        choirImage.style.maxWidth = 'none';
+      }
+    }
+  </script>
+
+  <!-- Footer Section -->
+  <section class="footer-section" style="background-color: #253341 !important; min-height: 1.2in; width: 100%; display: flex; align-items: center; justify-content: space-between; position: relative; padding: 20px 1in; margin-top: 0; z-index: 100;">
+    <div style="font-family: 'Libre Baskerville', serif; color: #FEFAE0; font-size: 15px; display: flex; align-items: center;">
+      <span style="margin-right: 10px;">©</span>
+      <div>
+        <div>2025 St. Basil's Syriac</div>
+        <div>Orthodox Church, All Rights Reserved.</div>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; font-family: 'Libre Baskerville', serif; color: #FEFAE0; font-size: 15px; position: absolute; left: 50%; transform: translateX(-50%);">
+      <a href="privacy-policy.html" class="footer-link" style="color: #FEFAE0; text-decoration: none; padding: 0 20px; font-size: 15px;">Privacy Policy</a>
+      <span style="border-left: 1px solid #FEFAE0; height: 30px; margin: 0 10px;"></span>
+      <a href="terms-of-use.html" class="footer-link" style="color: #FEFAE0; text-decoration: none; padding: 0 20px; font-size: 15px;">Terms of Use</a>
+      <span style="border-left: 1px solid #FEFAE0; height: 30px; margin: 0 10px;"></span>
+      <a href="contact-us.html" class="footer-link" style="color: #FEFAE0; text-decoration: none; padding: 0 20px; font-size: 15px;">Contact Us</a>
+    </div>
+    <div style="display: flex; align-items: center;">
+      <a href="https://www.facebook.com/StBasilsBoston" target="_blank" style="color: #FEFAE0; font-size: 20px;"><i class="bi bi-facebook"></i></a>
+    </div>
+  </section>
+
+  <!-- Scroll Top -->
+  <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+
+  <!-- Preloader -->
+  <div id="preloader"></div>
+
+  <!-- Vendor JS Files -->
+  <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="assets/vendor/php-email-form/validate.js"></script>
+  <script src="assets/vendor/aos/aos.js"></script>
+  <script src="assets/vendor/purecounter/purecounter_vanilla.js"></script>
+  <script src="assets/vendor/glightbox/js/glightbox.min.js"></script>
+  <script src="assets/vendor/imagesloaded/imagesloaded.pkgd.min.js"></script>
+  <script src="assets/vendor/isotope-layout/isotope.pkgd.min.js"></script>
+  <script src="assets/vendor/swiper/swiper-bundle.min.js"></script>
+
+  <!-- Main JS File -->
+  <script src="assets/js/main.js"></script>
+
+</body>
+
+</html>

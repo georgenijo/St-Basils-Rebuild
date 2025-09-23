@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>Contact Us - St.Basil's Syrian Orthodox Church</title>
+  <meta name="description" content="Contact St. Basil's Syriac Orthodox Church in Boston, Massachusetts">
+  <meta name="keywords" content="Contact, St Basils, Syrian Orthodox Church, Boston, Newton">
+  <meta name="robots" content="index,follow">
+  <meta name="author" content="George Nijo">
+
+  <!-- Favicons -->
+  <link href="assets/img/favicon.png" rel="icon">
+  <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com" rel="preconnect">
+  <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400;1,700;1,900&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Raleway:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+
+  <!-- Vendor CSS Files -->
+  <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="assets/vendor/aos/aos.css" rel="stylesheet">
+  <link href="assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
+  <link href="assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
+
+  <!-- Main CSS File -->
+  <link href="assets/css/main.css" rel="stylesheet">
+  
+  <!-- Custom Navigation Styles -->
+  <style>
+    @keyframes dropIn {
+      0% {
+        opacity: 0;
+        transform: translate(-50%, -80%);
+      }
+      100% {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+      }
+    }
+    
+    .drop-in-text {
+      animation: dropIn 2.5s ease-out;
+    }
+    
+    /* Smooth scrolling for anchor links */
+    html {
+      scroll-behavior: smooth;
+    }
+    
+    /* Offset for anchor links to account for fixed header */
+    #map-section {
+      scroll-margin-top: 100px;
+    }
+    
+    /* Fade drop in animation for tab content */
+    @keyframes fadeDropIn {
+      0% {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    body {
+      background-color: #FEFAE0 !important;
+    }
+    
+    .main {
+      background-color: #FEFAE0 !important;
+    }
+    
+    section:not(.footer-section) {
+      background-color: #FEFAE0 !important;
+    }
+    
+    /* Header navigation font styles */
+    .navmenu a,
+    .navmenu a:focus {
+      font-family: 'Libre Baskerville', serif !important;
+      color: #253341 !important;
+    }
+    
+    /* Dropdown menu styles */
+    .navmenu .dropdown ul {
+      background: #FEFAE0 !important;
+    }
+
+    .navmenu .dropdown ul a,
+    .navmenu .dropdown ul a:link,
+    .navmenu .dropdown ul a:visited {
+      font-family: 'Libre Baskerville', serif !important;
+      color: #253341 !important;
+      background-color: transparent !important;
+    }
+
+    /* Dropdown hover states */
+    .navmenu .dropdown ul li:hover,
+    .navmenu .dropdown ul li a:hover {
+      background-color: rgba(196, 164, 132, 0.5) !important;
+    }
+
+    .navmenu .dropdown ul a:hover,
+    .navmenu .dropdown ul .active:hover,
+    .navmenu .dropdown ul li:hover>a {
+      font-family: 'Libre Baskerville', serif !important;
+      color: #253341 !important;
+      background-color: transparent !important;
+      opacity: 1 !important;
+    }
+    
+    /* Active and hover states for non-dropdown items */
+    .navmenu li:hover>a,
+    .navmenu .active,
+    .navmenu .active:focus {
+      font-family: 'Libre Baskerville', serif !important;
+      color: #253341 !important;
+      background-color: rgba(196, 164, 132, 0.2) !important;
+      opacity: 1 !important;
+    }
+    
+    .header {
+      background-color: #FEFAE0; /* Light cream background color */
+      opacity: 1; /* Remove transparency */
+    }
+
+    .main {
+      padding-top: 0; /* Remove padding to show maroon section */
+    }
+
+    .contact-content {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .contact-content h3 {
+      margin-top: 30px;
+      margin-bottom: 15px;
+      color: #253341;
+    }
+
+    .contact-content p {
+      text-align: justify;
+      line-height: 1.8;
+    }
+
+    .contact-info {
+      background: rgba(196, 164, 132, 0.1);
+      padding: 30px;
+      border-radius: 10px;
+      margin: 30px 0;
+    }
+
+    .contact-info-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .contact-info-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .contact-info-item i {
+      font-size: 24px;
+      color: #91203C;
+      margin-right: 20px;
+      width: 30px;
+      text-align: center;
+    }
+
+    .contact-form {
+      background: rgba(196, 164, 132, 0.05);
+      padding: 30px;
+      border-radius: 10px;
+      margin-top: 30px;
+    }
+
+    .contact-form .form-control,
+    .contact-form .form-select {
+      background: #FEFAE0;
+      border: 1px solid rgba(196, 164, 132, 0.3);
+      color: #253341;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    .contact-form .form-control:focus,
+    .contact-form .form-select:focus {
+      background: #FEFAE0;
+      border-color: #91203C;
+      box-shadow: 0 0 0 0.2rem rgba(145, 32, 60, 0.1);
+    }
+
+    .contact-form label {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 500;
+      color: #253341;
+      margin-bottom: 8px;
+    }
+
+    .btn-submit {
+      background-color: #91203C;
+      color: #FAEDCD;
+      border: none;
+      padding: 12px 40px;
+      font-family: 'Poppins', sans-serif;
+      font-weight: 500;
+      border-radius: 5px;
+      transition: all 0.3s ease;
+    }
+
+    .btn-submit:hover {
+      background-color: #7a1a32;
+      color: #FAEDCD;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(145, 32, 60, 0.3);
+    }
+
+    .map-container {
+      margin-top: 40px;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 5px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Scroll to top button color */
+    #scroll-top {
+      background-color: #91203C !important;
+    }
+
+    /* Mobile Responsive Styles */
+    @media (max-width: 768px) {
+      /* Fix logo padding on mobile */
+      .logo {
+        transform: translateX(0) !important;
+        padding-left: 15px;
+      }
+
+      /* Hero title responsive */
+      h1.drop-in-text {
+        font-size: 50px !important;
+      }
+
+      /* Three column contact section responsive */
+      section[style*="height: 4in"] {
+        height: auto !important;
+        min-height: auto !important;
+        flex-direction: column !important;
+      }
+
+      section[style*="height: 4in"] > div {
+        width: 100% !important;
+        flex: none !important;
+        min-height: 200px !important;
+        padding: 30px 20px !important;
+      }
+
+      section[style*="height: 4in"] > div h3 {
+        font-size: 24px !important;
+      }
+
+      section[style*="height: 4in"] > div p {
+        font-size: 16px !important;
+      }
+
+      /* Hide vertical border lines on mobile */
+      section[style*="height: 4in"] div[style*="position: absolute"][style*="right: 0"] {
+        display: none !important;
+      }
+
+      /* Footer responsive styles */
+      .footer-section {
+        flex-direction: column !important;
+        padding: 30px 15px !important;
+        text-align: center;
+        gap: 20px;
+      }
+
+      .footer-section > div:first-child {
+        margin-bottom: 15px;
+        font-size: 13px !important;
+      }
+
+      /* Footer links section */
+      .footer-section > div:nth-child(2) {
+        position: relative !important;
+        left: 0 !important;
+        transform: none !important;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 15px;
+      }
+
+      .footer-section a.footer-link {
+        padding: 5px 10px !important;
+        font-size: 13px !important;
+      }
+
+      /* Hide divider lines on mobile */
+      .footer-section span[style*="border-left"] {
+        display: none !important;
+      }
+
+      /* Our Location section responsive */
+      div[style*="padding: 20px 1in"] h2 {
+        font-size: 32px !important;
+        padding-top: 30px !important;
+      }
+
+      div[style*="padding: 20px 1in"] p {
+        padding: 0 20px !important;
+        font-size: 15px !important;
+      }
+
+      /* Map container responsive */
+      #map-section {
+        padding: 20px !important;
+      }
+
+      /* Expandable tabs responsive */
+      button[onclick*="toggleTab"] {
+        font-size: 16px !important;
+        padding: 15px !important;
+      }
+
+      div[id*="-tab"] {
+        padding: 20px !important;
+        font-size: 14px !important;
+      }
+    }
+
+    @media (max-width: 576px) {
+      /* Extra small devices */
+      /* Hero title smaller */
+      h1.drop-in-text {
+        font-size: 36px !important;
+        padding: 0 15px;
+      }
+
+      .footer-section {
+        padding: 20px 10px !important;
+      }
+
+      .footer-section > div:first-child {
+        font-size: 11px !important;
+      }
+
+      .footer-section a.footer-link {
+        font-size: 11px !important;
+      }
+
+      section[style*="height: 4in"] > div h3 {
+        font-size: 20px !important;
+      }
+
+      section[style*="height: 4in"] > div p {
+        font-size: 14px !important;
+      }
+
+      section[style*="height: 4in"] > div i {
+        font-size: 32px !important;
+      }
+
+      /* Our Location title smaller */
+      div[style*="padding: 20px 1in"] h2 {
+        font-size: 26px !important;
+      }
+
+      div[style*="padding: 20px 1in"] p {
+        font-size: 13px !important;
+        letter-spacing: 1px !important;
+      }
+    }
+
+    @media (max-width: 400px) {
+      /* Very small devices */
+      .footer-section > div:first-child {
+        font-size: 10px !important;
+      }
+
+      .footer-section a.footer-link {
+        font-size: 10px !important;
+      }
+
+      section[style*="height: 4in"] > div h3 {
+        font-size: 18px !important;
+        letter-spacing: 0 !important;
+      }
+
+      section[style*="height: 4in"] > div p {
+        font-size: 13px !important;
+      }
+
+      /* Hero title even smaller */
+      h1.drop-in-text {
+        font-size: 28px !important;
+        white-space: normal !important;
+        line-height: 1.2 !important;
+        padding: 0 20px;
+      }
+    }
+
+    /* Fade-in animation for content */
+    @keyframes fadeInUp {
+      0% {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .fade-in-content {
+      animation: fadeInUp 1.2s ease-out forwards;
+    }
+
+    .fade-in-delay-1 {
+      animation-delay: 0.3s;
+    }
+
+    .fade-in-delay-2 {
+      animation-delay: 0.6s;
+    }
+
+    .fade-in-delay-3 {
+      animation-delay: 0.9s;
+    }
+  </style>
+
+</head>
+
+<body class="index-page">
+
+    <header id="header" class="header d-flex align-items-center fixed-top">
+        <div class="container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
+    
+          <a href="index.html" class="logo d-flex align-items-center" style="transform: translateX(-10px);">
+            <img src="assets/img/sbb logo, blue .png" alt="St. Basil's Syrian Orthodox Church" class="logo-img" style="height: 75px; max-height: 75px;">
+          </a>
+    
+                    <nav id="navmenu" class="navmenu">
+            <ul>
+              <li><a href="index.html">Home</a></li>
+              <li class="dropdown"><a href="about.html"><span>About</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
+                <ul>
+                  <li><a href="about.html">Our History</a></li>
+                  <li><a href="spiritual-leader.html">Our Spiritual Fathers</a></li>
+                  <li><a href="our-clergy.html">Our Clergy</a></li>
+                  <li><a href="office-bearers.html">Our Office Bearers</a></li>
+                  <li><a href="acolytes-choir.html">Our Acolytes &amp; Choir</a></li>
+                  <li><a href="our-organizations.html">Our Organizations</a></li>
+                </ul>
+              </li>
+              <li class="dropdown"><a href="first-time.html"><span>Resources</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
+                <ul>
+                  <li><a href="events-calendar.html">Events Calendar</a></li>
+                  <li><a href="useful-links.html">Useful Links</a></li>
+                  <li><a href="first-time.html">First Time Visiting?</a></li>
+                </ul>
+              </li>
+              <li><a href="giving.html">Giving</a></li>
+              <li><a href="contact-us.html" class="active">Contact Us</a></li>
+            </ul>
+
+            <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
+          </nav>
+    
+        </div>
+      </header>
+  
+  <!-- Top Header Image Section with Parallax -->
+  <div style="height: auto; width: 100%; position: relative; top: 75px; overflow: hidden;">
+    <!-- Fixed background image -->
+    <div style="position: fixed; top: 75px; left: 0; width: 100%; height: calc(100vh - 75px); background-image: url('assets/img/Contact Us/contact us.png'); background-size: cover; background-position: center; background-repeat: no-repeat; z-index: -1; background-color: #FEFAE0;"></div>
+    <!-- Invisible image for maintaining height -->
+    <img src="assets/img/Contact Us/contact us.png" style="width: 100%; height: auto; opacity: 0; display: block; position: relative;">
+    <!-- Dimming filter overlay that scrolls with content -->
+    <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6);"></div>
+    <!-- Contact Us Text that scrolls normally -->
+    <h1 class="drop-in-text" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-family: 'Poppins', sans-serif; font-weight: bold; font-size: 80px; color: #FAEDCD; text-transform: uppercase; margin: 0; padding: 0; text-align: center; z-index: 1;">CONTACT US</h1>
+  </div>
+
+  <main class="main" style="padding-top: 0;">
+    <!-- Three Column Contact Section -->
+    <section style="height: 4in; background-color: #FAEDCD; display: flex; align-items: stretch; position: relative; padding: 0; margin: 0;">
+      
+      <!-- First Section - Find Us Here -->
+      <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; position: relative;">
+        <i class="bi bi-geo-alt-fill" style="font-size: 40px; color: #91203C; margin-bottom: 20px;"></i>
+        <h3 style="font-family: 'Poppins', sans-serif; font-weight: bold; font-size: 30px; color: #91203C; text-transform: uppercase; letter-spacing: 1px; text-align: center; margin-bottom: 20px;">Find Us Here</h3>
+        <p style="font-family: 'Poppins', sans-serif; font-size: 18px; color: #91203C; text-align: center; letter-spacing: 1px; margin: 0;">73 Ellis Street</p>
+        <p style="font-family: 'Poppins', sans-serif; font-size: 18px; color: #91203C; text-align: center; letter-spacing: 1px; margin: 0;">Newton, MA 02464</p>
+        <!-- Full height border line -->
+        <div style="position: absolute; right: 0; top: 0; height: 100%; width: 1px; background-color: #91203C;"></div>
+      </div>
+      
+      <!-- Middle Section - Image -->
+      <div style="flex: 1; position: relative; background-image: url('assets/img/Contact Us/c.u ph.jpg'); background-size: cover; background-position: center; background-repeat: no-repeat; padding: 0; margin: 0; min-height: 100%;">
+        <!-- Full height border line -->
+        <div style="position: absolute; right: 0; top: 0; height: 100%; width: 1px; background-color: #91203C;"></div>
+      </div>
+      
+      <!-- Third Section - Connect with Us -->
+      <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;">
+        <i class="bi bi-chat-dots-fill" style="font-size: 40px; color: #91203C; margin-bottom: 20px;"></i>
+        <h3 style="font-family: 'Poppins', sans-serif; font-weight: bold; font-size: 30px; color: #91203C; text-transform: uppercase; letter-spacing: 1px; text-align: center; margin-bottom: 20px;">Connect with Us Here</h3>
+        <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 10px;">
+          <i class="bi bi-telephone-fill" style="font-size: 18px; color: #91203C; margin-right: 10px;"></i>
+          <p style="font-family: 'Poppins', sans-serif; font-size: 18px; color: #91203C; text-align: center; letter-spacing: 1px; margin: 0;">+1 (478) 227-4572</p>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: center;">
+          <i class="bi bi-envelope-fill" style="font-size: 18px; color: #91203C; margin-right: 10px;"></i>
+          <p style="font-family: 'Poppins', sans-serif; font-size: 18px; color: #91203C; text-align: center; letter-spacing: 1px; margin: 0;">stbasilsboston@gmail.com</p>
+        </div>
+      </div>
+      
+    </section>
+    
+    <!-- Blue section with Church Location -->
+    <div style="width: 100%; background-color: #253341; padding: 20px 1in;">
+      <!-- Our Location Title -->
+      <h2 style="font-size: 45px; color: #FAEDCD; text-transform: uppercase; text-align: center; padding-top: 1in; margin-bottom: 30px; letter-spacing: 1px;">
+        <span style="font-family: 'Poppins', sans-serif; font-weight: 400;">OUR</span>
+        <span style="font-family: 'Poppins', sans-serif; font-weight: bold;">LOCATION</span>
+      </h2>
+      <!-- Description Text -->
+      <p style="font-family: 'Poppins', sans-serif; font-weight: 300; font-size: 17px; color: #FAEDCD; text-align: center; letter-spacing: 2px; line-height: 1.4; margin: 0 auto; padding: 0 3in; max-width: 100%;">St. Basil's Syriac Orthodox Church is easily accessible by both car and public transportation. We're located just minutes from I-95/Route 128 and the Massachusetts Turnpike (I-90), making us convenient for visitors traveling from Boston, the North Shore, South Shore, and western suburbs. Our church is also accessible via the MBTA Green Line (D Branch). The nearest station is Eliot station, which is within walking distance or a short ride from our location.</p>
+      
+      <!-- Map Anchor Point -->
+      <div id="map-section" style="position: absolute; top: -100px;"></div>
+      <!-- Google Maps Section positioned to overlap both sections -->
+      <div style="display: flex; justify-content: center; margin-top: 0.5in; padding-bottom: 0.5in; position: relative; z-index: 10;">
+        <div style="width: 12in; height: 6in; border-radius: 10px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+          <iframe 
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2949.0846!2d-71.2012!3d42.3287!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89e3826d5e45f5e7%3A0x8f9a8c7f1b3d4e5a!2s73%20Ellis%20St%2C%20Newton%2C%20MA%2002464!5e0!3m2!1sen!2sus!4v1234567890" 
+            width="100%" 
+            height="100%" 
+            style="border:0;" 
+            allowfullscreen="" 
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade">
+          </iframe>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Cream colored section with expandable tabs and bottom of map -->
+    <div style="background-color: #FAEDCD; padding: 0 1in; padding-top: 3in; padding-bottom: 2in; margin-top: -3in; position: relative;">
+      <!-- Expandable Tabs Section -->
+      <div style="width: 100%;">
+        
+        <!-- Where to Park Tab -->
+        <div style="margin-bottom: 20px;">
+          <button onclick="toggleTab('parking-tab')" style="width: 100%; background-color: #253341; color: #FFF8E7; padding: 20px; font-family: 'Poppins', sans-serif; font-size: 20px; font-weight: normal; text-align: left; border: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: all 0.3s ease;">
+            <span>Where to Park</span>
+            <span id="parking-arrow" style="transition: transform 0.3s;">▼</span>
+          </button>
+          <div id="parking-tab" style="display: none; background-color: #253341; padding: 30px; color: #FFF8E7; font-family: 'Poppins', sans-serif; font-size: 16px; font-weight: normal; line-height: 1.8; letter-spacing: 1px;">
+            <div class="parking-content" style="opacity: 0; animation: fadeDropIn 0.8s ease-out forwards;">
+              <p style="margin: 0; color: #FFF8E7; font-family: 'Poppins', sans-serif; font-weight: normal; letter-spacing: 1px;">
+                Free parking is available in our church parking lot, accessible from Ellis Street. The lot accommodates approximately 10 vehicles. Additional street parking is available near by, as well as lot parking down the road. Please refer to the map below that specifies all available parking locations. Please be mindful of posted parking restrictions and residential permit requirements in the neighborhood. On Sundays, parking enforcement is generally relaxed, but always check street signs for specific regulations.
+              </p>
+              <img src="assets/img/Contact Us/maps pic.jpeg" style="width: 100%; height: auto; margin-top: 20px; border-radius: 10px;" alt="Parking Map">
+            </div>
+          </div>
+        </div>
+
+        <!-- From the Metro - Eliot Station Tab -->
+        <div style="margin-bottom: 20px;">
+          <button onclick="toggleTab('metro-tab')" style="width: 100%; background-color: #253341; color: #FFF8E7; padding: 20px; font-family: 'Poppins', sans-serif; font-size: 20px; font-weight: normal; text-align: left; border: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: all 0.3s ease;">
+            <span>From the Metro - Eliot Station</span>
+            <span id="metro-arrow" style="transition: transform 0.3s;">▼</span>
+          </button>
+          <div id="metro-tab" style="display: none; background-color: #253341; padding: 30px; color: #FFF8E7; font-family: 'Poppins', sans-serif; font-size: 16px; font-weight: normal; line-height: 1.8; letter-spacing: 1px;">
+            <div class="metro-content" style="opacity: 0; animation: fadeDropIn 0.8s ease-out forwards;">
+              <p style="margin: 0; color: #FFF8E7; font-family: 'Poppins', sans-serif; font-weight: normal; letter-spacing: 1px;">
+                Take the MBTA Green Line (D Branch) to Eliot Station. From the station, it is about a 10-15 minute walk to the church. As weather is unpredictable and it gets tough to walk those 10 minutes in the colder months, we have volunteers who pick up folks from the station before Morning Prayer starts at 8:30am. If you need a ride, please don't hesitate to text or call the following number: 508.542.3003.
+              </p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+  
+  <!-- Script for tab functionality -->
+  <script>
+    function toggleTab(tabId) {
+      var tab = document.getElementById(tabId);
+      var arrow = tabId === 'parking-tab' ? document.getElementById('parking-arrow') : document.getElementById('metro-arrow');
+      
+      if (tab.style.display === 'none' || tab.style.display === '') {
+        tab.style.display = 'block';
+        arrow.style.transform = 'rotate(180deg)';
+        
+        // Reset and trigger animation for tab content
+        var content = tab.querySelector('.parking-content') || tab.querySelector('.metro-content');
+        if (content) {
+          content.style.animation = 'none';
+          setTimeout(function() {
+            content.style.animation = 'fadeDropIn 0.8s ease-out forwards';
+          }, 10);
+        }
+      } else {
+        tab.style.display = 'none';
+        arrow.style.transform = 'rotate(0deg)';
+      }
+    }
+  </script>
+
+  <!-- Bottom Section -->
+  <style>
+    .footer-link:hover {
+      text-decoration: underline !important;
+    }
+
+    /* Scroll to top button color */
+    #scroll-top {
+      background-color: #91203C !important;
+    }
+  </style>
+  <section class="footer-section" style="background-color: #253341 !important; min-height: 1.2in; width: 100%; display: flex; align-items: center; justify-content: space-between; position: relative; padding: 20px 1in; margin-top: 0; z-index: 100;">
+    <div style="font-family: 'Libre Baskerville', serif; color: #FEFAE0; font-size: 15px; display: flex; align-items: center;">
+      <span style="margin-right: 10px;">©</span>
+      <div>
+        <div>2025 St. Basil's Syriac</div>
+        <div>Orthodox Church, All Rights Reserved.</div>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; font-family: 'Libre Baskerville', serif; color: #FEFAE0; font-size: 15px; position: absolute; left: 50%; transform: translateX(-50%);">
+      <a href="privacy-policy.html" class="footer-link" style="color: #FEFAE0; text-decoration: none; padding: 0 20px; font-size: 15px;">Privacy Policy</a>
+      <span style="border-left: 1px solid #FEFAE0; height: 30px; margin: 0 10px;"></span>
+      <a href="terms-of-use.html" class="footer-link" style="color: #FEFAE0; text-decoration: none; padding: 0 20px; font-size: 15px;">Terms of Use</a>
+      <span style="border-left: 1px solid #FEFAE0; height: 30px; margin: 0 10px;"></span>
+      <a href="contact-us.html" class="footer-link" style="color: #FEFAE0; text-decoration: none; padding: 0 20px; font-size: 15px;">Contact Us</a>
+    </div>
+    <div style="display: flex; align-items: center;">
+      <a href="https://www.facebook.com/StBasilsBoston" target="_blank" style="color: #FEFAE0; font-size: 20px;"><i class="bi bi-facebook"></i></a>
+    </div>
+  </section>
+
+  <!-- Scroll Top -->
+  <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+
+  <!-- Preloader -->
+  <div id="preloader"></div>
+
+  <!-- Vendor JS Files -->
+  <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="assets/vendor/php-email-form/validate.js"></script>
+  <script src="assets/vendor/aos/aos.js"></script>
+  <script src="assets/vendor/purecounter/purecounter_vanilla.js"></script>
+  <script src="assets/vendor/glightbox/js/glightbox.min.js"></script>
+  <script src="assets/vendor/imagesloaded/imagesloaded.pkgd.min.js"></script>
+  <script src="assets/vendor/isotope-layout/isotope.pkgd.min.js"></script>
+  <script src="assets/vendor/swiper/swiper-bundle.min.js"></script>
+
+  <!-- Main JS File -->
+  <script src="assets/js/main.js"></script>
+  
+
+</body>
+
+</html>

@@ -15,7 +15,7 @@
   <!-- Fonts -->
   <link href="https://fonts.googleapis.com" rel="preconnect">
   <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400;1,700;1,900&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Raleway:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
 
   <!-- Vendor CSS Files -->
   <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
@@ -27,14 +27,431 @@
   <!-- Main CSS File -->
   <link href="assets/css/main.css" rel="stylesheet">
 
+  
+  <!-- Custom Navigation Styles -->
   <style>
+    /* Page background */
+    body {
+      background-color: #FEFAE0 !important;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header navigation font styles */
+    .navmenu a,
+    .navmenu a:focus {
+      font-family: 'Libre Baskerville', serif !important;
+      color: #253341 !important;
+    }
+
+    /* Dropdown menu styles */
+    .navmenu .dropdown ul {
+      background: #FEFAE0 !important;
+    }
+
+    .navmenu .dropdown ul a,
+    .navmenu .dropdown ul a:link,
+    .navmenu .dropdown ul a:visited {
+      font-family: 'Libre Baskerville', serif !important;
+      color: #253341 !important;
+      background-color: transparent !important;
+    }
+
+    /* Dropdown hover states */
+    .navmenu .dropdown ul li:hover,
+    .navmenu .dropdown ul li a:hover {
+      background-color: rgba(196, 164, 132, 0.5) !important;
+    }
+
+    .navmenu .dropdown ul a:hover,
+    .navmenu .dropdown ul .active:hover,
+    .navmenu .dropdown ul li:hover>a {
+      font-family: 'Libre Baskerville', serif !important;
+      color: #253341 !important;
+      background-color: transparent !important;
+      opacity: 1 !important;
+    }
+
+    /* Active and hover states for non-dropdown items */
+    .navmenu li:hover>a,
+    .navmenu .active,
+    .navmenu .active:focus {
+      font-family: 'Libre Baskerville', serif !important;
+      color: #253341 !important;
+      background-color: rgba(196, 164, 132, 0.2) !important;
+      opacity: 1 !important;
+    }
+
     .header {
-      background-color: #67b0d1; /* Primary blue background color */
+      background-color: #FEFAE0; /* Light cream background color */
       opacity: 1; /* Remove transparency */
     }
 
     .main {
       padding-top: 100px; /* Adjust this value based on the height of your header */
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Team section background */
+    #team {
+      background-color: #FEFAE0 !important;
+      flex: 1;
+      min-height: calc(100vh - 400px); /* Ensures content pushes footer down */
+    }
+
+    /* Drop-in fade-in animation */
+    @keyframes dropInFade {
+      0% {
+        opacity: 0;
+        transform: translateY(-30px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .drop-in-fade {
+      animation: dropInFade 1.5s ease-out forwards;
+    }
+
+    /* Flip Card Styles */
+    .flip-card {
+      background-color: transparent;
+      width: 100%;
+      height: 612px; /* 420px + 192px (2 inches) */
+      perspective: 1000px;
+    }
+
+    .flip-card-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      text-align: center;
+      transition: transform 0.6s;
+      transform-style: preserve-3d;
+    }
+
+    .flip-card:hover .flip-card-inner {
+      transform: rotateY(180deg);
+    }
+
+    .flip-card-front, .flip-card-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
+      border-radius: 15px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+
+    .flip-card-front {
+      background-color: #fff;
+      position: relative;
+    }
+
+    .flip-card-front img {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 15px;
+    }
+
+    .flip-card-front .member-info {
+      position: absolute;
+      bottom: 28.8px; /* 0.3 inch = 28.8px at 96 DPI */
+      left: 20px;
+      right: 20px;
+      padding: 20px;
+      background-color: #FAEDCD;
+      min-height: auto;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
+
+    .flip-card-front .member-info h4 {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 400;
+      color: #253341;
+      margin-bottom: 5px;
+    }
+
+    .flip-card-front .member-info span {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 400;
+      color: #253341;
+      font-size: 14px;
+    }
+
+    .flip-card-back {
+      background-color: #91203C;
+      color: #FEFAE0;
+      transform: rotateY(180deg);
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: center;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      overflow-y: auto;
+    }
+
+    .flip-card-back h4 {
+      color: #FEFAE0;
+      font-family: 'Poppins', sans-serif;
+      font-weight: 600;
+      margin-bottom: 20px;
+      margin-top: 20px;
+      font-size: 24px;
+    }
+
+    .flip-card-back p {
+      color: #FEFAE0;
+      font-family: 'Poppins', sans-serif;
+      font-weight: 400;
+      font-size: 14px;
+      line-height: 1.6;
+      text-align: center;
+      padding: 0 15px;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 1200px) {
+      /* Logo padding for medium to large screens */
+      .logo {
+        transform: translateX(0) !important;
+        padding-left: 15px;
+      }
+
+      .main-title {
+        font-size: 35px !important;
+      }
+    }
+
+    @media (max-width: 991px) {
+      /* Logo padding maintained */
+      .logo {
+        transform: translateX(0) !important;
+        padding-left: 15px;
+      }
+
+      .main-title {
+        font-size: 32px !important;
+      }
+
+      .leader-name {
+        font-size: 30px !important;
+      }
+
+      .leader-title {
+        font-size: 18px !important;
+      }
+
+      /* Footer starts to compress at medium screens */
+      section[style*="background-color: #253341"] {
+        flex-direction: column !important;
+        padding: 30px 20px !important;
+        text-align: center !important;
+        gap: 20px !important;
+      }
+
+      section[style*="background-color: #253341"] > div:first-child {
+        margin-bottom: 15px !important;
+        font-size: 14px !important;
+      }
+
+      section[style*="background-color: #253341"] > div:nth-child(2) {
+        position: relative !important;
+        left: 0 !important;
+        transform: none !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 10px !important;
+        margin-bottom: 15px !important;
+      }
+
+      section[style*="background-color: #253341"] a.footer-link {
+        padding: 5px 15px !important;
+        font-size: 14px !important;
+      }
+    }
+
+    @media (max-width: 768px) {
+      /* Logo padding maintained for mobile */
+      .logo {
+        transform: translateX(0) !important;
+        padding-left: 15px;
+      }
+
+      .flip-card {
+        height: 612px;
+      }
+
+      /* Header section adjustments */
+      .hero-section {
+        height: 1.5in !important;
+        padding: 0 20px;
+      }
+
+      .main-title {
+        font-size: 28px !important;
+        padding: 0 15px;
+      }
+
+      /* Leader sections */
+      .leader-image {
+        height: 400px !important;
+        margin-bottom: 30px;
+      }
+
+      .leader-name {
+        font-size: 26px !important;
+        margin-bottom: 15px !important;
+      }
+
+      .leader-title {
+        font-size: 16px !important;
+        line-height: 1.5 !important;
+      }
+
+      .leader-description {
+        font-size: 14px !important;
+        padding: 0 10px;
+        text-align: left !important;
+      }
+
+      /* Section spacing */
+      .leader-section {
+        padding-top: 40px !important;
+        padding-bottom: 30px !important;
+      }
+
+      /* Footer responsive with better selectors */
+      section[style*="background-color: #253341"] {
+        flex-direction: column !important;
+        padding: 30px 15px !important;
+        text-align: center !important;
+        gap: 20px !important;
+      }
+
+      section[style*="background-color: #253341"] > div:first-child {
+        margin-bottom: 15px !important;
+        font-size: 13px !important;
+      }
+
+      section[style*="background-color: #253341"] > div:nth-child(2) {
+        position: relative !important;
+        left: 0 !important;
+        transform: none !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 10px !important;
+        margin-bottom: 15px !important;
+      }
+
+      section[style*="background-color: #253341"] a.footer-link {
+        padding: 5px 10px !important;
+        font-size: 13px !important;
+      }
+
+      section[style*="background-color: #253341"] span[style*="border-left"] {
+        display: none !important;
+      }
+    }
+
+    @media (max-width: 576px) {
+      .main-title {
+        font-size: 24px !important;
+      }
+
+      .leader-image {
+        height: 350px !important;
+      }
+
+      .leader-name {
+        font-size: 22px !important;
+      }
+
+      .leader-title {
+        font-size: 14px !important;
+        padding: 0 10px;
+      }
+
+      .leader-description {
+        font-size: 13px !important;
+      }
+
+      /* Adjust column padding on mobile */
+      .content-column {
+        padding-left: 15px !important;
+        padding-right: 15px !important;
+      }
+    }
+
+    @media (max-width: 400px) {
+      .main-title {
+        font-size: 20px !important;
+      }
+
+      .leader-image {
+        height: 300px !important;
+      }
+
+      .leader-name {
+        font-size: 20px !important;
+      }
+
+      .leader-title {
+        font-size: 13px !important;
+      }
+
+      .leader-description {
+        font-size: 12px !important;
+      }
+
+      section[style*="background-color: #253341"] {
+        padding: 20px 10px !important;
+      }
+
+      section[style*="background-color: #253341"] > div:first-child {
+        font-size: 11px !important;
+      }
+
+      section[style*="background-color: #253341"] a.footer-link {
+        font-size: 11px !important;
+      }
+    }
+
+    @media (max-width: 480px) {
+      section[style*="background-color: #253341"] > div:first-child {
+        font-size: 10px !important;
+      }
+
+      section[style*="background-color: #253341"] a.footer-link {
+        font-size: 10px !important;
+      }
+    }
+
+
+    /* Scroll to top button color */
+    #scroll-top {
+      background-color: #91203C !important;
     }
   </style>
 
@@ -52,144 +469,105 @@
   <header id="header" class="header d-flex align-items-center fixed-top">
     <div class="container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
 
-      <a href="index.html" class="logo d-flex align-items-center">
-        <!-- Uncomment the line below if you also wish to use an image logo -->
-        <!-- <img src="assets/img/logo.png" alt=""> -->
-        <h1 class="sitename">St.Basil's Syrian Orthodox Church</h1>
+      <a href="index.html" class="logo d-flex align-items-center" style="transform: translateX(-10px);">
+        <img src="assets/img/sbb logo, blue .png" alt="St. Basil's Syrian Orthodox Church" class="logo-img" style="height: 75px; max-height: 75px;">
       </a>
 
-      <nav id="navmenu" class="navmenu">
-        <ul>
-          <li><a href="index.html" class="active">Home</a></li>
-          <li><a href="index.html#services">Services</a></li>
-          <li><a href="about.html">About</a></li>
-          <li class="dropdown"><a href="#"><span>Our Organizations</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
+                <nav id="navmenu" class="navmenu">
             <ul>
-              <li><a href="sunday-school.html">Sunday School</a></li>
-              <li><a href="stpauls-mensfellow.html">St. Pauls Mens Fellowship</a></li>
-              <li><a href="stmarys-womens.html">St. Marys Womens League</a></li>
-              <li><a href="#">Managing Committee</a></li>
-              <li><a href="#">Spiritual Council</a></li>
-              <li><a href="spiritual-leader.html">Spiritual Leaders</a></li>
+              <li><a href="index.html">Home</a></li>
+              <li class="dropdown"><a href="about.html" class="active"><span>About</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
+                <ul>
+                  <li><a href="about.html">Our History</a></li>
+                  <li><a href="spiritual-leader.html" class="active">Our Spiritual Fathers</a></li>
+                  <li><a href="our-clergy.html">Our Clergy</a></li>
+                  <li><a href="office-bearers.html">Our Office Bearers</a></li>
+                  <li><a href="acolytes-choir.html">Our Acolytes &amp; Choir</a></li>
+                  <li><a href="our-organizations.html">Our Organizations</a></li>
+                </ul>
+              </li>
+              <li class="dropdown"><a href="first-time.html"><span>Resources</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
+                <ul>
+                  <li><a href="events-calendar.html">Events Calendar</a></li>
+                  <li><a href="useful-links.html">Useful Links</a></li>
+                  <li><a href="first-time.html">First Time Visiting?</a></li>
+                </ul>
+              </li>
+              <li><a href="giving.html">Giving</a></li>
+              <li><a href="contact-us.html">Contact Us</a></li>
             </ul>
-          </li>
-          <li><a href="#contact">Contact</a></li>
-        </ul>
-        <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
-      </nav>
+
+            <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
+          </nav>
 
     </div>
   </header>
 
   <main class="main">
-    <section id="team" class="team section">
+    <!-- Maroon Section with Title -->
+    <section class="hero-section" style="background-color: #91203C; height: 2in; width: 100%; display: flex; align-items: center; justify-content: center;">
+      <h1 class="drop-in-fade main-title" style="font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 40px; color: #FEFAE0; text-transform: uppercase; margin: 0; text-align: center;">OUR SPIRITUAL FATHERS</h1>
+    </section>
 
-      <!-- Section Title -->
-      <div class="container section-title" data-aos="fade-up">
-        <h2>Our Spiritual Leaders</h2>
-        <p></p>
-      </div><!-- End Section Title -->
+    <section id="team" class="team section leader-section" style="padding-top: 60px; padding-bottom: 0;">
 
-      <div class="container" data-aos="fade-up" data-aos-delay="100">
+      <div class="container">
 
-        <div class="row gy-5">
+        <!-- First Section: Image Left, Content Right -->
+        <div class="row align-items-center mb-5 py-4" data-aos="fade-up" data-aos-delay="100">
+          <div class="col-lg-5 mb-4 mb-lg-0">
+            <img src="assets/img/organizations/patriarch.jpg" alt="Patriarch" class="img-fluid rounded shadow leader-image" style="width: 100%; height: 600px; object-fit: cover; object-position: center 20%;">
+          </div>
+          <div class="col-lg-7 ps-lg-5 content-column">
+            <h2 class="leader-name" style="font-family: 'Poppins', sans-serif; font-weight: 600; color: #253341; margin-bottom: 10px; font-size: 36px;">Moran Mor Ignatius Aphrem II</h2>
+            <p class="leader-title" style="font-family: 'Poppins', sans-serif; color: #91203C; line-height: 1.6; font-size: 20px; margin-bottom: 10px; font-style: italic; font-weight: bold;">
+              122nd Successor of St. Peter in the Apostolic See of Antioch and All the East, and Supreme Head of the Universal Syrian Orthodox Church
+            </p>
+            <p class="leader-description" style="font-family: 'Poppins', sans-serif; color: #253341; line-height: 1.8; font-size: 16px; text-align: justify;">
+              His Holiness Moran Mor Ignatius Aphrem II was born in Kamishly, Syria on May 3, 1965, and pursued his theological education across multiple institutions, earning his Doctor of Divinity from St. Patrick's College in Ireland. Before his election to the patriarchate, he served as Archbishop for the Eastern United States of America, where he established numerous parishes and vital ministries including youth organizations and educational programs. He became the 123rd Syriac Orthodox Patriarch of Antioch when he was enthroned as Patriarch in Damascus on May 29, 2014. A accomplished scholar fluent in Syriac, Arabic, French, and English, His Holiness has authored numerous theological works and serves on the Executive Committee of the World Council of Churches. As our Supreme Spiritual Head, he continues to guide the global Syriac Orthodox Church while fostering Christian unity through ecumenical leadership. His pastoral care and scholarly depth ensure the preservation of our ancient traditions while meeting the spiritual needs of Orthodox communities worldwide.
+            </p>
+          </div>
+        </div>
 
-          <div class="col-xl-4 col-md-6 d-flex" data-aos="zoom-in" data-aos-delay="200">
-            <div class="team-member">
-              <div class="member-img">
-                <img src="assets/img/organizations/Patriarch_Ignatius_Aphrem_II,_seated.jpg" class="img-fluid" alt="">
-              </div>
-              <div class="member-info">
-                <div class="social">
-                    <!-- <a href=""><i class="bi bi-twitter-x"></i></a>
-                    <a href=""><i class="bi bi-facebook"></i></a>
-                    <a href=""><i class="bi bi-instagram"></i></a>
-                    <a href=""><i class="bi bi-linkedin"></i></a> -->
-                  </div>
-                <h4>His Holiness Moran Mor Ignatius Aphrem II</h4>
-                <span>Supreme head of the Universal Syrian Orthodox Church</span>
-              </div>
-            </div>
-          </div><!-- End Team Member -->
+        <!-- Second Section: Content Left, Image Right -->
+        <div class="row align-items-center mb-5 py-4" data-aos="fade-up" data-aos-delay="200">
+          <div class="col-lg-5 order-lg-2 mb-4 mb-lg-0">
+            <img src="assets/img/organizations/bava .png" alt="Metropolitan" class="img-fluid rounded shadow leader-image" style="width: 100%; height: 600px; object-fit: cover; object-position: center 20%;">
+          </div>
+          <div class="col-lg-7 order-lg-1 pe-lg-5 content-column">
+            <h2 class="leader-name" style="font-family: 'Poppins', sans-serif; font-weight: 600; color: #253341; margin-bottom: 10px; font-size: 36px;">His Beatitude Aboon Mor Baselios Joseph</h2>
+            <p class="leader-title" style="font-family: 'Poppins', sans-serif; color: #91203C; line-height: 1.6; font-size: 20px; margin-bottom: 10px; font-style: italic; font-weight: bold;">
+              Catholicos of the Malankara Archdiocese of the Syrian Orthodox Church in India
+            </p>
+            <p class="leader-description" style="font-family: 'Poppins', sans-serif; color: #253341; line-height: 1.8; font-size: 16px; text-align: justify;">
+              Aboon Mor Baselios Joseph is the current Catholicos of India of the Malankara Syriac Orthodox Church. He also serves as the Metropolitan of the Kochi Diocese and Angamali Diocese. He was elevated as Catholicos of India by Ignatius Aphrem II on 25 March 2025, at St. Mary's Cathedral, Atchaneh, Lebanon with the name Baselios Joseph. He was enthroned on 30 March 2025, at Mar Athanasius Cathedral, Puthencruz.
+            </p>
+          </div>
+        </div>
 
-          <div class="col-xl-4 col-md-6 d-flex" data-aos="zoom-in" data-aos-delay="400">
-            <div class="team-member">
-              <div class="member-img">
-                <img src="assets/img/organizations/H.B._Mor_Baselios_Thomas_I.jpg" class="img-fluid" alt="">
-              </div>
-              <div class="member-info">
-                <div class="social">
-                  <!-- <a href=""><i class="bi bi-twitter-x"></i></a>
-                  <a href=""><i class="bi bi-facebook"></i></a>
-                  <a href=""><i class="bi bi-instagram"></i></a>
-                  <a href=""><i class="bi bi-linkedin"></i></a> -->
-                </div>
-                <h4>H.B Catholicos Aboon Mor Baselios Thomas I</h4>
-                <span> Catholicos Of India </span>
-              </div>
-            </div>
-          </div><!-- End Team Member -->
-
-          <div class="col-xl-4 col-md-6 d-flex" data-aos="zoom-in" data-aos-delay="600">
-            <div class="team-member">
-              <div class="member-img">
-                <img src="assets/img/organizations/h-e-theethose-yeldho.jpg" class="img-fluid" alt="">
-              </div>
-              <div class="member-info">
-                <div class="social">
-                  <!-- <a href=""><i class="bi bi-twitter-x"></i></a>
-                  <a href=""><i class="bi bi-facebook"></i></a>
-                  <a href=""><i class="bi bi-instagram"></i></a>
-                  <a href=""><i class="bi bi-linkedin"></i></a> -->
-                </div>
-                <h4>His Eminence Mor Titus Yeldho</h4>
-                <span>Archbishop of the Malankara Syriac Orthodox Church in North America</span>
-              </div>
-            </div>
-          </div><!-- End Team Member -->
-
-          <div class="col-xl-4 col-md-6 d-flex" data-aos="zoom-in" data-aos-delay="800">
-            <div class="team-member">
-              <div class="member-img">
-                <img src="assets/img/organizations/frroy-varghese.jpg" class="img-fluid" alt="">
-              </div>
-              <div class="member-info">
-                <div class="social">
-                    <!-- <a href=""><i class="bi bi-twitter-x"></i></a>
-                    <a href=""><i class="bi bi-facebook"></i></a>
-                    <a href=""><i class="bi bi-instagram"></i></a>
-                    <a href=""><i class="bi bi-linkedin"></i></a> -->
-                  </div>
-                <h4>Rev. Fr. Roy Varghese</h4>
-                <span>Vicar of St. Basil's Syrian Orthodox Church</span>
-              </div>
-            </div>
-          </div><!-- End Team Member -->
-
-          <div class="col-xl-4 col-md-6 d-flex" data-aos="zoom-in" data-aos-delay="1000">
-            <div class="team-member">
-              <div class="member-img">
-                <img src="assets/img/team/team-5.jpg" class="img-fluid" alt="">
-              </div>
-              <div class="member-info">
-                <div class="social">
-                    <!-- <a href=""><i class="bi bi-twitter-x"></i></a>
-                    <a href=""><i class="bi bi-facebook"></i></a>
-                    <a href=""><i class="bi bi-instagram"></i></a>
-                    <a href=""><i class="bi bi-linkedin"></i></a> -->
-                </div>
-                <h4>Rev. Fr. Benny George </h4>
-                <span>Assistant Vicar of St. Basil's Syrian Orthodox Church</span>
-              </div>
-            </div>
-          </div><!-- End Team Member -->
-
+        <!-- Third Section: Image Left, Content Right -->
+        <div class="row align-items-center py-4" data-aos="fade-up" data-aos-delay="300">
+          <div class="col-lg-5 mb-4 mb-lg-0">
+            <img src="assets/img/organizations/h-e-theethose-yeldho.jpg" alt="H.E. Theethose Yeldho" class="img-fluid rounded shadow leader-image" style="width: 100%; height: 600px; object-fit: cover;">
+          </div>
+          <div class="col-lg-7 ps-lg-5 content-column">
+            <h2 class="leader-name" style="font-family: 'Poppins', sans-serif; font-weight: 600; color: #253341; margin-bottom: 10px; font-size: 36px;">His Eminence Archbishop Mor Titus Yeldho</h2>
+            <p class="leader-title" style="font-family: 'Poppins', sans-serif; color: #91203C; line-height: 1.6; font-size: 20px; margin-bottom: 10px; font-style: italic; font-weight: bold;">
+              Archbishop and Patriarchal Vicar of the Malankara Archdiocese of the Syrian Orthodox Church in North America
+            </p>
+            <p class="leader-description" style="font-family: 'Poppins', sans-serif; color: #253341; line-height: 1.8; font-size: 16px; text-align: justify;">
+              His Eminence Mor Titus Yeldho was born in 1970 in India and was ordained as a deacon at age 12, later receiving his theological education at seminaries in Damascus, Syria and India. He earned degrees in Mathematics and Education before pursuing advanced theological studies, including a Master of Divinity from St. Vladimir's Orthodox Theological Seminary in New York in 2003. After serving churches in both India and the United States, he was consecrated as Archbishop and Patriarchal Vicar of the Malankara Archdiocese in North America on January 4, 2004, by His Holiness Patriarch Moran Mor Ignatius Zakka I Iwas in Damascus, Syria. During the consecration ceremony, he was given the Episcopal name 'TITUS' and pledged his faithful service to the Holy Syriac Orthodox Church. His Eminence continues to serve as our beloved Archbishop while pursuing doctoral studies, providing pastoral leadership to the Syriac Orthodox communities across North America.
+            </p>
+          </div>
         </div>
 
       </div>
 
     </section><!-- /Team Section -->
   </main>
+
+  <!-- Spacer Section -->
+  <section style="background-color: #FEFAE0; height: 48px; width: 100%;"></section>
 
   <!-- Scroll Top -->
   <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
@@ -209,6 +587,32 @@
 
   <!-- Main JS File -->
   <script src="assets/js/main.js"></script>
+
+  <!-- Bottom Section -->
+  <style>
+    .footer-link:hover {
+      text-decoration: underline !important;
+    }
+  </style>
+  <section class="footer-section" style="background-color: #253341; min-min-height: 1.2in; width: 100%; display: flex; align-items: center; justify-content: space-between; position: relative; padding: 20px 1in; flex-wrap: wrap;">
+    <div class="footer-copyright" style="font-family: 'Libre Baskerville', serif; color: #FEFAE0; font-size: 15px; display: flex; align-items: center;">
+      <span style="margin-right: 10px;">©</span>
+      <div>
+        <div>2025 St. Basil's Syriac</div>
+        <div>Orthodox Church, All Rights Reserved.</div>
+      </div>
+    </div>
+    <div class="footer-links" style="display: flex; align-items: center; font-family: 'Libre Baskerville', serif; color: #FEFAE0; font-size: 15px; position: absolute; left: 50%; transform: translateX(-50%);">
+      <a href="privacy-policy.html" class="footer-link" style="color: #FEFAE0; text-decoration: none; padding: 0 20px; font-size: 15px;">Privacy Policy</a>
+      <span style="border-left: 1px solid #FEFAE0; height: 30px; margin: 0 10px;"></span>
+      <a href="terms-of-use.html" class="footer-link" style="color: #FEFAE0; text-decoration: none; padding: 0 20px; font-size: 15px;">Terms of Use</a>
+      <span style="border-left: 1px solid #FEFAE0; height: 30px; margin: 0 10px;"></span>
+      <a href="contact-us.html" class="footer-link" style="color: #FEFAE0; text-decoration: none; padding: 0 20px; font-size: 15px;">Contact Us</a>
+    </div>
+    <div style="display: flex; align-items: center;">
+      <a href="https://www.facebook.com/StBasilsBoston" target="_blank" style="color: #FEFAE0; font-size: 20px;"><i class="bi bi-facebook"></i></a>
+    </div>
+  </section>
 
 </body>
 

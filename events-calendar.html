@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>Events Calendar - St.Basil's Syrian Orthodox Church</title>
+  <meta name="description" content="Events Calendar for St. Basil's Syriac Orthodox Church in Boston, Massachusetts">
+  <meta name="keywords" content="Events,Calendar,Boston,Massachusetts,Malankara,Orthodox,Jacobite">
+  <meta name="robots" content="index,follow">
+  <meta name="author" content="George Nijo">
+
+  <!-- Favicons -->
+  <link href="assets/img/favicon.png" rel="icon">
+  <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com" rel="preconnect">
+  <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400;1,700;1,900&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Raleway:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+
+  <!-- Vendor CSS Files -->
+  <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="assets/vendor/aos/aos.css" rel="stylesheet">
+  <link href="assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
+  <link href="assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
+
+  <!-- Main CSS File -->
+  <link href="assets/css/main.css" rel="stylesheet">
+  
+  <!-- Custom Navigation Styles -->
+  <style>
+    /* Header navigation font styles */
+    .navmenu a,
+    .navmenu a:focus {
+      font-family: 'Libre Baskerville', serif !important;
+      color: #253341 !important;
+    }
+    
+    /* Dropdown menu styles */
+    .navmenu .dropdown ul {
+      background: #FEFAE0 !important;
+    }
+
+    .navmenu .dropdown ul a,
+    .navmenu .dropdown ul a:link,
+    .navmenu .dropdown ul a:visited {
+      font-family: 'Libre Baskerville', serif !important;
+      color: #253341 !important;
+      background-color: transparent !important;
+    }
+
+    /* Dropdown hover states */
+    .navmenu .dropdown ul li:hover,
+    .navmenu .dropdown ul li a:hover {
+      background-color: rgba(196, 164, 132, 0.5) !important;
+    }
+
+    .navmenu .dropdown ul a:hover,
+    .navmenu .dropdown ul .active:hover,
+    .navmenu .dropdown ul li:hover>a {
+      font-family: 'Libre Baskerville', serif !important;
+      color: #253341 !important;
+      background-color: transparent !important;
+      opacity: 1 !important;
+    }
+    
+    /* Active and hover states for non-dropdown items */
+    .navmenu li:hover>a,
+    .navmenu .active,
+    .navmenu .active:focus {
+      font-family: 'Libre Baskerville', serif !important;
+      color: #253341 !important;
+      background-color: rgba(196, 164, 132, 0.2) !important;
+      opacity: 1 !important;
+    }
+    
+    .header {
+      background-color: #FEFAE0; /* Light cream background color */
+      opacity: 1; /* Remove transparency */
+    }
+
+    .main {
+      padding-top: 0; /* Remove padding to show dark blue section */
+    }
+
+    /* Fade in animation for header content */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .header-content {
+      animation: fadeIn 1.5s ease-out;
+    }
+
+    /* Calendar Styles */
+    .calendar-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+
+    /* Interactive Calendar Styles */
+    .calendar-navigation {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      background-color: #FEFAE0;
+      padding: 1rem 2rem;
+      border-radius: 10px;
+    }
+
+    .calendar-navigation button {
+      background-color: #253341;
+      color: #FEFAE0;
+      border: none;
+      padding: 0.5rem 1.5rem;
+      font-family: 'Poppins', sans-serif;
+      font-weight: 400;
+      font-size: 16px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .calendar-navigation button:hover {
+      background-color: #1a2330;
+      transform: translateY(-2px);
+    }
+
+    .calendar-navigation h2 {
+      font-family: 'Poppins', sans-serif;
+      color: #253341;
+      font-weight: 400;
+      font-size: 24px;
+      margin: 0;
+    }
+
+    .calendar-grid {
+      background-color: #FEFAE0;
+      border-radius: 10px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .calendar-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 5px;
+      table-layout: fixed;
+    }
+
+    .calendar-table th {
+      font-family: 'Poppins', sans-serif;
+      color: #253341;
+      font-weight: 400;
+      font-size: 16px;
+      text-align: center;
+      padding: 10px;
+      background-color: #253341;
+      color: #FEFAE0;
+      width: 14.28%;
+    }
+
+    .calendar-table td {
+      font-family: 'Poppins', sans-serif;
+      color: #253341;
+      font-weight: 400;
+      font-size: 14px;
+      text-align: left;
+      padding: 8px;
+      background-color: white;
+      border: 1px solid #e0e0e0;
+      cursor: pointer;
+      position: relative;
+      height: 80px;
+      width: 14.28%;
+      vertical-align: top;
+      transition: all 0.3s ease;
+      box-sizing: border-box;
+    }
+
+    .calendar-table td:hover {
+      background-color: #f5f5f5;
+      transform: scale(1.05);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      z-index: 1;
+    }
+
+    .calendar-table td.other-month {
+      color: #999;
+      background-color: #f9f9f9;
+    }
+
+    .calendar-table td.today {
+      font-weight: 600;
+      border: 2px solid #253341;
+    }
+
+    .calendar-table td.sunday,
+    .calendar-table td.has-event {
+      background-color: #FAEDCD;
+    }
+
+    .event-text {
+      display: block;
+      font-family: 'Poppins', sans-serif;
+      color: #91203C;
+      font-weight: bold;
+      font-size: 11px;
+      margin-top: 4px;
+      line-height: 1.3;
+    }
+
+    .event-text.highlighted {
+      background-color: #C4A484;
+      color: #91203C;
+      padding: 2px 4px;
+      border-radius: 0;
+      display: inline-block;
+      position: absolute;
+      bottom: 8px;
+      left: 5px;
+      z-index: 2;
+    }
+
+    .event-bar {
+      position: absolute;
+      bottom: 5px;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background-color: #C4A484;
+    }
+
+    .event-bar.start {
+      left: 5px;
+      border-radius: 2px 0 0 2px;
+    }
+
+    .event-bar.middle {
+      left: 0;
+      right: 0;
+    }
+
+    .event-bar.end {
+      right: 5px;
+      border-radius: 0 2px 2px 0;
+    }
+
+    .event-bar.single {
+      left: 5px;
+      right: 5px;
+      border-radius: 2px;
+    }
+
+
+    @media (max-width: 768px) {
+      /* Logo padding fix */
+      .logo {
+        transform: translateX(0) !important;
+        padding-left: 15px;
+      }
+
+      /* Calendar container responsive */
+      .calendar-container {
+        padding: 1rem;
+      }
+
+      /* Calendar navigation responsive */
+      .calendar-navigation {
+        padding: 1rem;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .calendar-navigation h2 {
+        font-size: 18px;
+        order: 2;
+        width: 100%;
+        text-align: center;
+      }
+
+      .calendar-navigation button {
+        padding: 0.4rem 1rem;
+        font-size: 14px;
+      }
+
+      .calendar-navigation button:first-of-type {
+        order: 1;
+      }
+
+      .calendar-navigation button:last-of-type {
+        order: 3;
+      }
+
+      /* Today button container responsive */
+      .calendar-navigation > div {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        justify-content: center !important;
+        gap: 5px !important;
+        width: 100% !important;
+        order: 4 !important;
+      }
+
+      /* Today button mobile styles */
+      .calendar-navigation button[onclick="goToToday()"] {
+        margin-left: 0 !important;
+        padding: 0.4rem 1rem !important;
+        font-size: 14px !important;
+        flex-shrink: 0 !important;
+      }
+
+      /* Calendar grid responsive */
+      .calendar-grid {
+        padding: 1rem;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      /* Calendar table responsive - Force uniform sizes */
+      .calendar-table {
+        width: calc(7 * 71px + 8 * 5px) !important; /* Match cell widths exactly with outer gaps */
+        table-layout: fixed !important;
+        border-collapse: separate !important;
+        border-spacing: 5px !important;
+      }
+
+      .calendar-table tbody,
+      .calendar-table tr {
+        display: table !important;
+        width: 100% !important;
+        table-layout: fixed !important;
+      }
+
+      .calendar-table th {
+        width: calc(100% / 7) !important;
+        height: 40px !important;
+        padding: 5px !important;
+        font-size: 12px !important;
+        box-sizing: border-box !important;
+      }
+
+      .calendar-table td {
+        width: calc(100% / 7) !important;
+        height: 60px !important;
+        padding: 5px !important;
+        font-size: 12px !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
+        vertical-align: top !important;
+        position: relative !important;
+      }
+
+      /* Remove hover transform that can affect sizing */
+      .calendar-table td:hover {
+        transform: none !important;
+      }
+
+      /* Event text smaller on mobile */
+      .event-text {
+        font-size: 9px !important;
+      }
+
+      .event-text.highlighted {
+        font-size: 9px !important;
+        padding: 1px 2px;
+      }
+
+      /* Footer responsive styles */
+      section[style*="background-color: #253341"] {
+        flex-direction: column !important;
+        padding: 30px 15px !important;
+        text-align: center;
+        gap: 20px;
+      }
+
+      section[style*="background-color: #253341"] > div:first-child {
+        margin-bottom: 15px;
+        font-size: 13px !important;
+      }
+
+      /* Footer links section */
+      section[style*="background-color: #253341"] > div:nth-child(2) {
+        position: relative !important;
+        left: 0 !important;
+        transform: none !important;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 15px;
+      }
+
+      section[style*="background-color: #253341"] a.footer-link {
+        padding: 5px 10px !important;
+        font-size: 13px !important;
+      }
+
+      /* Hide divider lines on mobile */
+      section[style*="background-color: #253341"] span[style*="border-left"] {
+        display: none !important;
+      }
+    }
+
+    @media (max-width: 576px) {
+      /* Extra small devices */
+
+      /* Calendar navigation even smaller */
+      .calendar-navigation h2 {
+        font-size: 16px;
+      }
+
+      .calendar-navigation button {
+        padding: 0.3rem 0.8rem;
+        font-size: 12px;
+      }
+
+      /* Calendar table even smaller */
+      .calendar-table {
+        width: calc(7 * 57px + 6 * 5px) !important; /* Match cell widths exactly */
+        table-layout: fixed !important;
+      }
+
+      .calendar-table th {
+        width: calc(100% / 7) !important;
+        height: 35px !important;
+        padding: 3px !important;
+        font-size: 10px !important;
+      }
+
+      .calendar-table td {
+        width: calc(100% / 7) !important;
+        height: 50px !important;
+        padding: 3px !important;
+        font-size: 10px !important;
+      }
+
+      /* Event text even smaller */
+      .event-text {
+        font-size: 8px !important;
+      }
+
+      /* Footer even smaller text */
+      section[style*="background-color: #253341"] {
+        padding: 20px 10px !important;
+      }
+
+      section[style*="background-color: #253341"] > div:first-child {
+        font-size: 11px !important;
+      }
+
+      section[style*="background-color: #253341"] a.footer-link {
+        font-size: 11px !important;
+      }
+    }
+
+    @media (max-width: 400px) {
+      /* Very small devices */
+
+      /* Calendar table minimum width smaller */
+      .calendar-table {
+        width: calc(7 * 50px + 6 * 5px) !important; /* Match cell widths exactly */
+        table-layout: fixed !important;
+      }
+
+      .calendar-table th {
+        width: calc(100% / 7) !important;
+        height: 30px !important;
+        padding: 2px !important;
+        font-size: 9px !important;
+      }
+
+      .calendar-table td {
+        width: calc(100% / 7) !important;
+        height: 45px !important;
+        padding: 2px !important;
+        font-size: 9px !important;
+      }
+
+      /* Hide hover effects on very small devices */
+      .calendar-table td:hover {
+        transform: none;
+        box-shadow: none;
+      }
+    }
+  </style>
+</head>
+
+<body class="index-page">
+
+    <header id="header" class="header d-flex align-items-center fixed-top">
+        <div class="container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
+    
+          <a href="index.html" class="logo d-flex align-items-center" style="transform: translateX(-10px);">
+            <img src="assets/img/sbb logo, blue .png" alt="St. Basil's Syrian Orthodox Church" class="logo-img" style="height: 75px; max-height: 75px;">
+          </a>
+    
+                    <nav id="navmenu" class="navmenu">
+            <ul>
+              <li><a href="index.html">Home</a></li>
+              <li class="dropdown"><a href="about.html"><span>About</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
+                <ul>
+                  <li><a href="about.html">Our History</a></li>
+                  <li><a href="spiritual-leader.html">Our Spiritual Fathers</a></li>
+                  <li><a href="our-clergy.html">Our Clergy</a></li>
+                  <li><a href="office-bearers.html">Our Office Bearers</a></li>
+                  <li><a href="acolytes-choir.html">Our Acolytes &amp; Choir</a></li>
+                  <li><a href="our-organizations.html">Our Organizations</a></li>
+                </ul>
+              </li>
+              <li class="dropdown"><a href="first-time.html" class="active"><span>Resources</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
+                <ul>
+                  <li><a href="events-calendar.html" class="active">Events Calendar</a></li>
+                  <li><a href="useful-links.html">Useful Links</a></li>
+                  <li><a href="first-time.html">First Time Visiting?</a></li>
+                </ul>
+              </li>
+              <li><a href="giving.html">Giving</a></li>
+              <li><a href="contact-us.html">Contact Us</a></li>
+            </ul>
+
+            <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
+          </nav>
+    
+        </div>
+      </header>
+
+  <!-- Top Dark Blue Section -->
+  <div style="background-color: #253341; height: 3in; width: 100%; display: flex; align-items: center; justify-content: center; margin: 0; padding: 0; position: relative; top: 75px;">
+    <div class="header-content" style="text-align: center; position: relative; top: 20px;">
+      <h1 style="font-family: 'Poppins', sans-serif; font-weight: 400; font-size: 40px; color: #FAEDCD; margin: 0; padding: 0;">
+        <i class="bi bi-calendar3" style="margin-right: 10px; color: #FAEDCD;"></i>Events Calendar
+      </h1>
+      <p style="font-family: 'Poppins', sans-serif; font-weight: 400; font-size: 18px; color: #FAEDCD; margin-top: 10px;">
+        Join us for worship, fellowship, and celebration throughout the year
+      </p>
+    </div>
+  </div>
+
+  <main class="main" style="padding-top: 75px;">
+    <section class="calendar-section">
+      <div class="calendar-container">
+
+        <!-- Calendar Navigation -->
+        <div class="calendar-navigation" data-aos="fade-up" data-aos-delay="100">
+          <button id="prevMonth" onclick="changeMonth(-1)">← Previous</button>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <select id="monthSelect" onchange="jumpToMonth()" style="font-family: 'Poppins', sans-serif; color: #253341; font-weight: 400; font-size: 20px; padding: 8px 35px 8px 15px; border: 1px solid #253341; border-radius: 5px; background-color: white; cursor: pointer; appearance: none; background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23253341%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3e%3cpolyline points=%226 9 12 15 18 9%22%3e%3c/polyline%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 10px center; background-size: 20px;">
+              <option value="0">January</option>
+              <option value="1">February</option>
+              <option value="2">March</option>
+              <option value="3">April</option>
+              <option value="4">May</option>
+              <option value="5">June</option>
+              <option value="6">July</option>
+              <option value="7">August</option>
+              <option value="8">September</option>
+              <option value="9">October</option>
+              <option value="10">November</option>
+              <option value="11">December</option>
+            </select>
+            <select id="yearSelect" onchange="jumpToMonth()" style="font-family: 'Poppins', sans-serif; color: #253341; font-weight: 400; font-size: 20px; padding: 8px 35px 8px 15px; border: 1px solid #253341; border-radius: 5px; background-color: white; cursor: pointer; appearance: none; background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23253341%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3e%3cpolyline points=%226 9 12 15 18 9%22%3e%3c/polyline%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 10px center; background-size: 20px;">
+              <option value="2024">2024</option>
+              <option value="2025">2025</option>
+              <option value="2026">2026</option>
+            </select>
+            <button onclick="goToToday()" style="font-family: 'Poppins', sans-serif; color: #FEFAE0; background-color: #253341; font-weight: 400; font-size: 16px; padding: 0.5rem 1.5rem; border: none; border-radius: 5px; cursor: pointer; transition: all 0.3s ease; margin-left: 10px;" onmouseover="this.style.backgroundColor='#1a2330'; this.style.transform='translateY(-2px)'" onmouseout="this.style.backgroundColor='#253341'; this.style.transform='translateY(0)'">Today</button>
+          </div>
+          <button id="nextMonth" onclick="changeMonth(1)">Next →</button>
+        </div>
+
+        <!-- Calendar Grid -->
+        <div class="calendar-grid" data-aos="fade-up" data-aos-delay="200">
+          <table class="calendar-table">
+            <thead>
+              <tr>
+                <th>Sunday</th>
+                <th>Monday</th>
+                <th>Tuesday</th>
+                <th>Wednesday</th>
+                <th>Thursday</th>
+                <th>Friday</th>
+                <th>Saturday</th>
+              </tr>
+            </thead>
+            <tbody id="calendarBody">
+              <!-- Calendar days will be generated by JavaScript -->
+            </tbody>
+          </table>
+        </div>
+
+
+        <!-- Contact Information -->
+        <div style="text-align: center; margin-top: 3rem;" data-aos="fade-up" data-aos-delay="400">
+          <h3 style="font-family: 'Poppins', sans-serif; color: #253341; font-weight: 400; margin-bottom: 1rem;">For More Information</h3>
+          <p style="font-family: 'Poppins', sans-serif; color: #253341; font-weight: 400;">
+            <i class="bi bi-telephone"></i> Call us: +1 (478) 227-4572<br>
+            <i class="bi bi-envelope"></i> Email: StBasilsBoston@gmail.com<br>
+            <i class="bi bi-geo-alt"></i> Location: 65 Ellis St, Newton, MA 02464
+          </p>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <!-- Scroll Top -->
+  <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+
+  <!-- Preloader -->
+  <div id="preloader"></div>
+
+  <!-- Vendor JS Files -->
+  <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="assets/vendor/php-email-form/validate.js"></script>
+  <script src="assets/vendor/aos/aos.js"></script>
+  <script src="assets/vendor/purecounter/purecounter_vanilla.js"></script>
+  <script src="assets/vendor/glightbox/js/glightbox.min.js"></script>
+  <script src="assets/vendor/swiper/swiper-bundle.min.js"></script>
+  <script src="assets/vendor/imagesloaded/imagesloaded.pkgd.min.js"></script>
+  <script src="assets/vendor/isotope-layout/isotope.pkgd.min.js"></script>
+
+  <!-- Main JS File -->
+  <script src="assets/js/main.js"></script>
+
+  <style>
+    /* Mobile calendar uniform sizing override - MUST be after all other styles */
+    @media (max-width: 768px) and (min-width: 577px) {
+      /* Fix for 751px specific issue */
+      .calendar-table {
+        width: 537px !important; /* Exact width for 7*71px + gaps */
+        table-layout: fixed !important;
+      }
+
+      #calendar-body td {
+        width: 71px !important;
+        min-width: 71px !important;
+        max-width: 71px !important;
+        height: 60px !important;
+        min-height: 60px !important;
+        max-height: 60px !important;
+        box-sizing: border-box !important;
+      }
+
+      /* Remove any residual spacing */
+      #calendar-body {
+        display: table-row-group !important;
+      }
+
+      #calendar-body tr {
+        display: table-row !important;
+      }
+
+      #calendar-body td:last-child {
+        border-right: 1px solid #e0e0e0 !important;
+      }
+    }
+
+    @media (max-width: 576px) {
+      .calendar-table {
+        width: calc(7 * 57px + 6 * 5px) !important; /* 7 cells + 6 gaps */
+      }
+
+      #calendar-body td {
+        width: 57px !important;
+        min-width: 57px !important;
+        max-width: 57px !important;
+        height: 50px !important;
+        min-height: 50px !important;
+        max-height: 50px !important;
+      }
+    }
+
+    @media (max-width: 400px) {
+      .calendar-table {
+        width: calc(7 * 50px + 6 * 5px) !important; /* 7 cells + 6 gaps */
+      }
+
+      #calendar-body td {
+        width: 50px !important;
+        min-width: 50px !important;
+        max-width: 50px !important;
+        height: 45px !important;
+        min-height: 45px !important;
+        max-height: 45px !important;
+      }
+    }
+  </style>
+
+  <!-- Calendar JavaScript -->
+  <script>
+    // Calendar state
+    let currentDate = new Date();
+    let currentMonth = currentDate.getMonth();
+    let currentYear = currentDate.getFullYear();
+    const today = new Date();
+
+    // Month names
+    const monthNames = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+
+    // Generate calendar
+    function generateCalendar(month, year) {
+      const firstDay = new Date(year, month, 1).getDay();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const daysInPrevMonth = new Date(year, month, 0).getDate();
+      
+      let date = 1;
+      let calendarHTML = '';
+      
+      // Generate 6 weeks (max possible weeks in a month view)
+      for (let week = 0; week < 6; week++) {
+        calendarHTML += '<tr>';
+        
+        for (let day = 0; day < 7; day++) {
+          if (week === 0 && day < firstDay) {
+            // Previous month days
+            const prevDate = daysInPrevMonth - firstDay + day + 1;
+            calendarHTML += `<td class="other-month">${prevDate}</td>`;
+          } else if (date > daysInMonth) {
+            // Next month days
+            const nextDate = date - daysInMonth;
+            calendarHTML += `<td class="other-month">${nextDate}</td>`;
+            date++;
+          } else {
+            // Current month days
+            const dayOfWeek = new Date(year, month, date).getDay();
+            const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
+            let cellClass = '';
+            let eventHTML = '';
+            
+            // Check if Sunday
+            if (dayOfWeek === 0) {
+              cellClass = 'sunday';
+              eventHTML = '<span class="event-text">8:30a - Morning Prayer</span>';
+              eventHTML += '<span class="event-text">9:15a - Holy Qurbono</span>';
+            }
+            
+            // Check for special events
+            // Nativity Lent - December 15-24 (any year)
+            if (month === 11 && date >= 15 && date <= 24) {
+              if (!cellClass.includes('sunday')) {
+                cellClass = 'has-event';
+              }
+              // Only show text on December 15, but show bar for all days 15-24
+              if (date === 15) {
+                eventHTML += '<span class="event-text highlighted">Nativity Lent</span>';
+              }
+              
+              // Determine bar class based on position
+              let barClass = 'event-bar';
+              if (date === 15) {
+                // Check if it's at the end of a week (Saturday)
+                const dayOfWeekForBar = new Date(year, month, date).getDay();
+                barClass += dayOfWeekForBar === 6 ? ' single' : ' start';
+              } else if (date === 24) {
+                // Check if it's at the start of a week (Sunday)
+                const dayOfWeekForBar = new Date(year, month, date).getDay();
+                barClass += dayOfWeekForBar === 0 ? ' single' : ' end';
+              } else {
+                // Check if it's Sunday (start of week) or Saturday (end of week)
+                const dayOfWeekForBar = new Date(year, month, date).getDay();
+                if (dayOfWeekForBar === 0) {
+                  barClass += ' start';
+                } else if (dayOfWeekForBar === 6) {
+                  barClass += ' end';
+                } else {
+                  barClass += ' middle';
+                }
+              }
+              
+              eventHTML += `<span class="${barClass}"></span>`;
+            }
+            
+            // Christmas - December 25 (any year)
+            if (month === 11 && date === 25) {
+              if (!cellClass.includes('sunday')) {
+                cellClass = 'has-event';
+              }
+              eventHTML += '<span class="event-text">Christmas</span>';
+            }
+            
+            // Church Perunnal - September 27-28, 2025
+            if (year === 2025 && month === 8 && date >= 27 && date <= 28) {
+              if (!cellClass.includes('sunday')) {
+                cellClass = 'has-event';
+              }
+              // Only show text on September 27
+              if (date === 27) {
+                eventHTML += '<span class="event-text highlighted">Church Perunnal</span>';
+              }
+              // Add bar for both days
+              let barClass = 'event-bar';
+              if (date === 27) {
+                barClass += ' start';
+              } else if (date === 28) {
+                barClass += ' end';
+              }
+              eventHTML += `<span class="${barClass}"></span>`;
+            }
+            
+            // Single day events for 2026
+            // Circumcision of Christ - January 1, 2026
+            if (year === 2026 && month === 0 && date === 1) {
+              if (!cellClass.includes('sunday')) {
+                cellClass = 'has-event';
+              }
+              eventHTML += '<span class="event-text">Circumcision of Christ</span>';
+            }
+            
+            // Denho/Epiphany - January 6, 2026
+            if (year === 2026 && month === 0 && date === 6) {
+              if (!cellClass.includes('sunday')) {
+                cellClass = 'has-event';
+              }
+              eventHTML += '<span class="event-text">Denho/Epiphany</span>';
+            }
+            
+            // Annunciation - March 25 (any year)
+            if (month === 2 && date === 25) {
+              if (!cellClass.includes('sunday')) {
+                cellClass = 'has-event';
+              }
+              eventHTML += '<span class="event-text">Annunciation</span>';
+            }
+            
+            // Great Lent - February 16 - April 4, 2026
+            if (year === 2026) {
+              const lentStart = new Date(2026, 1, 16); // Feb 16
+              const lentEnd = new Date(2026, 3, 4); // April 4
+              const currentDateObj = new Date(year, month, date);
+              
+              if (currentDateObj >= lentStart && currentDateObj <= lentEnd) {
+                if (!cellClass.includes('sunday')) {
+                  cellClass = 'has-event';
+                }
+                // Only show text on February 16
+                if (month === 1 && date === 16) {
+                  eventHTML += '<span class="event-text highlighted">Great Lent</span>';
+                }
+                
+                // Add continuous bar
+                let barClass = 'event-bar';
+                // Check position in the period
+                if (month === 1 && date === 16) {
+                  // Start of Great Lent
+                  const dayOfWeekForBar = new Date(year, month, date).getDay();
+                  barClass += dayOfWeekForBar === 6 ? ' single' : ' start';
+                } else if (month === 3 && date === 4) {
+                  // End of Great Lent
+                  const dayOfWeekForBar = new Date(year, month, date).getDay();
+                  barClass += dayOfWeekForBar === 0 ? ' single' : ' end';
+                } else {
+                  // Middle days
+                  const dayOfWeekForBar = new Date(year, month, date).getDay();
+                  if (dayOfWeekForBar === 0) {
+                    barClass += ' start';
+                  } else if (dayOfWeekForBar === 6) {
+                    barClass += ' end';
+                  } else {
+                    barClass += ' middle';
+                  }
+                }
+                eventHTML += `<span class="${barClass}"></span>`;
+              }
+            }
+            
+            // Holy Week and Easter events - 2026
+            if (year === 2026) {
+              // Palm Sunday - March 29, 2026
+              if (month === 2 && date === 29) {
+                eventHTML += '<span class="event-text">Palm Sunday</span>';
+              }
+              
+              // Holy Thursday - April 2, 2026
+              if (month === 3 && date === 2) {
+                eventHTML += '<span class="event-text">Holy Thursday</span>';
+              }
+              
+              // Good Friday - April 3, 2026
+              if (month === 3 && date === 3) {
+                eventHTML += '<span class="event-text">Good Friday</span>';
+              }
+              
+              // Holy Saturday - April 4, 2026
+              if (month === 3 && date === 4) {
+                eventHTML += '<span class="event-text">Holy Saturday</span>';
+              }
+              
+              // Easter - April 5, 2026
+              if (month === 3 && date === 5) {
+                if (!cellClass.includes('sunday')) {
+                  cellClass = 'has-event';
+                }
+                eventHTML += '<span class="event-text">Easter</span>';
+              }
+              
+              // Ascension - May 14, 2026
+              if (month === 4 && date === 14) {
+                if (!cellClass.includes('sunday')) {
+                  cellClass = 'has-event';
+                }
+                eventHTML += '<span class="event-text">Ascension</span>';
+              }
+              
+              // Pentecost - May 24, 2026
+              if (month === 4 && date === 24) {
+                if (!cellClass.includes('sunday')) {
+                  cellClass = 'has-event';
+                }
+                eventHTML += '<span class="event-text">Pentecost</span>';
+              }
+              
+              // Apostles Feast - June 29 (any year)
+              if (month === 5 && date === 29) {
+                if (!cellClass.includes('sunday')) {
+                  cellClass = 'has-event';
+                }
+                eventHTML += '<span class="event-text">Apostles Feast</span>';
+              }
+              
+              // Transfiguration - August 5 (any year)
+              if (month === 7 && date === 5) {
+                if (!cellClass.includes('sunday')) {
+                  cellClass = 'has-event';
+                }
+                eventHTML += '<span class="event-text">Transfiguration</span>';
+              }
+              
+              // Assumption - August 15 (any year)
+              if (month === 7 && date === 15) {
+                if (!cellClass.includes('sunday')) {
+                  cellClass = 'has-event';
+                }
+                eventHTML += '<span class="event-text">Assumption</span>';
+              }
+            }
+            
+            // Feast of St. Mary - September 8 (any year)
+            if (month === 8 && date === 8) {
+              if (!cellClass.includes('sunday')) {
+                cellClass = 'has-event';
+              }
+              eventHTML += '<span class="event-text">Feast of St. Mary</span>';
+            }
+            
+            // Check if today (add to existing classes)
+            if (year === today.getFullYear() && month === today.getMonth() && date === today.getDate()) {
+              cellClass += (cellClass ? ' ' : '') + 'today';
+            }
+            
+            calendarHTML += `<td class="${cellClass}">${date}${eventHTML}</td>`;
+            date++;
+          }
+        }
+        
+        calendarHTML += '</tr>';
+        
+        // Stop generating weeks if we've displayed all days
+        if (date > daysInMonth) {
+          break;
+        }
+      }
+      
+      document.getElementById('calendarBody').innerHTML = calendarHTML;
+      
+      // Update dropdowns
+      document.getElementById('monthSelect').value = month;
+      document.getElementById('yearSelect').value = year;
+    }
+
+    // Jump to selected month/year from dropdowns
+    function jumpToMonth() {
+      const selectedMonth = parseInt(document.getElementById('monthSelect').value);
+      const selectedYear = parseInt(document.getElementById('yearSelect').value);
+      
+      currentMonth = selectedMonth;
+      currentYear = selectedYear;
+      
+      generateCalendar(currentMonth, currentYear);
+    }
+    
+    // Go to today's date
+    function goToToday() {
+      const now = new Date();
+      currentMonth = now.getMonth();
+      currentYear = now.getFullYear();
+      
+      // Ensure the year is within our range
+      if (currentYear < 2024) {
+        currentYear = 2024;
+        currentMonth = 0;
+      } else if (currentYear > 2026) {
+        currentYear = 2026;
+        currentMonth = 11;
+      }
+      
+      generateCalendar(currentMonth, currentYear);
+    }
+
+    // Change month
+    function changeMonth(direction) {
+      currentMonth += direction;
+      
+      if (currentMonth < 0) {
+        currentMonth = 11;
+        currentYear--;
+      } else if (currentMonth > 11) {
+        currentMonth = 0;
+        currentYear++;
+      }
+      
+      // Limit to 2024-2026
+      if (currentYear < 2024) {
+        currentYear = 2024;
+        currentMonth = 0;
+      } else if (currentYear > 2026) {
+        currentYear = 2026;
+        currentMonth = 11;
+      }
+      
+      generateCalendar(currentMonth, currentYear);
+    }
+
+    // Initialize calendar
+    document.addEventListener('DOMContentLoaded', function() {
+      // Set initial dropdown values
+      document.getElementById('monthSelect').value = currentMonth;
+      document.getElementById('yearSelect').value = currentYear;
+      
+      generateCalendar(currentMonth, currentYear);
+    });
+  </script>
+
+  <!-- Bottom Section -->
+  <style>
+    .footer-link:hover {
+      text-decoration: underline !important;
+    }
+
+    /* Scroll to top button color */
+    #scroll-top {
+      background-color: #91203C !important;
+    }
+  </style>
+  <section style="background-color: #253341; min-height: 1.2in; width: 100%; display: flex; align-items: center; justify-content: space-between; position: relative; padding: 20px 1in;">
+    <div style="font-family: 'Libre Baskerville', serif; color: #FEFAE0; font-size: 15px; display: flex; align-items: center;">
+      <span style="margin-right: 10px;">©</span>
+      <div>
+        <div>2025 St. Basil's Syriac</div>
+        <div>Orthodox Church, All Rights Reserved.</div>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; font-family: 'Libre Baskerville', serif; color: #FEFAE0; font-size: 15px; position: absolute; left: 50%; transform: translateX(-50%);">
+      <a href="privacy-policy.html" class="footer-link" style="color: #FEFAE0; text-decoration: none; padding: 0 20px; font-size: 15px;">Privacy Policy</a>
+      <span style="border-left: 1px solid #FEFAE0; height: 30px; margin: 0 10px;"></span>
+      <a href="terms-of-use.html" class="footer-link" style="color: #FEFAE0; text-decoration: none; padding: 0 20px; font-size: 15px;">Terms of Use</a>
+      <span style="border-left: 1px solid #FEFAE0; height: 30px; margin: 0 10px;"></span>
+      <a href="contact-us.html" class="footer-link" style="color: #FEFAE0; text-decoration: none; padding: 0 20px; font-size: 15px;">Contact Us</a>
+    </div>
+    <div style="display: flex; align-items: center;">
+      <a href="https://www.facebook.com/StBasilsBoston" target="_blank" style="color: #FEFAE0; font-size: 20px;"><i class="bi bi-facebook"></i></a>
+    </div>
+  </section>
+
+</body>
+
+</html>
