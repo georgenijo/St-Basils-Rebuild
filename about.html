@@ -385,7 +385,7 @@
 
     <!-- Our Faith Section -->
     <section style="background-color: #FEFAE0; padding: 0;">
-      <div id="our-faith-wrapper" style="margin: 0 1in;">
+      <div id="our-faith-wrapper" class="faith-wrapper-margin" style="margin: 0 1in;">
         <div id="our-faith-box" style="background-color: #FAEDCD; min-height: 8in; border-radius: 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); padding: 0.5in 1in 0.3in 1in;">
           <h2 class="fade-in-scroll" style="font-family: 'Poppins', sans-serif; font-size: 40px; font-weight: bold; color: #253341; text-align: center; margin: 0; margin-bottom: 0.5in;">
             Our Faith
@@ -590,15 +590,15 @@
         object-fit: contain !important;
       }
 
-      /* Override all inch-based measurements first */
-      *[style*="1in"] {
+      /* Override all inch-based measurements EXCEPT faith wrapper */
+      *[style*="1in"]:not(.faith-wrapper-margin) {
         padding: 15px !important;
         margin: 0 15px !important;
       }
 
-      /* THEN override specifically for Our Faith section - must come AFTER generic rule */
-      #our-faith-wrapper {
-        margin: 0 7.5px !important;  /* 7.5px each side = 15px total */
+      /* Our Faith section gets special treatment - 15px total (7.5px each side) */
+      .faith-wrapper-margin {
+        margin: 0 7.5px !important;
       }
 
       #our-faith-box {
@@ -646,4 +646,4 @@
 </body>
 
 </html>
-<!-- MOBILE FIX v7 - Set Our Faith outer margins to exactly 15px total (7.5px each side) -->
+<!-- MOBILE FIX v8 - Excluded faith wrapper from generic rule using :not() selector -->
