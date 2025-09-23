@@ -384,7 +384,7 @@
     </div>
 
     <!-- Our Faith Section -->
-    <section style="background-color: #FEFAE0; padding: 0;">
+    <section id="our-faith-section" style="background-color: #FEFAE0; padding: 0;">
       <div id="our-faith-wrapper" class="faith-wrapper-margin" style="margin: 0 1in;">
         <div id="our-faith-box" style="background-color: #FAEDCD; min-height: 8in; border-radius: 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); padding: 0.5in 1in 0.3in 1in;">
           <h2 class="fade-in-scroll" style="font-family: 'Poppins', sans-serif; font-size: 40px; font-weight: bold; color: #253341; text-align: center; margin: 0; margin-bottom: 0.5in;">
@@ -457,6 +457,23 @@
 
     <!-- Empty content area -->
   </main>
+
+  <!-- Mobile Style Override Script -->
+  <script>
+    // Override Our Faith margins and padding on mobile
+    if (window.innerWidth <= 768) {
+      const faithWrapper = document.getElementById('our-faith-wrapper');
+      const faithSection = document.getElementById('our-faith-section');
+
+      if (faithWrapper) {
+        faithWrapper.style.margin = '0 7.5px';
+      }
+
+      if (faithSection) {
+        faithSection.style.padding = '10px 0';  // 10px top and bottom
+      }
+    }
+  </script>
 
   <!-- Scroll Animation Script -->
   <script>
@@ -564,7 +581,7 @@
       /* Move content box below hero image - must override absolute positioning */
       #content-box {
         position: relative !important;
-        margin: 20px !important;
+        margin: 0 !important;
         bottom: auto !important;
         left: auto !important;
         right: auto !important;
@@ -601,8 +618,11 @@
         margin: 0 7.5px !important;
       }
 
+      /* Our Faith box - remove min-height and set padding */
       #our-faith-box {
-        padding: 15px 10px !important;
+        padding: 15px 10px 20px 10px !important;  /* increased bottom to 20px to prevent overflow */
+        min-height: auto !important;
+        height: auto !important;
       }
 
       /* Make dark section stack */
@@ -646,4 +666,4 @@
 </body>
 
 </html>
-<!-- MOBILE FIX v8 - Excluded faith wrapper from generic rule using :not() selector -->
+<!-- MOBILE FIX v12 - Set bottom internal padding to 10px -->
