@@ -147,76 +147,111 @@
       background-color: #91203C !important;
     }
 
-    /* Responsive Design - Mobile First */
+    /* Mobile Responsiveness Fixes */
     @media (max-width: 768px) {
-      /* Hero Title Scaling */
-      h1[style*="font-size: 80px"] {
-        font-size: 45px !important;
+      /* Fix hero text */
+      #hero-title {
+        font-size: 28px !important;
         white-space: normal !important;
-        line-height: 1.1 !important;
+        padding: 0 20px !important;
+        line-height: 1.2 !important;
       }
 
-      /* Section Headings */
+      /* Fix content box positioning */
+      #content-box {
+        position: relative !important;
+        bottom: auto !important;
+        left: 0 !important;
+        right: 0 !important;
+        margin: 20px !important;
+      }
+
+      /* Fix main content margin */
+      #main-content {
+        margin-top: 20px !important;
+      }
+
+      /* Stack dark section vertically */
+      #dark-section {
+        flex-direction: column !important;
+        height: auto !important;
+      }
+
+      #dark-section > div {
+        width: 100% !important;
+        height: auto !important;
+        min-height: 250px !important;
+      }
+
+      /* Stack mission sections */
+      #mission-sections {
+        flex-direction: column !important;
+        gap: 30px !important;
+      }
+
+      /* Fix all content boxes and sections */
+      div[style*="1in"] {
+        padding: 20px !important;
+        margin-left: 20px !important;
+        margin-right: 20px !important;
+      }
+
+      /* Fix images */
+      img[style*="width: 45%"] {
+        width: 100% !important;
+        margin-bottom: 10px !important;
+      }
+
+      /* Fix font sizes */
       h2[style*="font-size: 40px"] {
-        font-size: 28px !important;
+        font-size: 24px !important;
       }
 
       h3[style*="font-size: 30px"] {
-        font-size: 22px !important;
+        font-size: 20px !important;
       }
 
-      /* Content Containers */
-      div[style*="padding: 0.5in 1in"] {
-        padding: 20px 15px !important;
+      p[style*="font-size: 20px"],
+      p[style*="font-size: 17px"],
+      p[style*="font-size: 18px"] {
+        font-size: 14px !important;
       }
 
-      div[style*="left: 1in; right: 1in"] {
-        left: 15px !important;
-        right: 15px !important;
-      }
-
-      /* Body Text */
-      div[style*="font-size: 16px"],
-      div[style*="font-size: 17px"] {
-        font-size: 15px !important;
-      }
-
-      /* Footer Responsive */
+      /* Footer fixes */
       section[style*="padding: 20px 1in"] {
-        padding: 15px 20px !important;
+        padding: 20px !important;
         flex-direction: column !important;
         text-align: center !important;
+        gap: 20px !important;
+      }
+
+      section[style*="padding: 20px 1in"] > div[style*="position: absolute"] {
+        position: relative !important;
+        left: auto !important;
+        transform: none !important;
+      }
+
+      /* Hide separators */
+      span[style*="border-left"] {
+        display: none !important;
       }
     }
 
     @media (max-width: 480px) {
-      /* Extra Small Screens */
-      h1[style*="font-size: 80px"] {
-        font-size: 32px !important;
+      #hero-title {
+        font-size: 20px !important;
       }
 
-      h2[style*="font-size: 40px"] {
-        font-size: 22px !important;
+      h2[style*="font-size"] {
+        font-size: 20px !important;
       }
 
-      h3[style*="font-size: 30px"] {
+      h3[style*="font-size"] {
         font-size: 18px !important;
       }
 
-      /* Tighter Spacing */
-      div[style*="padding: 0.5in 1in"] {
-        padding: 15px 10px !important;
-      }
-
-      div[style*="left: 1in; right: 1in"] {
-        left: 10px !important;
-        right: 10px !important;
-      }
-
-      /* Body Text */
-      div[style*="font-size: 16px"],
-      div[style*="font-size: 17px"] {
-        font-size: 14px !important;
+      p {
+        font-size: 13px !important;
       }
     }
   </style>
@@ -273,10 +308,10 @@
   <div style="position: relative; width: 100%; margin-top: 75px;">
     <img src="assets/img/Our History/pre reno.JPG" style="width: 100%; height: auto; display: block;" alt="Church Pre-Renovation">
     <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5);"></div>
-    <h1 class="hero-text" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-family: 'Poppins', sans-serif; font-weight: bold; font-size: 80px; color: #FAEDCD; text-transform: uppercase; margin: 0; padding: 0; text-align: center; z-index: 1; white-space: nowrap;">OUR CHURCH HISTORY</h1>
+    <h1 id="hero-title" class="hero-text" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-family: 'Poppins', sans-serif; font-weight: bold; font-size: 80px; color: #FAEDCD; text-transform: uppercase; margin: 0; padding: 0; text-align: center; z-index: 1; white-space: nowrap;">OUR CHURCH HISTORY</h1>
 
     <!-- Rectangular Box with Title and Content (overlaying bottom of image) -->
-    <div style="position: absolute; bottom: -15.5in; left: 1in; right: 1in; z-index: 2;">
+    <div id="content-box" style="position: absolute; bottom: -15.5in; left: 1in; right: 1in; z-index: 2;">
       <div style="background-color: #FAEDCD; height: auto; min-height: 10in; border-radius: 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); padding: 0.5in 1in 0.5in 1in; overflow-y: auto;">
         <h2 class="fade-in-scroll" style="font-family: 'Poppins', sans-serif; font-size: 40px; color: #253341; text-align: center; margin: 0; margin-bottom: 0.5in;">
           Founded in <span style="font-weight: bold;">Faith</span>, Blessed by <span style="font-weight: bold;">Providence</span>
@@ -325,9 +360,9 @@
     </div>
   </div>
 
-  <main class="main" style="background-color: #FEFAE0; min-height: calc(100vh - 75px - 1in); padding: 0; margin-top: 15.5in;">
+  <main id="main-content" class="main desktop-main" style="background-color: #FEFAE0; min-height: calc(100vh - 75px - 1in); padding: 0; margin-top: 15.5in;">
     <!-- Dark section below rectangular box split into two -->
-    <div style="background-color: #253341; height: 4in; width: 100%; margin: 0; padding: 0; display: flex;">
+    <div id="dark-section" style="background-color: #253341; height: 4in; width: 100%; margin: 0; padding: 0; display: flex;">
       <!-- Left section with image -->
       <div style="width: 50%; height: 100%; overflow: hidden;">
         <img src="assets/img/Our History/group photo..jpg" style="width: 100%; height: 100%; object-fit: cover; display: block;" alt="Group Photo">
@@ -387,7 +422,7 @@
           </p>
 
           <!-- Three Mission Sections -->
-          <div class="fade-in-scroll" style="display: flex; justify-content: space-between; gap: 0.5in; margin-bottom: 0.5in;">
+          <div id="mission-sections" class="fade-in-scroll" style="display: flex; justify-content: space-between; gap: 0.5in; margin-bottom: 0.5in;">
             <!-- Worship Section -->
             <div style="flex: 1; text-align: center;">
               <i class="bi bi-heart-fill" style="font-size: 30px; color: #FEFAE0; margin-bottom: 0.2in; display: block;"></i>
@@ -494,6 +529,77 @@
     </div>
   </section>
 
+  <!-- Mobile Override Styles - Placed at end for highest priority -->
+  <style>
+    @media only screen and (max-width: 768px) {
+      /* Force hero text to be readable */
+      #hero-title {
+        font-size: 24px !important;
+        white-space: normal !important;
+        line-height: 1.3 !important;
+        padding: 0 10px !important;
+      }
+
+      /* Force content box to be visible */
+      #content-box {
+        position: static !important;
+        margin: 20px !important;
+        bottom: auto !important;
+        left: auto !important;
+        right: auto !important;
+      }
+
+      /* Remove massive top margin */
+      #main-content {
+        margin-top: 20px !important;
+        min-height: auto !important;
+      }
+
+      /* Make dark section stack */
+      #dark-section {
+        display: block !important;
+        height: auto !important;
+      }
+
+      #dark-section > div {
+        width: 100% !important;
+        height: auto !important;
+      }
+
+      /* Stack mission sections vertically */
+      #mission-sections {
+        display: block !important;
+      }
+
+      #mission-sections > div {
+        margin-bottom: 20px !important;
+      }
+
+      /* Override all inch-based measurements */
+      *[style*="1in"] {
+        padding: 15px !important;
+        margin: 0 15px !important;
+      }
+
+      /* Force images to fit */
+      img {
+        max-width: 100% !important;
+        height: auto !important;
+      }
+
+      /* Make text smaller */
+      h1, h2, h3, h4, h5, h6 {
+        font-size: revert !important;
+      }
+
+      p {
+        font-size: 14px !important;
+        line-height: 1.5 !important;
+      }
+    }
+  </style>
+
 </body>
 
 </html>
+<!-- MOBILE FIX v3 - Cache Refresh -->
