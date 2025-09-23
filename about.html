@@ -305,9 +305,9 @@
       </header>
 
   <!-- Hero Image Section -->
-  <div style="position: relative; width: 100%; margin-top: 75px;">
+  <div id="hero-container" style="position: relative; width: 100%; margin-top: 75px;">
     <img src="assets/img/Our History/pre reno.JPG" style="width: 100%; height: auto; display: block;" alt="Church Pre-Renovation">
-    <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5);"></div>
+    <div id="hero-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5);"></div>
     <h1 id="hero-title" class="hero-text" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-family: 'Poppins', sans-serif; font-weight: bold; font-size: 80px; color: #FAEDCD; text-transform: uppercase; margin: 0; padding: 0; text-align: center; z-index: 1; white-space: nowrap;">OUR CHURCH HISTORY</h1>
 
     <!-- Rectangular Box with Title and Content (overlaying bottom of image) -->
@@ -327,7 +327,7 @@
           </p>
 
           <!-- Founding Members Images -->
-          <div class="fade-in-scroll" style="display: flex; justify-content: center; gap: 0.5in; margin-bottom: 1.2em;">
+          <div id="founding-images" class="fade-in-scroll" style="display: flex; justify-content: center; gap: 0.5in; margin-bottom: 1.2em;">
             <img src="assets/img/Our History/founding mem 1.jpeg" style="width: 45%; height: auto; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);" alt="Founding Members 1">
             <img src="assets/img/Our History/founding mem 2.jpeg" style="width: 45%; height: auto; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);" alt="Founding Members 2">
           </div>
@@ -386,7 +386,7 @@
     <!-- Our Faith Section -->
     <section style="background-color: #FEFAE0; padding: 0;">
       <div style="margin: 0 1in;">
-        <div style="background-color: #FAEDCD; min-height: 8in; border-radius: 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); padding: 0.5in 1in 0.3in 1in;">
+        <div id="our-faith-box" style="background-color: #FAEDCD; min-height: 8in; border-radius: 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); padding: 0.5in 1in 0.3in 1in;">
           <h2 class="fade-in-scroll" style="font-family: 'Poppins', sans-serif; font-size: 40px; font-weight: bold; color: #253341; text-align: center; margin: 0; margin-bottom: 0.5in;">
             Our Faith
           </h2>
@@ -532,15 +532,36 @@
   <!-- Mobile Override Styles - Placed at end for highest priority -->
   <style>
     @media only screen and (max-width: 768px) {
-      /* Force hero text to be readable */
+      /* Fix hero container to contain only the image and overlay */
+      #hero-container {
+        position: relative !important;
+        overflow: hidden !important;
+      }
+
+      /* Keep overlay only on hero image */
+      #hero-overlay {
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        pointer-events: none !important;
+      }
+
+      /* Keep hero title positioned over the hero image */
       #hero-title {
+        position: absolute !important;
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
         font-size: 24px !important;
         white-space: normal !important;
         line-height: 1.3 !important;
         padding: 0 10px !important;
+        z-index: 2 !important;
       }
 
-      /* Force content box to be visible */
+      /* Move content box below hero image */
       #content-box {
         position: static !important;
         margin: 20px !important;
@@ -553,6 +574,24 @@
       #main-content {
         margin-top: 20px !important;
         min-height: auto !important;
+      }
+
+      /* Fix founding member images to show fully */
+      #founding-images {
+        flex-direction: column !important;
+        gap: 15px !important;
+      }
+
+      #founding-images img {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: auto !important;
+        object-fit: contain !important;
+      }
+
+      /* Reduce padding on Our Faith section */
+      #our-faith-box {
+        padding: 20px 15px !important;
       }
 
       /* Make dark section stack */
@@ -575,8 +614,8 @@
         margin-bottom: 20px !important;
       }
 
-      /* Override all inch-based measurements */
-      *[style*="1in"] {
+      /* Override all inch-based measurements EXCEPT Our Faith */
+      *[style*="1in"]:not(#our-faith-box) {
         padding: 15px !important;
         margin: 0 15px !important;
       }
@@ -602,4 +641,4 @@
 </body>
 
 </html>
-<!-- MOBILE FIX v3 - Cache Refresh -->
+<!-- MOBILE FIX v4 - Fixed overlay, hero title, images, and Our Faith padding -->
