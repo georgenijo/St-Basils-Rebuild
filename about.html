@@ -146,6 +146,79 @@
     #scroll-top {
       background-color: #91203C !important;
     }
+
+    /* Responsive Design - Mobile First */
+    @media (max-width: 768px) {
+      /* Hero Title Scaling */
+      h1[style*="font-size: 80px"] {
+        font-size: 45px !important;
+        white-space: normal !important;
+        line-height: 1.1 !important;
+      }
+
+      /* Section Headings */
+      h2[style*="font-size: 40px"] {
+        font-size: 28px !important;
+      }
+
+      h3[style*="font-size: 30px"] {
+        font-size: 22px !important;
+      }
+
+      /* Content Containers */
+      div[style*="padding: 0.5in 1in"] {
+        padding: 20px 15px !important;
+      }
+
+      div[style*="left: 1in; right: 1in"] {
+        left: 15px !important;
+        right: 15px !important;
+      }
+
+      /* Body Text */
+      div[style*="font-size: 16px"],
+      div[style*="font-size: 17px"] {
+        font-size: 15px !important;
+      }
+
+      /* Footer Responsive */
+      section[style*="padding: 20px 1in"] {
+        padding: 15px 20px !important;
+        flex-direction: column !important;
+        text-align: center !important;
+      }
+    }
+
+    @media (max-width: 480px) {
+      /* Extra Small Screens */
+      h1[style*="font-size: 80px"] {
+        font-size: 32px !important;
+      }
+
+      h2[style*="font-size: 40px"] {
+        font-size: 22px !important;
+      }
+
+      h3[style*="font-size: 30px"] {
+        font-size: 18px !important;
+      }
+
+      /* Tighter Spacing */
+      div[style*="padding: 0.5in 1in"] {
+        padding: 15px 10px !important;
+      }
+
+      div[style*="left: 1in; right: 1in"] {
+        left: 10px !important;
+        right: 10px !important;
+      }
+
+      /* Body Text */
+      div[style*="font-size: 16px"],
+      div[style*="font-size: 17px"] {
+        font-size: 14px !important;
+      }
+    }
   </style>
 
   <!-- =======================================================
