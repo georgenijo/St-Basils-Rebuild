@@ -304,6 +304,24 @@
         order: 3;
       }
 
+      /* Today button container responsive */
+      .calendar-navigation > div {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        justify-content: center !important;
+        gap: 5px !important;
+        width: 100% !important;
+        order: 4 !important;
+      }
+
+      /* Today button mobile styles */
+      .calendar-navigation button[onclick="goToToday()"] {
+        margin-left: 0 !important;
+        padding: 0.4rem 1rem !important;
+        font-size: 14px !important;
+        flex-shrink: 0 !important;
+      }
+
       /* Calendar grid responsive */
       .calendar-grid {
         padding: 1rem;
