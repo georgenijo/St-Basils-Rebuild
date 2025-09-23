@@ -147,6 +147,13 @@
       background-color: #91203C !important;
     }
 
+    /* Desktop-only styles */
+    @media (min-width: 769px) {
+      #our-faith-section {
+        padding: 30px 0 !important;
+      }
+    }
+
     /* Mobile Responsiveness Fixes */
     @media (max-width: 768px) {
       /* Fix hero text */
@@ -312,7 +319,7 @@
   </div>
 
   <!-- Rectangular Box with Title and Content (overlaying bottom of image) -->
-  <div id="content-box" style="position: absolute; bottom: -15.5in; left: 1in; right: 1in; z-index: 2;">
+  <div id="content-box" style="position: absolute; bottom: -18in; left: 1in; right: 1in; z-index: 2;">
       <div style="background-color: #FAEDCD; height: auto; min-height: 10in; border-radius: 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); padding: 0.5in 1in 0.5in 1in; overflow-y: auto;">
         <h2 class="fade-in-scroll" style="font-family: 'Poppins', sans-serif; font-size: 40px; color: #253341; text-align: center; margin: 0; margin-bottom: 0.5in;">
           Founded in <span style="font-weight: bold;">Faith</span>, Blessed by <span style="font-weight: bold;">Providence</span>
@@ -360,7 +367,7 @@
       </div>
     </div>
 
-  <main id="main-content" class="main desktop-main" style="background-color: #FEFAE0; min-height: calc(100vh - 75px - 1in); padding: 0; margin-top: 15.5in;">
+  <main id="main-content" class="main desktop-main" style="background-color: #FEFAE0; min-height: calc(100vh - 75px - 1in); padding: 0; margin-top: 18.5in;">
     <!-- Dark section below rectangular box split into two -->
     <div id="dark-section" style="background-color: #253341; height: 4in; width: 100%; margin: 0; padding: 0; display: flex;">
       <!-- Left section with image -->
@@ -666,4 +673,4 @@
 </body>
 
 </html>
-<!-- MOBILE FIX v12 - Set bottom internal padding to 10px -->
+<!-- v18 - Reduced gap to 0.5in: kept content-box at -18in, moved main-content up to 14.5in -->
