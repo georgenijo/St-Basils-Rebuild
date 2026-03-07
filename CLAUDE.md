@@ -5,7 +5,6 @@ Static HTML website for St. Basil's Syriac Orthodox Church in Boston, Massachuse
 
 - **Address**: 73 Ellis Street, Newton, MA 02464
 - **Domain**: stbasilsboston.org
-- **Author**: George Nijo
 
 ## Technology Stack
 - **Frontend**: Static HTML5, CSS3, JavaScript (no build step)
