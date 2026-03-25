@@ -88,7 +88,9 @@ export interface AcolytesChoirPage {
   _id: string
   pageTitle: string
   heroImage?: SanityImageSource
+  heroImageLqip?: string
   description?: PortableTextBlock[]
   groupPhoto?: SanityImageSource
+  groupPhotoLqip?: string
   metaDescription?: string
 }
