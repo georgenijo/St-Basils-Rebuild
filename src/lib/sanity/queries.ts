@@ -8,3 +8,14 @@ export const pageContentQuery = groq`
     body
   }
 `
+
+export const acolytesChoirPageQuery = groq`
+  *[_type == "acolytesChoirPage"][0] {
+    _id,
+    pageTitle,
+    heroImage,
+    description,
+    groupPhoto,
+    metaDescription
+  }
+`

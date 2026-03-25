@@ -9,3 +9,12 @@ export interface PageContent {
   slug: { current: string }
   body: PortableTextBlock[]
 }
+
+export interface AcolytesChoirPage {
+  _id: string
+  pageTitle: string
+  heroImage: SanityImageSource
+  description: PortableTextBlock[]
+  groupPhoto?: SanityImageSource
+  metaDescription?: string
+}
