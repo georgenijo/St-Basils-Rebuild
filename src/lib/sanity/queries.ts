@@ -13,3 +13,15 @@ export const pageContentBySlugQuery = groq`
     lastUpdated
   }
 `
+
+export const allSpiritualLeadersQuery = groq`
+  *[_type == "spiritualLeader"] | order(order asc) {
+    _id,
+    name,
+    title,
+    photo,
+    "photoLqip": photo.asset->metadata.lqip,
+    biography,
+    order
+  }
+`

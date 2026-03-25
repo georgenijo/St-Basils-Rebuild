@@ -14,3 +14,13 @@ export interface PageContent {
   effectiveDate?: string
   lastUpdated?: string
 }
+
+export interface SpiritualLeader {
+  _id: string
+  name: string
+  title: string
+  photo: SanityImageSource
+  photoLqip?: string
+  biography: PortableTextBlock[]
+  order: number
+}
