@@ -1,6 +1,7 @@
 // Components
 export { Button } from './Button'
 export { GoldDivider } from './GoldDivider'
+export { JsonLd } from './JsonLd'
 export { PageHero } from './PageHero'
 export { SectionHeader } from './SectionHeader'
 
