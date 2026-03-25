@@ -1,10 +1,15 @@
 import { groq } from 'next-sanity'
 
-export const pageContentQuery = groq`
+export const pageContentBySlugQuery = groq`
   *[_type == "pageContent" && slug.current == $slug][0] {
     _id,
     title,
     slug,
-    body
+    heroStyle,
+    heroImage,
+    body,
+    metaDescription,
+    effectiveDate,
+    lastUpdated
   }
 `

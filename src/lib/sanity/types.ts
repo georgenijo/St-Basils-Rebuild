@@ -7,5 +7,10 @@ export interface PageContent {
   _id: string
   title: string
   slug: { current: string }
+  heroStyle: 'maroon-banner' | 'parallax-image'
+  heroImage?: SanityImageSource
   body: PortableTextBlock[]
+  metaDescription?: string
+  effectiveDate?: string
+  lastUpdated?: string
 }

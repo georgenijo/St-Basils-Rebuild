@@ -1,3 +1,5 @@
 import { SchemaTypeDefinition } from 'sanity'
 
-export const schemaTypes: SchemaTypeDefinition[] = []
+import pageContent from './pageContent'
+
+export const schemaTypes: SchemaTypeDefinition[] = [pageContent]
