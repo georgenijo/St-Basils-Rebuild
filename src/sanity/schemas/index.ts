@@ -1,3 +1,5 @@
 import { SchemaTypeDefinition } from 'sanity'
 
-export const schemaTypes: SchemaTypeDefinition[] = []
+import spiritualLeader from '@/sanity/schemas/spiritualLeader'
+
+export const schemaTypes: SchemaTypeDefinition[] = [spiritualLeader]

@@ -9,3 +9,13 @@ export interface PageContent {
   slug: { current: string }
   body: PortableTextBlock[]
 }
+
+export interface SpiritualLeader {
+  _id: string
+  name: string
+  title: string
+  photo: SanityImageSource
+  photoPosition?: string
+  biography: PortableTextBlock[]
+  order: number
+}

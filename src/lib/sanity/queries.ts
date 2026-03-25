@@ -8,3 +8,15 @@ export const pageContentQuery = groq`
     body
   }
 `
+
+export const spiritualLeadersQuery = groq`
+  *[_type == "spiritualLeader" && isActive == true] | order(order asc) {
+    _id,
+    name,
+    title,
+    photo,
+    photoPosition,
+    biography,
+    order
+  }
+`
