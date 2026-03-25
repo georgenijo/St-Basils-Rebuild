@@ -6,6 +6,6 @@ const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET!
 export const client = createClient({
   projectId,
   dataset,
-  apiVersion: '2024-01-01',
+  apiVersion: '2025-03-01',
   useCdn: true,
 })
