@@ -1,4 +1,6 @@
 export { Button } from './Button'
 export { GoldDivider } from './GoldDivider'
+export { ScrollReveal } from './ScrollReveal'
+export type { ScrollRevealProps } from './ScrollReveal'
 export { SectionHeader } from './SectionHeader'
 export type { SectionHeaderProps } from './SectionHeader'
