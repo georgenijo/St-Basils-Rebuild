@@ -1,0 +1,16 @@
+# Legacy static site
+*.html
+assets/
+documentation/
+forms/
+PSD/
+
+# Vendor / generated
+node_modules/
+.next/
+package-lock.json
+
+# Config managed elsewhere
+.ralph/
+.claude/
+CLAUDE.md

@@ -2,16 +2,16 @@
 
 @theme {
   /* Colors — Primary palette */
-  --color-cream-50: #FFFDF8;
-  --color-cream-100: #FFF9EF;
-  --color-burgundy-100: #F5E6EB;
-  --color-burgundy-700: #9B1B3D;
-  --color-burgundy-800: #7A1530;
-  --color-gold-500: #D4A017;
-  --color-wood-800: #4A3729;
+  --color-cream-50: #fffdf8;
+  --color-cream-100: #fff9ef;
+  --color-burgundy-100: #f5e6eb;
+  --color-burgundy-700: #9b1b3d;
+  --color-burgundy-800: #7a1530;
+  --color-gold-500: #d4a017;
+  --color-wood-800: #4a3729;
   --color-wood-900: #352618;
   --color-charcoal: #253341;
-  --color-sand: #FAEDCD;
+  --color-sand: #faedcd;
 
   /* Font families */
   --font-heading: var(--font-cormorant-garamond), 'Georgia', serif;
@@ -34,7 +34,12 @@ body {
   color: var(--color-wood-800);
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: var(--font-heading);
   color: var(--color-wood-900);
 }
