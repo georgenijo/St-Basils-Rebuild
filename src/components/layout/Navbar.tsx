@@ -44,7 +44,7 @@ const navigation: NavItem[] = [
     ],
   },
   { label: 'Giving', href: '/giving' },
-  { label: 'Contact Us', href: '/contact-us' },
+  { label: 'Contact Us', href: '/contact' },
 ]
 
 // ─── Component ───────────────────────────────────────────────────────
