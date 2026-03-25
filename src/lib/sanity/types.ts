@@ -67,3 +67,19 @@ export interface SpiritualLeader {
   biography: PortableTextBlock[]
   order: number
 }
+
+export interface UsefulLink {
+  _id: string
+  title: string
+  fileUrl?: string
+  category?: string
+  order: number
+}
+
+export interface UsefulLinksPage {
+  _id: string
+  pageTitle: string
+  heroImage?: SanityImageSource
+  introText?: string
+  sectionTitle?: string
+}

@@ -71,3 +71,23 @@ export const allSpiritualLeadersQuery = groq`
     order
   }
 `
+
+export const allUsefulLinksQuery = groq`
+  *[_type == "usefulLink" && isActive == true] | order(order asc) {
+    _id,
+    title,
+    "fileUrl": file.asset->url,
+    category,
+    order
+  }
+`
+
+export const usefulLinksPageQuery = groq`
+  *[_type == "usefulLinksPage"][0] {
+    _id,
+    pageTitle,
+    heroImage,
+    introText,
+    sectionTitle
+  }
+`
