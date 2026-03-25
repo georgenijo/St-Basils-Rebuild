@@ -1,7 +1,9 @@
+import { redirect } from 'next/navigation'
 import Image from 'next/image'
 
 import type { Metadata } from 'next'
 
+import { createClient } from '@/lib/supabase/server'
 import { LoginForm } from '@/components/features/LoginForm'
 
 export const metadata: Metadata = {
@@ -9,7 +11,22 @@ export const metadata: Metadata = {
   description: 'Sign in to the St. Basil\'s church admin portal.',
 }
 
-export default function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ redirectTo?: string }>
+}) {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (user) {
+    redirect('/admin/dashboard')
+  }
+
+  const { redirectTo } = await searchParams
+
   return (
     <main className="w-full max-w-md px-4">
       <div className="rounded-2xl bg-white p-8 shadow-md sm:p-10">
@@ -26,7 +43,7 @@ export default function LoginPage() {
           </h1>
         </div>
 
-        <LoginForm />
+        <LoginForm redirectTo={redirectTo} />
       </div>
     </main>
   )

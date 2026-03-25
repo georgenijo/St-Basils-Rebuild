@@ -11,9 +11,18 @@ type LoginState = {
   errors?: Record<string, string[]>
 }
 
+/**
+ * Validates that a redirect URL is internal-only to prevent open redirect attacks.
+ * Must start with `/` and not contain protocol schemes or protocol-relative URLs.
+ */
+function isValidRedirectUrl(url: string): boolean {
+  return url.startsWith('/') && !url.startsWith('//') && !url.includes('://')
+}
+
 export async function login(prevState: LoginState, formData: FormData): Promise<LoginState> {
   const email = formData.get('email') as string
   const password = formData.get('password') as string
+  const redirectTo = formData.get('redirectTo') as string | null
 
   const errors: Record<string, string[]> = {}
 
@@ -43,5 +52,11 @@ export async function login(prevState: LoginState, formData: FormData): Promise<
   }
 
   revalidatePath('/', 'layout')
-  redirect('/admin/dashboard')
+
+  const destination =
+    redirectTo && isValidRedirectUrl(redirectTo)
+      ? redirectTo
+      : '/admin/dashboard'
+
+  redirect(destination)
 }

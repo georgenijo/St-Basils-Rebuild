@@ -5,7 +5,11 @@ import { useActionState } from 'react'
 import { login } from '@/actions/login'
 import { Button } from '@/components/ui'
 
-export function LoginForm() {
+interface LoginFormProps {
+  redirectTo?: string
+}
+
+export function LoginForm({ redirectTo }: LoginFormProps) {
   const [state, formAction, pending] = useActionState(login, {
     success: false,
     message: '',
@@ -13,6 +17,10 @@ export function LoginForm() {
 
   return (
     <form action={formAction} className="space-y-5">
+      {redirectTo && (
+        <input type="hidden" name="redirectTo" value={redirectTo} />
+      )}
+
       {state.message && !state.errors && (
         <div
           role="alert"
