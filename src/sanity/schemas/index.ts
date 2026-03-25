@@ -1,3 +1,5 @@
 import { SchemaTypeDefinition } from 'sanity'
 
-export const schemaTypes: SchemaTypeDefinition[] = []
+import organization from './organization'
+
+export const schemaTypes: SchemaTypeDefinition[] = [organization]

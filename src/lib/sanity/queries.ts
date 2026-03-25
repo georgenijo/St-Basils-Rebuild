@@ -8,3 +8,18 @@ export const pageContentQuery = groq`
     body
   }
 `
+
+export const organizationsQuery = groq`
+  *[_type == "organization" && isActive == true] | order(order asc) {
+    _id,
+    name,
+    slug,
+    photo,
+    description,
+    missionStatement,
+    scriptureQuote,
+    externalLink,
+    order,
+    backgroundColor
+  }
+`
