@@ -1,0 +1,1 @@
+export { GoldDivider } from './GoldDivider'
