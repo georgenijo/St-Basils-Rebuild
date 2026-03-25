@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils'
 
-interface GoldDividerProps {
+export interface GoldDividerProps {
   className?: string
 }
 
