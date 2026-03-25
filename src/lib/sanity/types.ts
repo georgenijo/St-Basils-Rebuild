@@ -9,3 +9,15 @@ export interface PageContent {
   slug: { current: string }
   body: PortableTextBlock[]
 }
+
+export interface Clergy {
+  _id: string
+  name: string
+  role?: string
+  photo?: SanityImageSource
+  photoPosition?: string
+  yearsOfService?: string
+  biography?: PortableTextBlock[]
+  category: 'current' | 'previous' | 'memoriam'
+  order?: number
+}

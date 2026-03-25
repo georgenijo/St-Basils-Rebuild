@@ -8,3 +8,17 @@ export const pageContentQuery = groq`
     body
   }
 `
+
+export const clergyQuery = groq`
+  *[_type == "clergy" && isActive == true] | order(category asc, order asc) {
+    _id,
+    name,
+    role,
+    photo,
+    photoPosition,
+    yearsOfService,
+    biography,
+    category,
+    order
+  }
+`
