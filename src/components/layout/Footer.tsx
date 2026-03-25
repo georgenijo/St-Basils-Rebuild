@@ -23,9 +23,7 @@ export function Footer() {
 
           {/* Service Times */}
           <div>
-            <h2 className="font-heading text-xl font-600 text-cream-50">
-              Sunday Services
-            </h2>
+            <h2 className="font-heading text-xl font-600 text-cream-50">Sunday Services</h2>
             <dl className="mt-4 space-y-2 text-cream-50/80">
               <div>
                 <dt className="font-medium text-cream-50">Morning Prayer</dt>
@@ -40,32 +38,21 @@ export function Footer() {
 
           {/* Links & Social */}
           <div>
-            <h2 className="font-heading text-xl font-600 text-cream-50">
-              Quick Links
-            </h2>
+            <h2 className="font-heading text-xl font-600 text-cream-50">Quick Links</h2>
             <nav aria-label="Footer navigation" className="mt-4">
               <ul className="space-y-2 text-cream-50/80">
                 <li>
-                  <Link
-                    href="/contact"
-                    className="transition-colors hover:text-cream-50"
-                  >
+                  <Link href="/contact" className="transition-colors hover:text-cream-50">
                     Contact Us
                   </Link>
                 </li>
                 <li>
-                  <Link
-                    href="/privacy-policy"
-                    className="transition-colors hover:text-cream-50"
-                  >
+                  <Link href="/privacy-policy" className="transition-colors hover:text-cream-50">
                     Privacy Policy
                   </Link>
                 </li>
                 <li>
-                  <Link
-                    href="/terms-of-use"
-                    className="transition-colors hover:text-cream-50"
-                  >
+                  <Link href="/terms-of-use" className="transition-colors hover:text-cream-50">
                     Terms of Use
                   </Link>
                 </li>
@@ -97,8 +84,7 @@ export function Footer() {
         <GoldDivider className="my-10" />
 
         <p className="text-center text-sm text-cream-50/60">
-          &copy; {currentYear} St. Basil&#39;s Syriac Orthodox Church. All
-          rights reserved.
+          &copy; {currentYear} St. Basil&#39;s Syriac Orthodox Church. All rights reserved.
         </p>
       </div>
     </footer>

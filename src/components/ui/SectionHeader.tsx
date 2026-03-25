@@ -30,16 +30,12 @@ export function SectionHeader({
 
   return (
     <div className={cn(isCenter ? 'text-center' : 'text-left', className)}>
-      <Tag className={cn(headingSizes[Tag], 'text-wood-900')}>
-        {title}
-      </Tag>
+      <Tag className={cn(headingSizes[Tag], 'text-wood-900')}>{title}</Tag>
 
       <GoldDivider className={cn('my-4', !isCenter && 'mx-0')} />
 
       {subtitle && (
-        <p className="font-body text-base leading-relaxed text-wood-800/60">
-          {subtitle}
-        </p>
+        <p className="font-body text-base leading-relaxed text-wood-800/60">{subtitle}</p>
       )}
     </div>
   )
