@@ -8,3 +8,23 @@ export const pageContentQuery = groq`
     body
   }
 `
+
+export const usefulLinksQuery = groq`
+  *[_type == "usefulLink" && isActive == true] | order(order asc) {
+    _id,
+    title,
+    file,
+    category,
+    order
+  }
+`
+
+export const usefulLinksPageQuery = groq`
+  *[_type == "usefulLinksPage"][0] {
+    _id,
+    pageTitle,
+    heroImage,
+    introText,
+    sectionTitle
+  }
+`

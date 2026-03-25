@@ -9,3 +9,27 @@ export interface PageContent {
   slug: { current: string }
   body: PortableTextBlock[]
 }
+
+export interface SanityFileAsset {
+  _type: 'file'
+  asset: {
+    _ref: string
+    _type: 'reference'
+  }
+}
+
+export interface UsefulLink {
+  _id: string
+  title: string
+  file?: SanityFileAsset
+  category?: string
+  order: number
+}
+
+export interface UsefulLinksPage {
+  _id: string
+  pageTitle: string
+  heroImage?: SanityImageSource
+  introText?: string
+  sectionTitle?: string
+}
