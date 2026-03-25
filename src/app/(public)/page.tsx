@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 
+import { Button, Card, GoldDivider, ScrollReveal, SectionHeader } from '@/components/ui'
+
 export const metadata: Metadata = {
   title: {
     absolute: "St. Basil's Syriac Orthodox Church — Boston, MA",
@@ -13,11 +15,185 @@ export const metadata: Metadata = {
   },
 }
 
+const announcements = [
+  {
+    title: 'Great Lent Begins',
+    date: 'March 10, 2026',
+    description:
+      'The season of Great Lent begins this Monday. Join us for special evening prayers throughout the Lenten season.',
+  },
+  {
+    title: 'Annual General Body Meeting',
+    date: 'April 5, 2026',
+    description:
+      'The annual general body meeting will be held following Holy Qurbono. All members are encouraged to attend.',
+  },
+  {
+    title: 'Sunday School Registration',
+    date: 'Open Now',
+    description:
+      'Registration for the upcoming Sunday School year is now open. Contact the Sunday School superintendent for details.',
+  },
+]
+
 export default function HomePage() {
   return (
-    <main className="min-h-screen px-4 py-22 font-body text-wood-800">
-      <h1 className="font-heading text-3xl font-semibold text-wood-900">Public Group</h1>
-      <p className="mt-4">Homepage placeholder — (public) route group.</p>
-    </main>
+    <>
+      {/* ── Hero ─────────────────────────────────────────────── */}
+      <section className="relative flex min-h-[calc(100svh-4rem)] items-center justify-center bg-charcoal">
+        {/* TODO: Replace gradient with video/image background */}
+        <div
+          className="absolute inset-0 bg-gradient-to-b from-charcoal via-charcoal/90 to-charcoal/70"
+          aria-hidden="true"
+        />
+
+        <div className="relative z-10 mx-auto max-w-3xl px-4 text-center">
+          <h1 className="animate-drop-in font-heading text-[2.5rem] font-light leading-[1.1] text-cream-50 md:text-[4rem]">
+            St. Basil&#39;s Syriac Orthodox Church
+          </h1>
+          <p className="mt-6 text-lg leading-relaxed text-cream-50/80">
+            Serving the Jacobite Malayalee community in New England
+          </p>
+        </div>
+
+        {/* Scroll chevron */}
+        <div
+          className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce motion-reduce:animate-none"
+          aria-hidden="true"
+        >
+          <svg
+            width="32"
+            height="32"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="text-cream-50/60"
+          >
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        </div>
+      </section>
+
+      {/* ── Service Times Bar ────────────────────────────────── */}
+      <section className="bg-burgundy-700 py-6 text-cream-50">
+        <dl className="mx-auto grid max-w-[1200px] grid-cols-1 gap-6 px-4 text-center sm:grid-cols-3 sm:px-6 lg:px-8">
+          <div>
+            <dt className="font-heading text-lg font-semibold text-cream-50">Location</dt>
+            <dd className="mt-1 text-sm text-cream-50/80">
+              73 Ellis Street, Newton, MA 02464
+            </dd>
+          </div>
+          <div>
+            <dt className="font-heading text-lg font-semibold text-cream-50">Sunday Services</dt>
+            <dd className="mt-1 text-sm text-cream-50/80">
+              Morning Prayer 8:30 AM &middot; Holy Qurbono 9:15 AM
+            </dd>
+          </div>
+          <div>
+            <dt className="font-heading text-lg font-semibold text-cream-50">Contact</dt>
+            <dd className="mt-1 text-sm text-cream-50/80">
+              <a href="tel:+16175270527" className="transition-colors hover:text-cream-50">
+                (617) 527-0527
+              </a>
+            </dd>
+          </div>
+        </dl>
+      </section>
+
+      {/* ── Welcome ──────────────────────────────────────────── */}
+      <section className="py-16 md:py-22 lg:py-28">
+        <ScrollReveal className="mx-auto max-w-[1200px] px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-3xl text-center">
+            <SectionHeader
+              title="Welcome to St. Basil's"
+              subtitle="A home for faith, fellowship, and tradition in the heart of New England."
+            />
+            <p className="mt-8 text-base leading-relaxed text-wood-800">
+              St. Basil&#39;s Syriac Orthodox Church has been a spiritual home for the
+              Jacobite Malayalee community in the greater Boston area. Rooted in the
+              ancient traditions of the Syriac Orthodox faith, our parish gathers each
+              Sunday for the Holy Qurbono, fellowship, and the shared life of Christ.
+            </p>
+            <p className="mt-4 text-base leading-relaxed text-wood-800">
+              Whether you are a lifelong member or visiting for the first time, you are
+              welcome here.
+            </p>
+            <div className="mt-10">
+              <Button href="/about">Learn Our History</Button>
+            </div>
+          </div>
+        </ScrollReveal>
+      </section>
+
+      {/* ── Announcements (static placeholder) ───────────────── */}
+      <section className="bg-sand py-16 md:py-22 lg:py-28">
+        <ScrollReveal className="mx-auto max-w-[1200px] px-4 sm:px-6 lg:px-8">
+          <SectionHeader
+            title="Announcements"
+            subtitle="Stay up to date with the latest from our parish."
+          />
+          <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {announcements.map((item) => (
+              <Card key={item.title} variant="outlined" className="h-full">
+                <Card.Body>
+                  <p className="text-sm font-medium text-burgundy-700">{item.date}</p>
+                  <h3 className="mt-2 font-heading text-xl font-semibold">{item.title}</h3>
+                  <p className="mt-3 text-sm leading-relaxed text-wood-800/80">
+                    {item.description}
+                  </p>
+                </Card.Body>
+              </Card>
+            ))}
+          </div>
+        </ScrollReveal>
+      </section>
+
+      {/* ── Events CTA (static placeholder) ──────────────────── */}
+      <section className="py-16 md:py-22 lg:py-28">
+        <ScrollReveal className="mx-auto max-w-[1200px] px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-3xl text-center">
+            <SectionHeader
+              title="Upcoming Events"
+              subtitle="From feast days to fellowship gatherings, there is always something happening at St. Basil's."
+            />
+            <p className="mt-8 text-base leading-relaxed text-wood-800">
+              Check our events calendar for service schedules, special observances, and
+              community gatherings throughout the year.
+            </p>
+            <div className="mt-10">
+              <Button href="/events-calendar">View Events Calendar</Button>
+            </div>
+          </div>
+        </ScrollReveal>
+      </section>
+
+      {/* ── Office Bearers CTA ───────────────────────────────── */}
+      <section className="bg-charcoal py-16 md:py-22 lg:py-28">
+        <ScrollReveal className="mx-auto max-w-[1200px] px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-3xl text-center">
+            <h2 className="font-heading text-[1.75rem] font-semibold leading-[1.3] text-cream-50 md:text-[2.25rem]">
+              Our Church Leadership
+            </h2>
+            <GoldDivider className="my-4" />
+            <p className="mt-6 text-base leading-relaxed text-cream-50/80">
+              Meet the dedicated office bearers who serve our parish and guide our
+              community.
+            </p>
+            <div className="mt-10">
+              <Button
+                href="/office-bearers"
+                variant="secondary"
+                className="border-cream-50 text-cream-50 hover:bg-cream-50 hover:text-charcoal"
+              >
+                Meet Our Office Bearers
+              </Button>
+            </div>
+          </div>
+        </ScrollReveal>
+      </section>
+    </>
   )
 }
