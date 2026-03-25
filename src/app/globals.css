@@ -30,6 +30,7 @@
 
   /* Animations */
   --animate-drop-in: drop-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-flicker: flicker 2s infinite ease-in-out;
 
   @keyframes drop-in {
     from {
@@ -39,6 +40,25 @@
     to {
       opacity: 1;
       transform: translateY(0);
+    }
+  }
+
+  @keyframes flicker {
+    0%, 100% {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+    25% {
+      opacity: 0.95;
+      transform: scale(1.05) translateY(-2px);
+    }
+    50% {
+      opacity: 0.9;
+      transform: scale(0.95) translateY(-1px);
+    }
+    75% {
+      opacity: 0.95;
+      transform: scale(1.02) translateY(-2px);
     }
   }
 }
