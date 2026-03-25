@@ -13,3 +13,14 @@ export const pageContentBySlugQuery = groq`
     lastUpdated
   }
 `
+
+export const acolytesChoirPageQuery = groq`
+  *[_type == "acolytesChoirPage"][0] {
+    _id,
+    heroImage,
+    body,
+    groupPhoto,
+    groupPhotoAlt,
+    metaDescription
+  }
+`

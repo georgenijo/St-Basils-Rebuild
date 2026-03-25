@@ -14,3 +14,12 @@ export interface PageContent {
   effectiveDate?: string
   lastUpdated?: string
 }
+
+export interface AcolytesChoirPage {
+  _id: string
+  heroImage: SanityImageSource
+  body: PortableTextBlock[]
+  groupPhoto?: SanityImageSource
+  groupPhotoAlt?: string
+  metaDescription?: string
+}
