@@ -97,8 +97,10 @@ export const acolytesChoirPageQuery = groq`
     _id,
     pageTitle,
     heroImage,
+    "heroImageLqip": heroImage.asset->metadata.lqip,
     description,
     groupPhoto,
+    "groupPhotoLqip": groupPhoto.asset->metadata.lqip,
     metaDescription
   }
 `
