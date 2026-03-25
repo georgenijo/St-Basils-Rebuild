@@ -8,3 +8,16 @@ export const pageContentQuery = groq`
     body
   }
 `
+
+export const officeBearersQuery = groq`
+  *[_type == "officeBearer" && isActive == true] | order(order asc) {
+    _id,
+    name,
+    role,
+    photo,
+    photoPosition,
+    category,
+    year,
+    order
+  }
+`

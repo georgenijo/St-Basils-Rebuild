@@ -1,3 +1,5 @@
 import { SchemaTypeDefinition } from 'sanity'
 
-export const schemaTypes: SchemaTypeDefinition[] = []
+import officeBearer from './officeBearer'
+
+export const schemaTypes: SchemaTypeDefinition[] = [officeBearer]
