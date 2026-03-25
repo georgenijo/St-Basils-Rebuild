@@ -83,3 +83,12 @@ export interface UsefulLinksPage {
   introText?: string
   sectionTitle?: string
 }
+
+export interface AcolytesChoirPage {
+  _id: string
+  pageTitle: string
+  heroImage?: SanityImageSource
+  description?: PortableTextBlock[]
+  groupPhoto?: SanityImageSource
+  metaDescription?: string
+}
