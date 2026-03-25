@@ -1,9 +1,16 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: "St. Basil's Syriac Orthodox Church",
+  title: {
+    absolute: "St. Basil's Syriac Orthodox Church — Boston, MA",
+  },
   description:
-    "St. Basil's Syriac Orthodox Church in Boston, Massachusetts. Serving the Jacobite Malayalee community in the New England region.",
+    "Welcome to St. Basil's Syriac Orthodox Church in Boston, Massachusetts. Join us for Sunday services, community events, and fellowship. Serving the Jacobite Malayalee community in New England.",
+  openGraph: {
+    title: "St. Basil's Syriac Orthodox Church — Boston, MA",
+    description:
+      "Welcome to St. Basil's Syriac Orthodox Church in Boston, Massachusetts. Join us for Sunday services, community events, and fellowship.",
+  },
 }
 
 export default function HomePage() {

@@ -56,12 +56,35 @@ const dmSans = DM_Sans({
 })
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://stbasilsboston.org'),
   title: {
     template: "%s | St. Basil's Syriac Orthodox Church",
     default: "St. Basil's Syriac Orthodox Church",
   },
   description:
     "St. Basil's Syriac Orthodox Church in Boston, Massachusetts. Serving the Jacobite Malayalee community in the New England region.",
+  openGraph: {
+    title: "St. Basil's Syriac Orthodox Church",
+    description:
+      "St. Basil's Syriac Orthodox Church in Boston, Massachusetts. Serving the Jacobite Malayalee community in the New England region.",
+    url: 'https://stbasilsboston.org',
+    siteName: "St. Basil's Syriac Orthodox Church",
+    locale: 'en_US',
+    type: 'website',
+    images: [
+      {
+        url: '/logo.png',
+        alt: "St. Basil's Syriac Orthodox Church logo",
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary',
+    title: "St. Basil's Syriac Orthodox Church",
+    description:
+      "St. Basil's Syriac Orthodox Church in Boston, Massachusetts. Serving the Jacobite Malayalee community in the New England region.",
+    images: ['/logo.png'],
+  },
 }
 
 export default function RootLayout({
