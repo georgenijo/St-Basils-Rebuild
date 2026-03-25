@@ -10,15 +10,19 @@ import { GoldDivider, ScrollReveal } from '@/components/ui'
 
 import type { Organization } from '@/lib/sanity/types'
 
-export const metadata: Metadata = {
-  title: 'Our Organizations',
-  description:
-    "Explore the organizations of St. Basil's Syriac Orthodox Church in Boston — Sunday School, youth groups, men's and women's fellowships serving our community.",
-  openGraph: {
-    title: "Our Organizations | St. Basil's Syriac Orthodox Church",
-    description:
-      "Explore the organizations of St. Basil's Syriac Orthodox Church in Boston — Sunday School, youth groups, men's and women's fellowships serving our community.",
-  },
+const fallbackDescription =
+  "Explore the organizations of St. Basil's Syriac Orthodox Church in Boston — Sunday School, youth groups, men's and women's fellowships serving our community."
+
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: 'Our Organizations',
+    description: fallbackDescription,
+    openGraph: {
+      title: "Our Organizations | St. Basil's Syriac Orthodox Church",
+      description: fallbackDescription,
+      images: ['/images/our-organizations-hero.jpg'],
+    },
+  }
 }
 
 export const revalidate = 60

@@ -7,15 +7,18 @@ import { SectionHeader, ScrollReveal } from '@/components/ui'
 
 import type { OfficeBearer } from '@/lib/sanity/types'
 
-export const metadata: Metadata = {
-  title: 'Our Office Bearers',
-  description:
-    "Meet the office bearers of St. Basil's Syriac Orthodox Church — the executive committee and board members who serve our community.",
-  openGraph: {
-    title: "Our Office Bearers | St. Basil's Syriac Orthodox Church",
-    description:
-      "Meet the office bearers of St. Basil's Syriac Orthodox Church — the executive committee and board members who serve our community.",
-  },
+const fallbackDescription =
+  "Meet the office bearers of St. Basil's Syriac Orthodox Church — the executive committee and board members who serve our community."
+
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: 'Our Office Bearers',
+    description: fallbackDescription,
+    openGraph: {
+      title: "Our Office Bearers | St. Basil's Syriac Orthodox Church",
+      description: fallbackDescription,
+    },
+  }
 }
 
 export const revalidate = 60

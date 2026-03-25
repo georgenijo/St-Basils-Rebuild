@@ -2,22 +2,35 @@ import type { Metadata } from 'next'
 import { PortableText } from 'next-sanity'
 
 import { sanityFetch } from '@/lib/sanity/client'
-import { SanityImage } from '@/lib/sanity/image'
+import { urlFor, SanityImage } from '@/lib/sanity/image'
 import { allSpiritualLeadersQuery } from '@/lib/sanity/queries'
 import { cn } from '@/lib/utils'
 import { GoldDivider, ScrollReveal } from '@/components/ui'
 
 import type { SpiritualLeader } from '@/lib/sanity/types'
 
-export const metadata: Metadata = {
-  title: 'Our Spiritual Fathers',
-  description:
-    "Meet the spiritual fathers who guide St. Basil's Syriac Orthodox Church in Boston, Massachusetts.",
-  openGraph: {
-    title: "Our Spiritual Fathers | St. Basil's Syriac Orthodox Church",
-    description:
-      "Meet the spiritual fathers who guide St. Basil's Syriac Orthodox Church in Boston, Massachusetts.",
-  },
+const fallbackDescription =
+  "Meet the spiritual fathers who guide St. Basil's Syriac Orthodox Church in Boston, Massachusetts."
+
+export async function generateMetadata(): Promise<Metadata> {
+  const leaders = await sanityFetch<SpiritualLeader[]>({
+    query: allSpiritualLeadersQuery,
+    tags: ['spiritualLeader'],
+  })
+
+  const firstLeaderPhoto = leaders[0]?.photo
+
+  return {
+    title: 'Our Spiritual Fathers',
+    description: fallbackDescription,
+    openGraph: {
+      title: "Our Spiritual Fathers | St. Basil's Syriac Orthodox Church",
+      description: fallbackDescription,
+      ...(firstLeaderPhoto
+        ? { images: [urlFor(firstLeaderPhoto).width(1200).height(630).url()] }
+        : {}),
+    },
+  }
 }
 
 export const revalidate = 60

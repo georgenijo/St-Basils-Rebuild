@@ -1,21 +1,35 @@
 import type { Metadata } from 'next'
 
 import { sanityFetch } from '@/lib/sanity/client'
-import { SanityImage } from '@/lib/sanity/image'
+import { urlFor, SanityImage } from '@/lib/sanity/image'
 import { allUsefulLinksQuery, usefulLinksPageQuery } from '@/lib/sanity/queries'
 import { SectionHeader, ScrollReveal } from '@/components/ui'
 
 import type { UsefulLink, UsefulLinksPage } from '@/lib/sanity/types'
 
-export const metadata: Metadata = {
-  title: 'Useful Links',
-  description:
-    "Download liturgical texts, prayer books, and other resources from St. Basil's Syriac Orthodox Church in Boston.",
-  openGraph: {
-    title: "Useful Links | St. Basil's Syriac Orthodox Church",
-    description:
-      "Download liturgical texts, prayer books, and other resources from St. Basil's Syriac Orthodox Church in Boston.",
-  },
+const fallbackDescription =
+  "Download liturgical texts, prayer books, and other resources from St. Basil's Syriac Orthodox Church in Boston."
+
+export async function generateMetadata(): Promise<Metadata> {
+  const pageContent = await sanityFetch<UsefulLinksPage | null>({
+    query: usefulLinksPageQuery,
+    tags: ['usefulLinksPage'],
+  })
+
+  const title = pageContent?.pageTitle || 'Useful Links'
+  const description = fallbackDescription
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title: `${title} | St. Basil's Syriac Orthodox Church`,
+      description,
+      ...(pageContent?.heroImage
+        ? { images: [urlFor(pageContent.heroImage).width(1200).height(630).url()] }
+        : {}),
+    },
+  }
 }
 
 export const revalidate = 60

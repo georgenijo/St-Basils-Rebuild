@@ -10,15 +10,19 @@ import { CandleFlame } from '@/components/features/CandleFlame'
 
 import type { Clergy } from '@/lib/sanity/types'
 
-export const metadata: Metadata = {
-  title: 'Our Clergy',
-  description:
-    "Meet the clergy of St. Basil's Syriac Orthodox Church in Boston — past and present servants who have shepherded our community.",
-  openGraph: {
-    title: "Our Clergy | St. Basil's Syriac Orthodox Church",
-    description:
-      "Meet the clergy of St. Basil's Syriac Orthodox Church in Boston — past and present servants who have shepherded our community.",
-  },
+const fallbackDescription =
+  "Meet the clergy of St. Basil's Syriac Orthodox Church in Boston — past and present servants who have shepherded our community."
+
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: 'Our Clergy',
+    description: fallbackDescription,
+    openGraph: {
+      title: "Our Clergy | St. Basil's Syriac Orthodox Church",
+      description: fallbackDescription,
+      images: ['/images/our-clergy-hero.jpg'],
+    },
+  }
 }
 
 export const revalidate = 60
