@@ -1,5 +1,8 @@
 @import 'tailwindcss';
 
+/* Hover effects only on devices with pointer hover (not touch) */
+@custom-variant can-hover (@media (hover: hover));
+
 @theme {
   /* Colors — Primary palette */
   --color-cream-50: #fffdf8;

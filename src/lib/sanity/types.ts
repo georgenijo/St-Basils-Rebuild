@@ -14,3 +14,12 @@ export interface PageContent {
   effectiveDate?: string
   lastUpdated?: string
 }
+
+export interface OfficeBearer {
+  _id: string
+  name: string
+  role: string
+  category: 'executive' | 'board'
+  photo?: SanityImageSource
+  order: number
+}

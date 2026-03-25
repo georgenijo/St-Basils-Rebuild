@@ -13,3 +13,14 @@ export const pageContentBySlugQuery = groq`
     lastUpdated
   }
 `
+
+export const officeBearersQuery = groq`
+  *[_type == "officeBearer"] | order(order asc) {
+    _id,
+    name,
+    role,
+    category,
+    photo,
+    order
+  }
+`
