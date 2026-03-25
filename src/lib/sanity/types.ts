@@ -40,6 +40,23 @@ export interface OfficeBearer {
   order: number
 }
 
+export interface Organization {
+  _id: string
+  name: string
+  slug: { current: string }
+  photo?: SanityImageSource
+  photoLqip?: string
+  description?: PortableTextBlock[]
+  missionStatement?: string
+  scriptureQuote?: {
+    text?: string
+    reference?: string
+  }
+  externalLink?: string
+  backgroundColor?: string
+  order: number
+}
+
 export interface SpiritualLeader {
   _id: string
   name: string

@@ -43,6 +43,22 @@ export const allOfficeBearersQuery = groq`
   }
 `
 
+export const allOrganizationsQuery = groq`
+  *[_type == "organization" && isActive == true] | order(order asc) {
+    _id,
+    name,
+    slug,
+    photo,
+    "photoLqip": photo.asset->metadata.lqip,
+    description,
+    missionStatement,
+    scriptureQuote,
+    externalLink,
+    backgroundColor,
+    order
+  }
+`
+
 export const allSpiritualLeadersQuery = groq`
   *[_type == "spiritualLeader" && isActive == true] | order(order asc) {
     _id,
