@@ -32,7 +32,16 @@ export async function updateSession(request: NextRequest) {
   // randomly logged out.
 
   // IMPORTANT: DO NOT REMOVE auth.getUser()
-  await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  // Protect /admin routes — redirect unauthenticated users to login
+  if (request.nextUrl.pathname.startsWith('/admin') && !user) {
+    const loginUrl = new URL('/login', request.url)
+    loginUrl.searchParams.set('next', request.nextUrl.pathname)
+    return NextResponse.redirect(loginUrl)
+  }
 
   return supabaseResponse
 }
