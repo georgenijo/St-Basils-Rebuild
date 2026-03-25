@@ -1,5 +1,6 @@
 import { SchemaTypeDefinition } from 'sanity'
 
+import acolytesChoirPage from './acolytesChoirPage'
 import clergy from './clergy'
 import officeBearer from './officeBearer'
 import organization from './organization'
@@ -9,6 +10,7 @@ import usefulLink from './usefulLink'
 import usefulLinksPage from './usefulLinksPage'
 
 export const schemaTypes: SchemaTypeDefinition[] = [
+  acolytesChoirPage,
   clergy,
   officeBearer,
   organization,

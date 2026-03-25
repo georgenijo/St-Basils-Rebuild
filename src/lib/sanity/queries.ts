@@ -91,3 +91,14 @@ export const usefulLinksPageQuery = groq`
     sectionTitle
   }
 `
+
+export const acolytesChoirPageQuery = groq`
+  *[_type == "acolytesChoirPage"][0] {
+    _id,
+    pageTitle,
+    heroImage,
+    description,
+    groupPhoto,
+    metaDescription
+  }
+`

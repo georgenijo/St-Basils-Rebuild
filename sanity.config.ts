@@ -8,7 +8,7 @@ import { schemaTypes } from '@/sanity/schemas'
 const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID!
 const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET!
 
-const singletonTypes = new Set(['usefulLinksPage'])
+const singletonTypes = new Set(['acolytesChoirPage', 'usefulLinksPage'])
 
 const singletonListItem = (S: StructureBuilder, typeName: string, title: string) =>
   S.listItem()
@@ -30,6 +30,7 @@ export default defineConfig({
           .title('Content')
           .items([
             // Singleton pages
+            singletonListItem(S, 'acolytesChoirPage', 'Acolytes & Choir Page'),
             singletonListItem(S, 'usefulLinksPage', 'Useful Links Page'),
             S.divider(),
             // All other document types (excluding singletons)
