@@ -16,6 +16,7 @@
   /* Font families */
   --font-heading: var(--font-cormorant-garamond), 'Georgia', serif;
   --font-body: var(--font-dm-sans), 'Helvetica Neue', sans-serif;
+  --font-legal: var(--font-poppins), 'Helvetica Neue', sans-serif;
 
   /* Custom border radius */
   --radius-arch: 50% 50% 0 0;

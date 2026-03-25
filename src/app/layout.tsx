@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Cormorant_Garamond, DM_Sans } from 'next/font/google'
+import { Cormorant_Garamond, DM_Sans, Poppins } from 'next/font/google'
 
 import { cn } from '@/lib/utils'
 import { JsonLd } from '@/components/ui'
@@ -55,6 +55,13 @@ const dmSans = DM_Sans({
   display: 'swap',
 })
 
+const poppins = Poppins({
+  subsets: ['latin'],
+  weight: ['400', '500', '600'],
+  variable: '--font-poppins',
+  display: 'swap',
+})
+
 export const metadata: Metadata = {
   metadataBase: new URL('https://stbasilsboston.org'),
   title: {
@@ -93,7 +100,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={cn(cormorantGaramond.variable, dmSans.variable)}>
+    <html lang="en" className={cn(cormorantGaramond.variable, dmSans.variable, poppins.variable)}>
       <body>
         <JsonLd data={churchJsonLd} />
         {children}
