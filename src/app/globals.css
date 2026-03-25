@@ -26,6 +26,20 @@
   --spacing-26: 6.5rem;
   --spacing-28: 7rem;
   --spacing-30: 7.5rem;
+
+  /* Animations */
+  --animate-drop-in: drop-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+
+  @keyframes drop-in {
+    from {
+      opacity: 0;
+      transform: translateY(-30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 }
 
 body {
@@ -42,4 +56,10 @@ h5,
 h6 {
   font-family: var(--font-heading);
   color: var(--color-wood-900);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-drop-in {
+    animation: none;
+  }
 }
