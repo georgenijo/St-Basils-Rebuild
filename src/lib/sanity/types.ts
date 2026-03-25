@@ -15,6 +15,19 @@ export interface PageContent {
   lastUpdated?: string
 }
 
+export interface Clergy {
+  _id: string
+  name: string
+  role?: string
+  photo?: SanityImageSource
+  photoPosition?: string
+  photoLqip?: string
+  yearsOfService?: string
+  biography?: PortableTextBlock[]
+  category: 'current' | 'previous' | 'memoriam'
+  order: number
+}
+
 export interface SpiritualLeader {
   _id: string
   name: string
