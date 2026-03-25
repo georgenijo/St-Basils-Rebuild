@@ -108,13 +108,10 @@ export function Navbar({ className }: NavbarProps) {
       if (item.href) return pathname === item.href
       return item.children?.some((child) => pathname === child.href) ?? false
     },
-    [pathname],
+    [pathname]
   )
 
-  const isChildActive = useCallback(
-    (href: string) => pathname === href,
-    [pathname],
-  )
+  const isChildActive = useCallback((href: string) => pathname === href, [pathname])
 
   return (
     <>
@@ -122,7 +119,7 @@ export function Navbar({ className }: NavbarProps) {
       <div
         className={cn(
           'fixed inset-0 z-40 bg-black/20 transition-opacity duration-300 xl:hidden',
-          mobileOpen ? 'opacity-100' : 'pointer-events-none opacity-0',
+          mobileOpen ? 'opacity-100' : 'pointer-events-none opacity-0'
         )}
         aria-hidden="true"
         onClick={() => setMobileOpen(false)}
@@ -137,11 +134,7 @@ export function Navbar({ className }: NavbarProps) {
         <div className="mx-auto max-w-[1200px] px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             {/* Logo */}
-            <Link
-              href="/"
-              className="flex-shrink-0"
-              aria-label="St. Basil's — Home"
-            >
+            <Link href="/" className="flex-shrink-0" aria-label="St. Basil's — Home">
               <Image
                 src="/logo.png"
                 alt="St. Basil's Syriac Orthodox Church"
@@ -168,21 +161,19 @@ export function Navbar({ className }: NavbarProps) {
                         'flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium transition-colors',
                         isActive(item)
                           ? 'text-burgundy-700'
-                          : 'text-wood-800 hover:text-burgundy-700',
+                          : 'text-wood-800 hover:text-burgundy-700'
                       )}
                       aria-expanded={activeDropdown === item.label}
                       aria-controls={`dropdown-${item.label}`}
                       onClick={() =>
-                        setActiveDropdown(
-                          activeDropdown === item.label ? null : item.label,
-                        )
+                        setActiveDropdown(activeDropdown === item.label ? null : item.label)
                       }
                     >
                       {item.label}
                       <ChevronDown
                         className={cn(
                           'transition-transform duration-200',
-                          activeDropdown === item.label && 'rotate-180',
+                          activeDropdown === item.label && 'rotate-180'
                         )}
                       />
                     </button>
@@ -194,7 +185,7 @@ export function Navbar({ className }: NavbarProps) {
                         'absolute left-0 top-full mt-1 w-56 origin-top rounded-xl bg-cream-50 py-2 shadow-md transition-all duration-200',
                         activeDropdown === item.label
                           ? 'translate-y-0 scale-100 opacity-100'
-                          : 'pointer-events-none -translate-y-2 scale-95 opacity-0',
+                          : 'pointer-events-none -translate-y-2 scale-95 opacity-0'
                       )}
                     >
                       {item.children.map((child) => (
@@ -205,7 +196,7 @@ export function Navbar({ className }: NavbarProps) {
                               'block px-4 py-2.5 text-sm transition-colors',
                               isChildActive(child.href)
                                 ? 'bg-burgundy-100 text-burgundy-700'
-                                : 'text-wood-800 hover:bg-cream-100 hover:text-burgundy-700',
+                                : 'text-wood-800 hover:bg-cream-100 hover:text-burgundy-700'
                             )}
                             {...(isChildActive(child.href) && {
                               'aria-current': 'page' as const,
@@ -225,7 +216,7 @@ export function Navbar({ className }: NavbarProps) {
                         'rounded-lg px-4 py-2 text-sm font-medium transition-colors',
                         isActive(item)
                           ? 'text-burgundy-700'
-                          : 'text-wood-800 hover:text-burgundy-700',
+                          : 'text-wood-800 hover:text-burgundy-700'
                       )}
                       {...(isActive(item) && {
                         'aria-current': 'page' as const,
@@ -234,7 +225,7 @@ export function Navbar({ className }: NavbarProps) {
                       {item.label}
                     </Link>
                   </li>
-                ),
+                )
               )}
             </ul>
 
@@ -264,7 +255,7 @@ export function Navbar({ className }: NavbarProps) {
           id="mobile-menu"
           className={cn(
             'overflow-hidden bg-cream-50 transition-all duration-300 ease-in-out xl:hidden',
-            mobileOpen ? 'max-h-[calc(100vh-4.25rem)]' : 'max-h-0',
+            mobileOpen ? 'max-h-[calc(100vh-4.25rem)]' : 'max-h-0'
           )}
         >
           <ul className="max-h-[calc(100vh-5rem)] space-y-1 overflow-y-auto px-4 py-4">
@@ -275,21 +266,19 @@ export function Navbar({ className }: NavbarProps) {
                     type="button"
                     className={cn(
                       'flex w-full items-center justify-between rounded-lg px-4 py-3 text-base font-medium transition-colors',
-                      isActive(item) ? 'text-burgundy-700' : 'text-wood-800',
+                      isActive(item) ? 'text-burgundy-700' : 'text-wood-800'
                     )}
                     aria-expanded={activeAccordion === item.label}
                     aria-controls={`accordion-${item.label}`}
                     onClick={() =>
-                      setActiveAccordion(
-                        activeAccordion === item.label ? null : item.label,
-                      )
+                      setActiveAccordion(activeAccordion === item.label ? null : item.label)
                     }
                   >
                     {item.label}
                     <ChevronDown
                       className={cn(
                         'transition-transform duration-200',
-                        activeAccordion === item.label && 'rotate-180',
+                        activeAccordion === item.label && 'rotate-180'
                       )}
                     />
                   </button>
@@ -299,9 +288,7 @@ export function Navbar({ className }: NavbarProps) {
                     id={`accordion-${item.label}`}
                     className={cn(
                       'overflow-hidden transition-all duration-200',
-                      activeAccordion === item.label
-                        ? 'max-h-96 opacity-100'
-                        : 'max-h-0 opacity-0',
+                      activeAccordion === item.label ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
                     )}
                   >
                     {item.children.map((child) => (
@@ -312,7 +299,7 @@ export function Navbar({ className }: NavbarProps) {
                             'block rounded-lg py-2.5 pl-8 pr-4 text-sm transition-colors',
                             isChildActive(child.href)
                               ? 'bg-burgundy-100 text-burgundy-700'
-                              : 'text-wood-800 hover:text-burgundy-700',
+                              : 'text-wood-800 hover:text-burgundy-700'
                           )}
                           {...(isChildActive(child.href) && {
                             'aria-current': 'page' as const,
@@ -332,7 +319,7 @@ export function Navbar({ className }: NavbarProps) {
                       'block rounded-lg px-4 py-3 text-base font-medium transition-colors',
                       isActive(item)
                         ? 'bg-burgundy-100 text-burgundy-700'
-                        : 'text-wood-800 hover:text-burgundy-700',
+                        : 'text-wood-800 hover:text-burgundy-700'
                     )}
                     {...(isActive(item) && {
                       'aria-current': 'page' as const,
@@ -341,7 +328,7 @@ export function Navbar({ className }: NavbarProps) {
                     {item.label}
                   </Link>
                 </li>
-              ),
+              )
             )}
           </ul>
         </div>

@@ -1,10 +1,6 @@
 import { Metadata } from 'next'
 
-import {
-  Button,
-  GoldDivider,
-  SectionHeader,
-} from '@/components/ui'
+import { Button, GoldDivider, SectionHeader } from '@/components/ui'
 
 export const metadata: Metadata = {
   title: 'Component Showcase',
@@ -21,16 +17,12 @@ export default function ShowcasePage() {
           <h1 className="font-heading text-[2rem] font-semibold text-wood-900 md:text-[3rem]">
             Component Showcase
           </h1>
-          <p className="mt-2 font-body text-wood-800/60">
-            All UI component variants — dev only
-          </p>
+          <p className="mt-2 font-body text-wood-800/60">All UI component variants — dev only</p>
         </div>
 
         {/* GoldDivider */}
         <section className="space-y-6">
-          <h2 className="font-heading text-[1.75rem] font-semibold text-wood-900">
-            GoldDivider
-          </h2>
+          <h2 className="font-heading text-[1.75rem] font-semibold text-wood-900">GoldDivider</h2>
           <div className="space-y-8 rounded-2xl bg-sand p-8">
             <div>
               <p className="mb-3 font-body text-sm text-wood-800/60">Default</p>
@@ -43,9 +35,7 @@ export default function ShowcasePage() {
               <GoldDivider className="max-w-[100px]" />
             </div>
             <div>
-              <p className="mb-3 font-body text-sm text-wood-800/60">
-                Left-aligned (mx-0)
-              </p>
+              <p className="mb-3 font-body text-sm text-wood-800/60">Left-aligned (mx-0)</p>
               <GoldDivider className="mx-0" />
             </div>
           </div>
@@ -53,9 +43,7 @@ export default function ShowcasePage() {
 
         {/* Button */}
         <section className="space-y-6">
-          <h2 className="font-heading text-[1.75rem] font-semibold text-wood-900">
-            Button
-          </h2>
+          <h2 className="font-heading text-[1.75rem] font-semibold text-wood-900">Button</h2>
 
           {/* Variants */}
           <div className="space-y-4 rounded-2xl bg-sand p-8">
@@ -90,15 +78,11 @@ export default function ShowcasePage() {
 
         {/* SectionHeader */}
         <section className="space-y-6">
-          <h2 className="font-heading text-[1.75rem] font-semibold text-wood-900">
-            SectionHeader
-          </h2>
+          <h2 className="font-heading text-[1.75rem] font-semibold text-wood-900">SectionHeader</h2>
 
           <div className="space-y-12 rounded-2xl bg-sand p-8">
             <div>
-              <p className="mb-4 font-body text-sm text-wood-800/60">
-                Centered (default) — h2
-              </p>
+              <p className="mb-4 font-body text-sm text-wood-800/60">Centered (default) — h2</p>
               <SectionHeader
                 title="Our History"
                 subtitle="Learn about the rich heritage of St. Basil's"
@@ -106,9 +90,7 @@ export default function ShowcasePage() {
             </div>
 
             <div>
-              <p className="mb-4 font-body text-sm text-wood-800/60">
-                Left-aligned — h2
-              </p>
+              <p className="mb-4 font-body text-sm text-wood-800/60">Left-aligned — h2</p>
               <SectionHeader
                 title="Upcoming Events"
                 subtitle="Join us for worship and community gatherings"
@@ -117,9 +99,7 @@ export default function ShowcasePage() {
             </div>
 
             <div>
-              <p className="mb-4 font-body text-sm text-wood-800/60">
-                As h1
-              </p>
+              <p className="mb-4 font-body text-sm text-wood-800/60">As h1</p>
               <SectionHeader
                 as="h1"
                 title="Welcome to St. Basil's"
@@ -128,9 +108,7 @@ export default function ShowcasePage() {
             </div>
 
             <div>
-              <p className="mb-4 font-body text-sm text-wood-800/60">
-                As h3, no subtitle
-              </p>
+              <p className="mb-4 font-body text-sm text-wood-800/60">As h3, no subtitle</p>
               <SectionHeader as="h3" title="Quick Links" />
             </div>
           </div>

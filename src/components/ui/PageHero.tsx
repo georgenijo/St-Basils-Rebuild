@@ -13,17 +13,10 @@ export function PageHero({ title, backgroundImage, className }: PageHeroProps) {
     <section
       className={cn(
         'relative flex h-[40vh] items-center justify-center overflow-hidden md:h-[60vh]',
-        className,
+        className
       )}
     >
-      <Image
-        src={backgroundImage}
-        alt=""
-        fill
-        priority
-        className="object-cover"
-        sizes="100vw"
-      />
+      <Image src={backgroundImage} alt="" fill priority className="object-cover" sizes="100vw" />
 
       <div className="absolute inset-0 bg-black/50" aria-hidden="true" />
 

@@ -3,12 +3,10 @@ import Link from 'next/link'
 import { cn } from '@/lib/utils'
 
 const variants = {
-  primary:
-    'bg-burgundy-700 text-cream-50 hover:bg-burgundy-800',
+  primary: 'bg-burgundy-700 text-cream-50 hover:bg-burgundy-800',
   secondary:
     'border border-burgundy-700 text-burgundy-700 hover:bg-burgundy-700 hover:text-cream-50',
-  ghost:
-    'text-burgundy-700 hover:bg-cream-100',
+  ghost: 'text-burgundy-700 hover:bg-cream-100',
 } as const
 
 const sizes = {
