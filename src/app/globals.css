@@ -20,6 +20,9 @@
   /* Custom border radius */
   --radius-arch: 50% 50% 0 0;
 
+  /* Animations */
+  --animate-drop-in: drop-in 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+
   /* Extended spacing (22–30 in steps of 2) */
   --spacing-22: 5.5rem;
   --spacing-24: 6rem;
@@ -42,4 +45,15 @@ h5,
 h6 {
   font-family: var(--font-heading);
   color: var(--color-wood-900);
+}
+
+@keyframes drop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
