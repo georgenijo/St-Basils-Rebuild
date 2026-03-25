@@ -1,4 +1,6 @@
 export { Button } from './Button'
+export { Card } from './Card'
+export type { CardProps } from './Card'
 export { GoldDivider } from './GoldDivider'
 export { SectionHeader } from './SectionHeader'
 export type { SectionHeaderProps } from './SectionHeader'
