@@ -15,9 +15,11 @@ export const metadata: Metadata = {
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen px-4 py-22 font-body text-wood-800">
-      <h1 className="font-heading text-3xl font-semibold text-wood-900">Public Group</h1>
+    <div className="min-h-screen px-4 py-16 font-body text-wood-800 md:py-22">
+      <h1 className="font-heading text-[2rem] font-semibold text-wood-900 md:text-[3rem]">
+        Public Group
+      </h1>
       <p className="mt-4">Homepage placeholder — (public) route group.</p>
-    </main>
+    </div>
   )
 }

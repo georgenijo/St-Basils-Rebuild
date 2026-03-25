@@ -40,19 +40,19 @@ export function Footer() {
           <div>
             <h2 className="font-heading text-xl font-600 text-cream-50">Quick Links</h2>
             <nav aria-label="Footer navigation" className="mt-4">
-              <ul className="space-y-2 text-cream-50/80">
+              <ul className="-my-0.5 text-cream-50/80">
                 <li>
-                  <Link href="/contact" className="transition-colors hover:text-cream-50">
+                  <Link href="/contact" className="block py-2.5 transition-colors hover:text-cream-50">
                     Contact Us
                   </Link>
                 </li>
                 <li>
-                  <Link href="/privacy-policy" className="transition-colors hover:text-cream-50">
+                  <Link href="/privacy-policy" className="block py-2.5 transition-colors hover:text-cream-50">
                     Privacy Policy
                   </Link>
                 </li>
                 <li>
-                  <Link href="/terms-of-use" className="transition-colors hover:text-cream-50">
+                  <Link href="/terms-of-use" className="block py-2.5 transition-colors hover:text-cream-50">
                     Terms of Use
                   </Link>
                 </li>

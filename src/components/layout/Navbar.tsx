@@ -130,6 +130,14 @@ export function Navbar({ className }: NavbarProps) {
         className={cn('fixed inset-x-0 top-0 z-50 bg-cream-50 shadow-sm', className)}
         aria-label="Main navigation"
       >
+        {/* Skip link for keyboard/screen-reader users */}
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-2 focus:z-10 focus:rounded-lg focus:bg-burgundy-700 focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-cream-50 focus:shadow-lg"
+        >
+          Skip to main content
+        </a>
+
         {/* ── Top bar ── */}
         <div className="mx-auto max-w-[1200px] px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
@@ -193,7 +201,7 @@ export function Navbar({ className }: NavbarProps) {
                           <Link
                             href={child.href}
                             className={cn(
-                              'block px-4 py-2.5 text-sm transition-colors',
+                              'block px-4 py-3 text-sm transition-colors',
                               isChildActive(child.href)
                                 ? 'bg-burgundy-100 text-burgundy-700'
                                 : 'text-wood-800 hover:bg-cream-100 hover:text-burgundy-700'
@@ -296,7 +304,7 @@ export function Navbar({ className }: NavbarProps) {
                         <Link
                           href={child.href}
                           className={cn(
-                            'block rounded-lg py-2.5 pl-8 pr-4 text-sm transition-colors',
+                            'block rounded-lg py-3 pl-8 pr-4 text-sm transition-colors',
                             isChildActive(child.href)
                               ? 'bg-burgundy-100 text-burgundy-700'
                               : 'text-wood-800 hover:text-burgundy-700'

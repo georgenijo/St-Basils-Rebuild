@@ -92,7 +92,7 @@ const ministries = [
 
 export default function GivingPage() {
   return (
-    <main>
+    <>
       <PageHero title="Giving" backgroundImage="/images/giving/hero.png" />
 
       {/* Introduction */}
@@ -147,7 +147,7 @@ export default function GivingPage() {
           <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {ministries.map((ministry, i) => (
               <ScrollReveal key={ministry.title} delay={i * 0.12}>
-                <Card className="h-full transition-transform duration-300 hover:-translate-y-1 hover:shadow-lg">
+                <Card className="h-full transition-shadow duration-300 hover:shadow-lg motion-safe:transition-all motion-safe:hover:-translate-y-1">
                   <Card.Body className="space-y-4">
                     <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-burgundy-700/10 text-burgundy-700">
                       {ministry.icon}
@@ -155,7 +155,7 @@ export default function GivingPage() {
                     <h3 className="font-heading text-xl font-semibold text-wood-900">
                       {ministry.title}
                     </h3>
-                    <p className="font-body text-sm leading-relaxed text-wood-800/80">
+                    <p className="font-body text-sm leading-relaxed text-wood-800/80 md:text-base">
                       {ministry.description}
                     </p>
                   </Card.Body>
@@ -174,6 +174,6 @@ export default function GivingPage() {
           </ScrollReveal>
         </div>
       </section>
-    </main>
+    </>
   )
 }
