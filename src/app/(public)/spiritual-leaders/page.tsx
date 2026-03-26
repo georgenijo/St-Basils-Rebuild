@@ -5,7 +5,8 @@ import { sanityFetch } from '@/lib/sanity/client'
 import { urlFor, SanityImage } from '@/lib/sanity/image'
 import { allSpiritualLeadersQuery } from '@/lib/sanity/queries'
 import { cn } from '@/lib/utils'
-import { GoldDivider, ScrollReveal } from '@/components/ui'
+import { breadcrumbSchema } from '@/lib/structured-data'
+import { GoldDivider, JsonLd, ScrollReveal } from '@/components/ui'
 
 import type { SpiritualLeader } from '@/lib/sanity/types'
 
@@ -43,6 +44,8 @@ export default async function SpiritualLeadersPage() {
 
   return (
     <>
+      <JsonLd data={breadcrumbSchema([{ name: 'Our Spiritual Fathers', path: '/spiritual-leaders' }])} />
+
       {/* Maroon Hero Banner */}
       <section className="flex h-[40vh] items-center justify-center bg-burgundy-700 md:h-[60vh]">
         <h1 className="animate-drop-in px-4 text-center font-heading text-[2.5rem] font-light leading-[1.1] text-cream-50 md:text-[4rem]">

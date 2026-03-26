@@ -1,7 +1,8 @@
 import type { Metadata } from 'next'
 
 import { createClient } from '@/lib/supabase/server'
-import { PageHero, SectionHeader, ScrollReveal } from '@/components/ui'
+import { breadcrumbSchema } from '@/lib/structured-data'
+import { PageHero, SectionHeader, ScrollReveal, JsonLd } from '@/components/ui'
 import { EventCalendar } from '@/components/features/EventCalendar'
 
 import type { CalendarEvent } from '@/components/features/EventCalendar'
@@ -85,6 +86,7 @@ export default async function EventsPage() {
 
   return (
     <>
+      <JsonLd data={breadcrumbSchema([{ name: 'Events Calendar', path: '/events' }])} />
       <PageHero title="Events Calendar" backgroundImage="/images/about/church-exterior.jpg" />
 
       <section className="py-16 md:py-22 lg:py-28">

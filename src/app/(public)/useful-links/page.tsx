@@ -3,7 +3,8 @@ import type { Metadata } from 'next'
 import { sanityFetch } from '@/lib/sanity/client'
 import { urlFor, SanityImage } from '@/lib/sanity/image'
 import { allUsefulLinksQuery, usefulLinksPageQuery } from '@/lib/sanity/queries'
-import { SectionHeader, ScrollReveal } from '@/components/ui'
+import { breadcrumbSchema } from '@/lib/structured-data'
+import { SectionHeader, ScrollReveal, JsonLd } from '@/components/ui'
 
 import type { UsefulLink, UsefulLinksPage } from '@/lib/sanity/types'
 
@@ -60,6 +61,8 @@ export default async function UsefulLinksPageRoute() {
 
   return (
     <>
+      <JsonLd data={breadcrumbSchema([{ name: 'Useful Links', path: '/useful-links' }])} />
+
       {/* Parallax Hero */}
       <section className="relative flex h-[40vh] items-center justify-center overflow-hidden md:h-[60vh]">
         {pageContent?.heroImage ? (

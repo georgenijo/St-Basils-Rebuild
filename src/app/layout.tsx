@@ -2,44 +2,10 @@ import type { Metadata } from 'next'
 import { Cormorant_Garamond, DM_Sans, Poppins } from 'next/font/google'
 
 import { cn } from '@/lib/utils'
+import { churchSchema } from '@/lib/structured-data'
 import { JsonLd } from '@/components/ui'
 
 import './globals.css'
-
-const churchJsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'Church',
-  name: "St. Basil's Syriac Orthodox Church",
-  description:
-    "St. Basil's Syriac Orthodox Church in Boston, Massachusetts. Serving the Jacobite Malayalee community in the New England region.",
-  url: 'https://stbasilsboston.org',
-  telephone: '+1-617-527-0527',
-  logo: 'https://stbasilsboston.org/images/logo.png',
-  image: 'https://stbasilsboston.org/images/logo.png',
-  address: {
-    '@type': 'PostalAddress',
-    streetAddress: '73 Ellis Street',
-    addressLocality: 'Newton',
-    addressRegion: 'MA',
-    postalCode: '02464',
-    addressCountry: 'US',
-  },
-  geo: {
-    '@type': 'GeoCoordinates',
-    latitude: 42.3375,
-    longitude: -71.2093,
-  },
-  openingHoursSpecification: [
-    {
-      '@type': 'OpeningHoursSpecification',
-      dayOfWeek: 'Sunday',
-      opens: '08:30',
-      closes: '12:00',
-      description: 'Morning Prayer at 8:30 AM, Holy Qurbono at 9:15 AM',
-    },
-  ],
-  sameAs: ['https://www.facebook.com/stbasilsboston'],
-}
 
 const cormorantGaramond = Cormorant_Garamond({
   subsets: ['latin'],
@@ -102,7 +68,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={cn(cormorantGaramond.variable, dmSans.variable, poppins.variable)}>
       <body>
-        <JsonLd data={churchJsonLd} />
+        <JsonLd data={churchSchema} />
         {children}
       </body>
     </html>

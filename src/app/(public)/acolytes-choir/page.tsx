@@ -4,7 +4,8 @@ import { PortableText } from 'next-sanity'
 import { sanityFetch } from '@/lib/sanity/client'
 import { urlFor, SanityImage } from '@/lib/sanity/image'
 import { acolytesChoirPageQuery } from '@/lib/sanity/queries'
-import { GoldDivider, ScrollReveal } from '@/components/ui'
+import { breadcrumbSchema } from '@/lib/structured-data'
+import { GoldDivider, JsonLd, ScrollReveal } from '@/components/ui'
 
 import type { AcolytesChoirPage } from '@/lib/sanity/types'
 
@@ -52,6 +53,8 @@ export default async function AcolytesChoirPage() {
 
   return (
     <>
+      <JsonLd data={breadcrumbSchema([{ name: 'Our Acolytes & Choir', path: '/acolytes-choir' }])} />
+
       {/* Parallax Hero */}
       <section className="relative flex h-[40vh] items-center justify-center overflow-hidden md:h-[60vh]">
         {page?.heroImage ? (

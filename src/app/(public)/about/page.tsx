@@ -2,7 +2,8 @@ import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
 
-import { PageHero, SectionHeader, ScrollReveal, Card } from '@/components/ui'
+import { breadcrumbSchema } from '@/lib/structured-data'
+import { PageHero, SectionHeader, ScrollReveal, Card, JsonLd } from '@/components/ui'
 
 export const metadata: Metadata = {
   title: 'About',
@@ -18,6 +19,8 @@ export const metadata: Metadata = {
 export default function AboutPage() {
   return (
     <>
+      <JsonLd data={breadcrumbSchema([{ name: 'Our History', path: '/about' }])} />
+
       {/* Hero */}
       <PageHero title="Our Church History" backgroundImage="/images/about/church-exterior.jpg" />
 

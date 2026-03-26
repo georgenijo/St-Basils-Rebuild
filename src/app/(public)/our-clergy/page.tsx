@@ -5,7 +5,8 @@ import { sanityFetch } from '@/lib/sanity/client'
 import { SanityImage } from '@/lib/sanity/image'
 import { allClergyQuery } from '@/lib/sanity/queries'
 import { cn } from '@/lib/utils'
-import { SectionHeader, ScrollReveal } from '@/components/ui'
+import { breadcrumbSchema } from '@/lib/structured-data'
+import { SectionHeader, ScrollReveal, JsonLd } from '@/components/ui'
 import { CandleFlame } from '@/components/features/CandleFlame'
 
 import type { Clergy } from '@/lib/sanity/types'
@@ -51,6 +52,8 @@ export default async function OurClergyPage() {
 
   return (
     <>
+      <JsonLd data={breadcrumbSchema([{ name: 'Our Clergy', path: '/our-clergy' }])} />
+
       {/* Fixed Background Hero */}
       <section className="relative flex h-[40vh] items-center justify-center overflow-hidden md:h-[60vh]">
         <div

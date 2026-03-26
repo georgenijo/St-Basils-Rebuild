@@ -4,6 +4,8 @@ import { notFound } from 'next/navigation'
 import { sanityFetch } from '@/lib/sanity/client'
 import { urlFor } from '@/lib/sanity/image'
 import { pageContentBySlugQuery } from '@/lib/sanity/queries'
+import { breadcrumbSchema } from '@/lib/structured-data'
+import { JsonLd } from '@/components/ui'
 import { LegalPageLayout } from '@/components/features/LegalPageLayout'
 
 import type { PageContent } from '@/lib/sanity/types'
@@ -47,5 +49,10 @@ export default async function TermsOfUsePage() {
     notFound()
   }
 
-  return <LegalPageLayout page={page} />
+  return (
+    <>
+      <JsonLd data={breadcrumbSchema([{ name: 'Terms of Use', path: '/terms-of-use' }])} />
+      <LegalPageLayout page={page} />
+    </>
+  )
 }

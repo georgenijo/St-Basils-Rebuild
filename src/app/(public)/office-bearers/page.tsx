@@ -3,7 +3,8 @@ import type { Metadata } from 'next'
 import { sanityFetch } from '@/lib/sanity/client'
 import { SanityImage } from '@/lib/sanity/image'
 import { allOfficeBearersQuery } from '@/lib/sanity/queries'
-import { SectionHeader, ScrollReveal } from '@/components/ui'
+import { breadcrumbSchema } from '@/lib/structured-data'
+import { SectionHeader, ScrollReveal, JsonLd } from '@/components/ui'
 
 import type { OfficeBearer } from '@/lib/sanity/types'
 
@@ -46,6 +47,8 @@ export default async function OfficeBearersPage() {
 
   return (
     <>
+      <JsonLd data={breadcrumbSchema([{ name: 'Our Office Bearers', path: '/office-bearers' }])} />
+
       {/* Maroon Hero */}
       <section className="relative flex h-[40vh] items-center justify-center bg-burgundy-700 md:h-[60vh]">
         <div className="absolute inset-0 bg-black/20" aria-hidden="true" />

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 
-import { Card, PageHero, ScrollReveal, SectionHeader } from '@/components/ui'
+import { breadcrumbSchema } from '@/lib/structured-data'
+import { Card, PageHero, ScrollReveal, SectionHeader, JsonLd } from '@/components/ui'
 
 export const metadata: Metadata = {
   title: 'First Time Visiting?',
@@ -90,6 +91,8 @@ const guidelines = [
 export default function FirstTimePage() {
   return (
     <>
+      <JsonLd data={breadcrumbSchema([{ name: 'First Time Visiting?', path: '/first-time' }])} />
+
       <PageHero
         title="A Guide to Our Sacred Worship"
         backgroundImage="/images/first-time-hero.jpg"

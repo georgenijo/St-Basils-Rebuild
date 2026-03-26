@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 
-import { PageHero, SectionHeader, Card } from '@/components/ui'
+import { breadcrumbSchema } from '@/lib/structured-data'
+import { PageHero, SectionHeader, Card, JsonLd } from '@/components/ui'
 import { ScrollReveal } from '@/components/ui/ScrollReveal'
 import { ContactForm } from '@/components/features/ContactForm'
 
@@ -82,7 +83,9 @@ const contactInfo = [
 
 export default function ContactPage() {
   return (
-    <main>
+    <>
+      <JsonLd data={breadcrumbSchema([{ name: 'Contact Us', path: '/contact' }])} />
+      <main>
       <PageHero title="Contact Us" backgroundImage="/images/about/church-exterior.jpg" />
 
       {/* Contact Info Cards */}
@@ -177,5 +180,6 @@ export default function ContactPage() {
         </div>
       </section>
     </main>
+    </>
   )
 }

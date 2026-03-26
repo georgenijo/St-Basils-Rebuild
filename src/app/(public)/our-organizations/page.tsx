@@ -6,7 +6,8 @@ import { sanityFetch } from '@/lib/sanity/client'
 import { SanityImage } from '@/lib/sanity/image'
 import { allOrganizationsQuery } from '@/lib/sanity/queries'
 import { cn } from '@/lib/utils'
-import { GoldDivider, ScrollReveal } from '@/components/ui'
+import { breadcrumbSchema } from '@/lib/structured-data'
+import { GoldDivider, JsonLd, ScrollReveal } from '@/components/ui'
 
 import type { Organization } from '@/lib/sanity/types'
 
@@ -35,6 +36,8 @@ export default async function OurOrganizationsPage() {
 
   return (
     <>
+      <JsonLd data={breadcrumbSchema([{ name: 'Our Organizations', path: '/our-organizations' }])} />
+
       {/* Parallax Hero */}
       <section className="relative flex h-[40vh] items-center justify-center overflow-hidden md:h-[60vh]">
         <div

@@ -4,7 +4,8 @@ import { notFound } from 'next/navigation'
 
 import { createClient } from '@/lib/supabase/server'
 import { renderTiptapHTML } from '@/lib/tiptap'
-import { Button, Card, GoldDivider, ScrollReveal } from '@/components/ui'
+import { articleSchema, breadcrumbSchema } from '@/lib/structured-data'
+import { Button, Card, GoldDivider, JsonLd, ScrollReveal } from '@/components/ui'
 
 interface AnnouncementRow {
   id: string
@@ -72,9 +73,25 @@ export default async function AnnouncementDetailPage({ params }: PageProps) {
   if (!announcement) notFound()
 
   const bodyHtml = renderTiptapHTML(announcement.body)
+  const bodyText = bodyHtml ? bodyHtml.replace(/<[^>]*>/g, '').trim() : null
+
+  const announcementJsonLd = articleSchema({
+    title: announcement.title,
+    slug: announcement.slug,
+    publishedAt: announcement.published_at,
+    bodyText,
+  })
+
+  const breadcrumbJsonLd = breadcrumbSchema([
+    { name: 'Announcements', path: '/announcements' },
+    { name: announcement.title, path: `/announcements/${announcement.slug}` },
+  ])
 
   return (
-    <section className="bg-cream-50 py-16 md:py-22 lg:py-28">
+    <>
+      <JsonLd data={announcementJsonLd} />
+      <JsonLd data={breadcrumbJsonLd} />
+      <section className="bg-cream-50 py-16 md:py-22 lg:py-28">
       <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
         <ScrollReveal>
           {/* Back link */}
@@ -195,6 +212,7 @@ export default async function AnnouncementDetailPage({ params }: PageProps) {
         </ScrollReveal>
       </div>
     </section>
+    </>
   )
 }
 

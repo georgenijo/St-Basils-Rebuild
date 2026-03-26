@@ -2,7 +2,8 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 import { createClient } from '@/lib/supabase/server'
-import { PageHero, SectionHeader, Card, ScrollReveal, Button } from '@/components/ui'
+import { breadcrumbSchema } from '@/lib/structured-data'
+import { PageHero, SectionHeader, Card, ScrollReveal, Button, JsonLd } from '@/components/ui'
 
 export const metadata: Metadata = {
   title: 'Announcements',
@@ -68,6 +69,7 @@ export default async function AnnouncementsPage({ searchParams }: PageProps) {
 
   return (
     <>
+      <JsonLd data={breadcrumbSchema([{ name: 'Announcements', path: '/announcements' }])} />
       <PageHero title="Announcements" backgroundImage="/images/about/church-exterior.jpg" />
 
       <section className="py-16 md:py-22 lg:py-28">

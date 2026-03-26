@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { renderTiptapHTML } from '@/lib/tiptap'
 import { describeRecurrence } from '@/lib/recurrence'
+import { eventSchema, breadcrumbSchema } from '@/lib/structured-data'
 import { Button, Card, GoldDivider, JsonLd, ScrollReveal } from '@/components/ui'
 import { AddToCalendar } from '@/components/features/AddToCalendar'
 
@@ -91,28 +92,26 @@ export default async function EventDetailPage({ params }: PageProps) {
     ? describeRecurrence(recurrenceRule.rrule_string)
     : null
 
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'Event',
-    name: event.title,
-    startDate: event.start_at,
-    ...(event.end_at && { endDate: event.end_at }),
-    ...(event.location && {
-      location: {
-        '@type': 'Place',
-        name: event.location,
-      },
-    }),
-    organizer: {
-      '@type': 'Organization',
-      name: "St. Basil's Syriac Orthodox Church",
-      url: 'https://stbasilsboston.org',
-    },
-  }
+  const plainText = descriptionHtml ? stripHtml(descriptionHtml) : null
+
+  const eventJsonLd = eventSchema({
+    title: event.title,
+    startAt: event.start_at,
+    endAt: event.end_at,
+    location: event.location,
+    description: plainText,
+    slug: event.slug,
+  })
+
+  const breadcrumbJsonLd = breadcrumbSchema([
+    { name: 'Events', path: '/events' },
+    { name: event.title, path: `/events/${event.slug}` },
+  ])
 
   return (
     <>
-      <JsonLd data={jsonLd} />
+      <JsonLd data={eventJsonLd} />
+      <JsonLd data={breadcrumbJsonLd} />
 
       <section className="bg-cream-50 py-16 md:py-22 lg:py-28">
         <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
@@ -223,7 +222,7 @@ export default async function EventDetailPage({ params }: PageProps) {
             <div className="mb-10">
               <AddToCalendar
                 title={event.title}
-                description={descriptionHtml ? stripHtml(descriptionHtml) : undefined}
+                description={plainText ?? undefined}
                 location={event.location}
                 startAt={event.start_at}
                 endAt={event.end_at}

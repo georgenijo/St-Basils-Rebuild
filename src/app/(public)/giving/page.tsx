@@ -1,7 +1,8 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 
-import { PageHero, SectionHeader, Button, Card } from '@/components/ui'
+import { breadcrumbSchema } from '@/lib/structured-data'
+import { PageHero, SectionHeader, Button, Card, JsonLd } from '@/components/ui'
 import { ScrollReveal } from '@/components/ui/ScrollReveal'
 
 export const metadata: Metadata = {
@@ -92,7 +93,9 @@ const ministries = [
 
 export default function GivingPage() {
   return (
-    <main>
+    <>
+      <JsonLd data={breadcrumbSchema([{ name: 'Giving', path: '/giving' }])} />
+      <main>
       <PageHero title="Giving" backgroundImage="/images/giving/hero.png" />
 
       {/* Introduction */}
@@ -175,5 +178,6 @@ export default function GivingPage() {
         </div>
       </section>
     </main>
+    </>
   )
 }
