@@ -6,6 +6,9 @@ const CHURCH_ADDRESS = "73 Ellis Street, Newton, MA 02464";
 const FROM_EMAIL = "announcements@stbasilsboston.org";
 const SITE_URL = Deno.env.get("SITE_URL") ?? "https://stbasilsboston.org";
 const RESEND_BATCH_LIMIT = 100;
+const EMAIL_TRANSPORT = Deno.env.get("EMAIL_TRANSPORT") ?? "resend";
+const EMAIL_SINK_BASE_URL = Deno.env.get("EMAIL_SINK_BASE_URL");
+const TEST_SUPPORT_SECRET = Deno.env.get("TEST_SUPPORT_SECRET");
 
 // ─── Types ──────────────────────────────────────────────────────────
 
@@ -183,9 +186,46 @@ function buildEmailHtml(
 // ─── Resend Batch Send ───────────────────────────────────────────────
 
 async function sendBatch(
-  emails: { from: string; to: string; subject: string; html: string }[],
-  apiKey: string
+  emails: {
+    from: string;
+    to: string;
+    subject: string;
+    html: string;
+    metadata?: Record<string, string>;
+  }[],
+  apiKey?: string
 ): Promise<{ success: boolean; error?: string }> {
+  if (EMAIL_TRANSPORT === "mock") {
+    if (!EMAIL_SINK_BASE_URL || !TEST_SUPPORT_SECRET) {
+      return {
+        success: false,
+        error: "EMAIL_SINK_BASE_URL and TEST_SUPPORT_SECRET are required for mock transport",
+      };
+    }
+
+    for (const email of emails) {
+      const res = await fetch(`${EMAIL_SINK_BASE_URL}/api/test/email-sink`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-test-secret": TEST_SUPPORT_SECRET,
+        },
+        body: JSON.stringify(email),
+      });
+
+      if (!res.ok) {
+        const body = await res.text();
+        return { success: false, error: `Email sink ${res.status}: ${body}` };
+      }
+    }
+
+    return { success: true };
+  }
+
+  if (!apiKey) {
+    return { success: false, error: "Resend API key is required" };
+  }
+
   const res = await fetch(RESEND_API_URL, {
     method: "POST",
     headers: {
@@ -218,7 +258,7 @@ Deno.serve(async (req) => {
   }
 
   const resendApiKey = Deno.env.get("RESEND_API_KEY");
-  if (!resendApiKey) {
+  if (EMAIL_TRANSPORT !== "mock" && !resendApiKey) {
     return new Response(
       JSON.stringify({ error: "RESEND_API_KEY not configured" }),
       { status: 500, headers: { "Content-Type": "application/json" } }
@@ -265,11 +305,12 @@ Deno.serve(async (req) => {
     );
   }
 
-  // Fetch active, confirmed subscribers
+  // Fetch active, confirmed, non-unsubscribed subscribers
   const { data: subscribers, error: subError } = await supabase
     .from("email_subscribers")
     .select("email, name, unsubscribe_token")
-    .eq("confirmed", true);
+    .eq("confirmed", true)
+    .is("unsubscribed_at", null);
 
   if (subError) {
     return new Response(
@@ -299,12 +340,18 @@ Deno.serve(async (req) => {
   for (let i = 0; i < subscribers.length; i += RESEND_BATCH_LIMIT) {
     const batch = (subscribers as Subscriber[]).slice(i, i + RESEND_BATCH_LIMIT);
     const emails = batch.map((sub) => {
-      const unsubscribeUrl = `${SITE_URL}/unsubscribe?token=${sub.unsubscribe_token}`;
+      const unsubscribeUrl = `${SITE_URL}/api/newsletter/unsubscribe?token=${sub.unsubscribe_token}`;
       return {
         from: `${CHURCH_NAME} <${FROM_EMAIL}>`,
         to: sub.email,
         subject,
         html: buildEmailHtml(record, unsubscribeUrl),
+        metadata: {
+          template: "announcement-broadcast",
+          announcementId: record.id,
+          announcementUrl: `${SITE_URL}/announcements/${record.slug}`,
+          unsubscribeUrl,
+        },
       };
     });
 
@@ -316,15 +363,16 @@ Deno.serve(async (req) => {
     }
   }
 
-  // Update email_sent_at if any emails were sent successfully
-  if (totalSent > 0) {
+  // Only mark as sent when ALL batches succeeded — partial failures
+  // leave email_sent_at NULL so a manual retry can re-trigger the webhook.
+  if (errors.length === 0) {
     await supabase
       .from("announcements")
       .update({ email_sent_at: new Date().toISOString() })
       .eq("id", record.id);
   }
 
-  const status = errors.length === 0 ? 200 : 207;
+  const status = errors.length === 0 ? 200 : 500;
   return new Response(
     JSON.stringify({
       sent: totalSent,

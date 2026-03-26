@@ -30,7 +30,7 @@ export function AnnouncementBroadcast({
   siteUrl = 'https://stbasilsboston.org',
 }: AnnouncementBroadcastProps) {
   const readUrl = `${siteUrl}/announcements/${slug}`
-  const unsubscribeUrl = `${siteUrl}/unsubscribe?token=${unsubscribeToken}`
+  const unsubscribeUrl = `${siteUrl}/api/newsletter/unsubscribe?token=${unsubscribeToken}`
 
   return (
     <Html>
