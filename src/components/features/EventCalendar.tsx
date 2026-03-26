@@ -84,7 +84,11 @@ export function EventCalendar({ events }: EventCalendarProps) {
       </div>
 
       {/* Calendar */}
-      <div className="rounded-2xl bg-cream-50 p-2 shadow sm:p-4">
+      <div
+        className="rounded-2xl bg-cream-50 p-2 shadow sm:p-4"
+        role="region"
+        aria-label="Events calendar"
+      >
         <CalendarView events={filteredEvents} />
       </div>
     </div>

@@ -36,7 +36,7 @@ export function ContactForm() {
 
   if (state.success) {
     return (
-      <div className="rounded-2xl border border-green-200 bg-green-50 p-8 text-center">
+      <div className="rounded-2xl border border-green-200 bg-green-50 p-8 text-center" role="status" aria-live="polite">
         <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
           <svg
             className="h-6 w-6 text-green-600"
@@ -44,6 +44,7 @@ export function ContactForm() {
             viewBox="0 0 24 24"
             strokeWidth={2}
             stroke="currentColor"
+            aria-hidden="true"
           >
             <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
           </svg>
@@ -55,7 +56,7 @@ export function ContactForm() {
   }
 
   const inputBase =
-    'w-full rounded-lg border bg-cream-50 px-4 py-3 font-body text-base text-wood-800 placeholder:text-wood-800/40 transition-colors focus:border-burgundy-700 focus:outline-none focus:ring-2 focus:ring-burgundy-700/20'
+    'w-full rounded-lg border bg-cream-50 px-4 py-3 font-body text-base text-wood-800 placeholder:text-wood-800/40 transition-colors focus-visible:border-burgundy-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-burgundy-700 focus-visible:ring-offset-2'
 
   return (
     <form ref={formRef} action={action} className="space-y-6">
@@ -146,7 +147,7 @@ export function ContactForm() {
       <Button type="submit" disabled={isPending} className="w-full sm:w-auto">
         {isPending ? (
           <span className="flex items-center gap-2">
-            <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+            <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
             </svg>
