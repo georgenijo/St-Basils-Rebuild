@@ -1,6 +1,8 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 
+import { removeContactFromAudience } from '@/lib/resend'
+
 export async function GET(req: NextRequest) {
   const token = req.nextUrl.searchParams.get('token')
 
@@ -21,12 +23,15 @@ export async function GET(req: NextRequest) {
       confirmed_at: null,
     })
     .eq('unsubscribe_token', token)
-    .select('id')
+    .select('id, email')
     .single()
 
   if (error || !subscriber) {
     return NextResponse.redirect(new URL('/?unsubscribed=invalid', req.url))
   }
+
+  // Remove from Resend Audience
+  await removeContactFromAudience(subscriber.email)
 
   return NextResponse.redirect(new URL('/?unsubscribed=success', req.url))
 }
