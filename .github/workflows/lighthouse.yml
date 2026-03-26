@@ -1,0 +1,105 @@
+name: Lighthouse CI
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  lighthouse:
+    name: Lighthouse Audit
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      deployments: read
+      statuses: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Wait for Vercel Preview
+        id: vercel
+        uses: patrickedqvist/wait-for-vercel-preview@v1.3.2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          max_timeout: 300
+          check_interval: 10
+
+      - name: Run Lighthouse CI
+        id: lighthouse
+        uses: treosh/lighthouse-ci-action@v12
+        with:
+          urls: ${{ steps.vercel.outputs.url }}
+          configPath: .github/lighthouse/lighthouserc.json
+          uploadArtifacts: true
+          temporaryPublicStorage: true
+
+      - name: Post Results
+        if: always() && steps.lighthouse.outcome != 'skipped'
+        uses: actions/github-script@v7
+        env:
+          LIGHTHOUSE_MANIFEST: ${{ steps.lighthouse.outputs.manifest }}
+          LIGHTHOUSE_LINKS: ${{ steps.lighthouse.outputs.links }}
+        with:
+          script: |
+            const manifest = JSON.parse(process.env.LIGHTHOUSE_MANIFEST || '[]');
+            const links = JSON.parse(process.env.LIGHTHOUSE_LINKS || '{}');
+
+            if (!manifest.length) {
+              core.warning('No Lighthouse results to post');
+              return;
+            }
+
+            const result = manifest[0];
+            const { summary } = result;
+
+            const score = (v) => Math.round(v * 100);
+            const badge = (v, t) => v >= t ? '\u2705' : '\u274C';
+
+            const perf = score(summary.performance);
+            const a11y = score(summary.accessibility);
+            const seo = score(summary.seo);
+            const bp = score(summary['best-practices']);
+
+            const reportUrl = Object.values(links)[0];
+
+            const body = [
+              '## Lighthouse Results',
+              '',
+              '| Category | Score | Threshold | Status |',
+              '|----------|-------|-----------|--------|',
+              `| Performance | **${perf}** | >= 90 | ${badge(perf, 90)} |`,
+              `| Accessibility | **${a11y}** | >= 95 | ${badge(a11y, 95)} |`,
+              `| SEO | **${seo}** | >= 90 | ${badge(seo, 90)} |`,
+              `| Best Practices | **${bp}** | — | — |`,
+              '',
+              reportUrl ? `[Full Report](${reportUrl})` : '',
+              '',
+              `*Tested: ${result.url}*`,
+            ].join('\n');
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const existing = comments.find(c =>
+              c.body?.includes('## Lighthouse Results')
+            );
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
