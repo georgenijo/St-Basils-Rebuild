@@ -135,9 +135,9 @@ export default function FirstTimePage() {
                   in the prayers, and giving proper and timely responses will definitely
                   transpire us to an amazing and unique experience.&rdquo;
                 </p>
-                <footer className="mt-6 text-right font-body text-base text-gold-500">
+                <cite className="mt-6 block text-right font-body text-base text-gold-500 not-italic">
                   &mdash; A Guide to the Holy Qurbono, Prepared by Archbishop Mor Titus Yeldho
-                </footer>
+                </cite>
               </blockquote>
             </Card>
           </ScrollReveal>

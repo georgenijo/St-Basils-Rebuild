@@ -21,7 +21,7 @@ export async function generateMetadata(): Promise<Metadata> {
     openGraph: {
       title: "Our Organizations | St. Basil's Syriac Orthodox Church",
       description: fallbackDescription,
-      images: ['/images/our-organizations-hero.jpg'],
+      images: ['/images/about/group-photo.jpg'],
     },
   }
 }
@@ -32,6 +32,7 @@ export default async function OurOrganizationsPage() {
   const organizations = await sanityFetch<Organization[]>({
     query: allOrganizationsQuery,
     tags: ['organization'],
+    fallback: [],
   })
 
   return (
@@ -42,7 +43,7 @@ export default async function OurOrganizationsPage() {
       <section className="relative flex h-[40vh] items-center justify-center overflow-hidden md:h-[60vh]">
         <div
           className="absolute inset-0 bg-cover bg-fixed bg-center"
-          style={{ backgroundImage: "url('/images/our-organizations-hero.jpg')" }}
+          style={{ backgroundImage: "url('/images/about/group-photo.jpg')" }}
           aria-hidden="true"
         />
         <div className="absolute inset-0 bg-black/50" aria-hidden="true" />
@@ -115,9 +116,9 @@ export default async function OurOrganizationsPage() {
                             &ldquo;{org.scriptureQuote.text}&rdquo;
                           </p>
                           {org.scriptureQuote.reference && (
-                            <footer className="mt-2 text-sm font-medium text-burgundy-700">
+                            <cite className="mt-2 block text-sm font-medium text-burgundy-700 not-italic">
                               &mdash; {org.scriptureQuote.reference}
-                            </footer>
+                            </cite>
                           )}
                         </blockquote>
                       )}

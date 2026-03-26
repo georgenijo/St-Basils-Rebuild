@@ -16,6 +16,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const page = await sanityFetch<AcolytesChoirPage | null>({
     query: acolytesChoirPageQuery,
     tags: ['acolytesChoirPage'],
+    fallback: null,
   })
 
   const description = page?.metaDescription || fallbackDescription
@@ -47,6 +48,7 @@ export default async function AcolytesChoirPage() {
   const page = await sanityFetch<AcolytesChoirPage | null>({
     query: acolytesChoirPageQuery,
     tags: ['acolytesChoirPage'],
+    fallback: null,
   })
 
   const title = page?.pageTitle || 'Our Acolytes & Choir'

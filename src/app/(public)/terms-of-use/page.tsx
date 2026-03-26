@@ -1,6 +1,4 @@
 import type { Metadata } from 'next'
-import { notFound } from 'next/navigation'
-
 import { sanityFetch } from '@/lib/sanity/client'
 import { urlFor } from '@/lib/sanity/image'
 import { pageContentBySlugQuery } from '@/lib/sanity/queries'
@@ -15,11 +13,46 @@ export const revalidate = 60
 const fallbackDescription =
   "Terms of Use for St. Basil's Syriac Orthodox Church website."
 
+const fallbackPage: PageContent = {
+  _id: 'fallback-terms-of-use',
+  title: 'Terms of Use',
+  slug: { current: 'terms-of-use' },
+  heroStyle: 'maroon-banner',
+  body: [
+    {
+      _type: 'block',
+      style: 'normal',
+      markDefs: [],
+      children: [
+        {
+          _type: 'span',
+          text: 'This website is provided to share information about the parish, its ministries, and its public events. Please use the site lawfully and respectfully.',
+          marks: [],
+        },
+      ],
+    },
+    {
+      _type: 'block',
+      style: 'normal',
+      markDefs: [],
+      children: [
+        {
+          _type: 'span',
+          text: 'Content may be updated as parish schedules, ministries, and policies change. For official guidance on any church matter, please contact the parish directly.',
+          marks: [],
+        },
+      ],
+    },
+  ],
+  metaDescription: fallbackDescription,
+}
+
 async function getPage() {
-  return sanityFetch<PageContent | null>({
+  return sanityFetch<PageContent>({
     query: pageContentBySlugQuery,
     params: { slug: 'terms-of-use' },
     tags: ['pageContent'],
+    fallback: fallbackPage,
   })
 }
 
@@ -44,10 +77,6 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function TermsOfUsePage() {
   const page = await getPage()
-
-  if (!page) {
-    notFound()
-  }
 
   return (
     <>

@@ -15,6 +15,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const pageContent = await sanityFetch<UsefulLinksPage | null>({
     query: usefulLinksPageQuery,
     tags: ['usefulLinksPage'],
+    fallback: null,
   })
 
   const title = pageContent?.pageTitle || 'Useful Links'
@@ -37,13 +38,15 @@ export const revalidate = 60
 
 export default async function UsefulLinksPageRoute() {
   const [pageContent, links] = await Promise.all([
-    sanityFetch<UsefulLinksPage>({
+    sanityFetch<UsefulLinksPage | null>({
       query: usefulLinksPageQuery,
       tags: ['usefulLinksPage'],
+      fallback: null,
     }),
     sanityFetch<UsefulLink[]>({
       query: allUsefulLinksQuery,
       tags: ['usefulLink'],
+      fallback: [],
     }),
   ])
 
@@ -78,7 +81,7 @@ export default async function UsefulLinksPageRoute() {
         ) : (
           <div
             className="absolute inset-0 bg-cover bg-fixed bg-center"
-            style={{ backgroundImage: "url('/images/useful-links-hero.jpg')" }}
+            style={{ backgroundImage: "url('/images/about/church-exterior.jpg')" }}
             aria-hidden="true"
           />
         )}

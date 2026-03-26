@@ -17,6 +17,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const leaders = await sanityFetch<SpiritualLeader[]>({
     query: allSpiritualLeadersQuery,
     tags: ['spiritualLeader'],
+    fallback: [],
   })
 
   const firstLeaderPhoto = leaders[0]?.photo
@@ -40,6 +41,7 @@ export default async function SpiritualLeadersPage() {
   const leaders = await sanityFetch<SpiritualLeader[]>({
     query: allSpiritualLeadersQuery,
     tags: ['spiritualLeader'],
+    fallback: [],
   })
 
   return (

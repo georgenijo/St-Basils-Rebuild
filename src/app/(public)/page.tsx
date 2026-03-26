@@ -58,7 +58,7 @@ export default async function HomePage() {
       <section className="relative flex min-h-[calc(100svh-4rem)] items-center justify-center bg-charcoal">
         {/* TODO: Replace gradient with video/image background */}
         <div
-          className="absolute inset-0 bg-gradient-to-b from-charcoal via-charcoal/90 to-charcoal/70"
+          className="pointer-events-none absolute inset-0 bg-gradient-to-b from-charcoal via-charcoal/90 to-charcoal/70"
           aria-hidden="true"
         />
 
@@ -73,7 +73,7 @@ export default async function HomePage() {
 
         {/* Scroll chevron */}
         <div
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce motion-reduce:animate-none"
+          className="pointer-events-none absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce motion-reduce:animate-none"
           aria-hidden="true"
         >
           <svg
@@ -210,7 +210,7 @@ export default async function HomePage() {
               community gatherings throughout the year.
             </p>
             <div className="mt-10">
-              <Button href="/events-calendar">View Events Calendar</Button>
+              <Button href="/events">View Events Calendar</Button>
             </div>
           </div>
         </ScrollReveal>

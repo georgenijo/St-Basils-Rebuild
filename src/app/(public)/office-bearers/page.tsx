@@ -40,6 +40,7 @@ export default async function OfficeBearersPage() {
   const bearers = await sanityFetch<OfficeBearer[]>({
     query: allOfficeBearersQuery,
     tags: ['officeBearer'],
+    fallback: [],
   })
 
   const { executive, board } = groupBearersByCategory(bearers)

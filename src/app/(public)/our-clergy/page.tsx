@@ -21,7 +21,7 @@ export async function generateMetadata(): Promise<Metadata> {
     openGraph: {
       title: "Our Clergy | St. Basil's Syriac Orthodox Church",
       description: fallbackDescription,
-      images: ['/images/our-clergy-hero.jpg'],
+      images: ['/images/about/church-exterior.jpg'],
     },
   }
 }
@@ -46,6 +46,7 @@ export default async function OurClergyPage() {
   const clergy = await sanityFetch<Clergy[]>({
     query: allClergyQuery,
     tags: ['clergy'],
+    fallback: [],
   })
 
   const { current, previous, memoriam } = groupClergyByCategory(clergy)
@@ -58,7 +59,7 @@ export default async function OurClergyPage() {
       <section className="relative flex h-[40vh] items-center justify-center overflow-hidden md:h-[60vh]">
         <div
           className="absolute inset-0 bg-cover bg-fixed bg-center"
-          style={{ backgroundImage: "url('/images/our-clergy-hero.jpg')" }}
+          style={{ backgroundImage: "url('/images/about/church-exterior.jpg')" }}
           aria-hidden="true"
         />
         <div className="absolute inset-0 bg-black/50" aria-hidden="true" />
