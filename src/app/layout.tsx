@@ -31,6 +31,8 @@ const poppins = Poppins({
   display: 'swap',
 })
 
+const isVercelDeployment = process.env.VERCEL === '1'
+
 export const metadata: Metadata = {
   metadataBase: new URL('https://stbasilsboston.org'),
   title: {
@@ -75,8 +77,8 @@ export default function RootLayout({
       <body>
         <JsonLd data={churchSchema} />
         {children}
-        <Analytics />
-        <SpeedInsights />
+        {isVercelDeployment && <Analytics />}
+        {isVercelDeployment && <SpeedInsights />}
       </body>
     </html>
   )

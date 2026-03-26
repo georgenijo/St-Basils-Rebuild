@@ -1,7 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { resend } from '@/lib/resend'
+import { sendEmail } from '@/lib/email'
 import { verifyTurnstile } from '@/lib/turnstile'
 import { contactSchema } from '@/lib/validators/contact'
 import { ContactNotification } from '@/emails/contact-notification'
@@ -50,11 +50,17 @@ export async function submitContact(
   }
 
   // 4. Send email via Resend
-  const { error: emailError } = await resend.emails.send({
+  const { error: emailError } = await sendEmail({
     from: "St. Basil's Church <noreply@stbasilsboston.org>",
     to: 'info@stbasilsboston.org',
     subject: `Contact Form: ${parsed.data.subject}`,
     react: ContactNotification({ ...parsed.data }),
+    metadata: {
+      template: 'contact-notification',
+      name: parsed.data.name,
+      email: parsed.data.email,
+      subject: parsed.data.subject,
+    },
   })
 
   if (emailError) {

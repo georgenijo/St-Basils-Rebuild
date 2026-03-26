@@ -10,8 +10,8 @@ export const churchSchema: WithContext<Church> = {
   description: `${ORG_NAME} in Boston, Massachusetts. Serving the Jacobite Malayalee community in the New England region.`,
   url: SITE_URL,
   telephone: '+1-617-527-0527',
-  logo: `${SITE_URL}/images/logo.png`,
-  image: `${SITE_URL}/images/logo.png`,
+  logo: `${SITE_URL}/logo.png`,
+  image: `${SITE_URL}/logo.png`,
   address: {
     '@type': 'PostalAddress',
     streetAddress: '73 Ellis Street',
@@ -103,7 +103,7 @@ export function articleSchema(announcement: {
       url: SITE_URL,
       logo: {
         '@type': 'ImageObject',
-        url: `${SITE_URL}/images/logo.png`,
+        url: `${SITE_URL}/logo.png`,
       },
     },
   }

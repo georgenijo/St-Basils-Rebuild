@@ -1,9 +1,10 @@
 'use client'
 
 import { useActionState, useRef, useEffect } from 'react'
-import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile'
+import type { TurnstileInstance } from '@marsidev/react-turnstile'
 
 import { submitContact } from '@/actions/contact'
+import { CaptchaField } from '@/components/features/CaptchaField'
 import { Button } from '@/components/ui'
 import { cn } from '@/lib/utils'
 
@@ -61,7 +62,7 @@ export function ContactForm() {
   return (
     <form ref={formRef} action={action} className="space-y-6">
       {/* Honeypot — hidden from real users */}
-      <div className="absolute -left-[9999px]" aria-hidden="true">
+      <div className="hidden" aria-hidden="true">
         <label htmlFor="website">Website</label>
         <input type="text" id="website" name="website" tabIndex={-1} autoComplete="off" />
       </div>
@@ -138,11 +139,7 @@ export function ContactForm() {
         <FieldError errors={state.errors?.message} />
       </div>
 
-      <Turnstile
-        ref={turnstileRef}
-        siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
-        options={{ theme: 'light' }}
-      />
+      <CaptchaField turnstileRef={turnstileRef} theme="light" />
 
       <Button type="submit" disabled={isPending} className="w-full sm:w-auto">
         {isPending ? (

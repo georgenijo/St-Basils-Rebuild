@@ -6,12 +6,16 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test:e2e": "playwright test",
-    "test:smoke": "playwright test --grep @smoke"
+    "test:e2e:ci": "playwright test e2e/ci e2e/smoke",
+    "test:smoke": "playwright test --grep @smoke",
+    "test:smoke:prod": "playwright test e2e/smoke/public-pages.spec.ts e2e/smoke/forms.spec.ts e2e/smoke/mobile-nav.spec.ts e2e/smoke/images.spec.ts e2e/smoke/redirects.spec.ts e2e/smoke/calendar-announcements.spec.ts",
+    "ci:validate": "npm run format:check && npm run lint && npm run typecheck && npm run build"
   },
   "dependencies": {
     "@fullcalendar/core": "^6.1.20",

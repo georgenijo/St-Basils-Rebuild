@@ -1,5 +1,7 @@
 import { Resend } from 'resend'
 
+import { isMockEmailTransportEnabled } from '@/lib/test-support'
+
 let _resend: Resend | null = null
 
 function getResend(): Resend {
@@ -16,6 +18,8 @@ export const resend = new Proxy({} as Resend, {
 })
 
 export async function addContactToAudience(email: string): Promise<void> {
+  if (isMockEmailTransportEnabled()) return
+
   const audienceId = process.env.RESEND_AUDIENCE_ID
   if (!audienceId) return
 
@@ -27,6 +31,8 @@ export async function addContactToAudience(email: string): Promise<void> {
 }
 
 export async function removeContactFromAudience(email: string): Promise<void> {
+  if (isMockEmailTransportEnabled()) return
+
   const audienceId = process.env.RESEND_AUDIENCE_ID
   if (!audienceId) return
 

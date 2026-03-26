@@ -1,9 +1,10 @@
 'use client'
 
 import { useActionState, useRef, useEffect } from 'react'
-import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile'
+import type { TurnstileInstance } from '@marsidev/react-turnstile'
 
 import { subscribeNewsletter } from '@/actions/newsletter'
+import { CaptchaField } from '@/components/features/CaptchaField'
 import { Button } from '@/components/ui'
 import { cn } from '@/lib/utils'
 
@@ -66,7 +67,7 @@ export function NewsletterSignupForm({
   return (
     <form ref={formRef} action={action} className={cn('space-y-3', className)}>
       {/* Honeypot — hidden from real users */}
-      <div className="absolute -left-[9999px]" aria-hidden="true">
+      <div className="hidden" aria-hidden="true">
         <label htmlFor="newsletter-website">Website</label>
         <input type="text" id="newsletter-website" name="website" tabIndex={-1} autoComplete="off" />
       </div>
@@ -140,10 +141,10 @@ export function NewsletterSignupForm({
         )}
       </div>
 
-      <Turnstile
-        ref={turnstileRef}
-        siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
-        options={{ theme: isDark ? 'dark' : 'light', size: 'compact' }}
+      <CaptchaField
+        turnstileRef={turnstileRef}
+        theme={isDark ? 'dark' : 'light'}
+        size="compact"
       />
     </form>
   )

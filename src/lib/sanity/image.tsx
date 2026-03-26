@@ -2,14 +2,17 @@ import Image, { type ImageProps } from 'next/image'
 
 import { createImageUrlBuilder } from '@sanity/image-url'
 
-import { client } from '@/lib/sanity/client'
+import { getSanityClient, hasSanityConfig } from '@/lib/sanity/client'
 import { cn } from '@/lib/utils'
 
 import type { SanityImageSource } from '@/lib/sanity/types'
 
-const builder = createImageUrlBuilder(client)
+const builder = hasSanityConfig ? createImageUrlBuilder(getSanityClient()) : null
 
 export function urlFor(source: SanityImageSource) {
+  if (!builder) {
+    throw new Error('Sanity image URLs are unavailable because Sanity is not configured')
+  }
   return builder.image(source)
 }
 
