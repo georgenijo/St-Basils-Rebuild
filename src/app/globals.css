@@ -80,8 +80,20 @@ h6 {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .animate-drop-in {
+  .animate-drop-in,
+  .animate-flicker {
     animation: none;
+  }
+
+  .animate-bounce {
+    animation: none;
+  }
+
+  /* Prevent decorative transitions — user-initiated UI transitions still use motion-reduce: utilities */
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
   }
 }
 

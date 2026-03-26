@@ -92,7 +92,7 @@ const ministries = [
 
 export default function GivingPage() {
   return (
-    <main>
+    <>
       <PageHero title="Giving" backgroundImage="/images/giving/hero.png" />
 
       {/* Introduction */}
@@ -112,12 +112,12 @@ export default function GivingPage() {
                 <p className="font-body text-base font-medium text-wood-900">
                   For your convenience, offerings may be sent to our Zelle account:
                 </p>
-                <p className="mt-2 font-heading text-xl font-semibold text-burgundy-700">
+                <p className="mt-2 break-all font-heading text-xl font-semibold text-burgundy-700">
                   stbasilsboston.trsr@gmail.com
                 </p>
               </div>
 
-              <p className="font-body text-base text-wood-800/60">
+              <p className="font-body text-base text-wood-800/80">
                 For questions about giving or other ways to support our ministry, please reach out
                 through our{' '}
                 <Link
@@ -140,14 +140,14 @@ export default function GivingPage() {
             <SectionHeader
               title="Our Heart for Service"
               subtitle="Following Christ's call to serve 'the least of these,' St. Basil's has been blessed to support various charitable causes and organizations over the years. Through the faithful generosity of our church family, we have been able to extend God's love beyond our parish walls."
-              className="[&_h2]:text-cream-50 [&_p]:text-cream-50/60"
+              className="[&_h2]:text-cream-50 [&_p]:text-cream-50/80"
             />
           </ScrollReveal>
 
           <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {ministries.map((ministry, i) => (
               <ScrollReveal key={ministry.title} delay={i * 0.12}>
-                <Card className="h-full transition-transform duration-300 hover:-translate-y-1 hover:shadow-lg">
+                <Card className="h-full transition-transform duration-300 hover:-translate-y-1 hover:shadow-lg motion-reduce:transition-none motion-reduce:hover:translate-y-0">
                   <Card.Body className="space-y-4">
                     <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-burgundy-700/10 text-burgundy-700">
                       {ministry.icon}
@@ -174,6 +174,6 @@ export default function GivingPage() {
           </ScrollReveal>
         </div>
       </section>
-    </main>
+    </>
   )
 }

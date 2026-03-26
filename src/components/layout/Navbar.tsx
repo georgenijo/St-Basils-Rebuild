@@ -158,7 +158,7 @@ export function Navbar({ className }: NavbarProps) {
                     <button
                       type="button"
                       className={cn(
-                        'flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium transition-colors',
+                        'flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-burgundy-700 focus-visible:ring-offset-2',
                         isActive(item)
                           ? 'text-burgundy-700'
                           : 'text-wood-800 hover:text-burgundy-700'
@@ -193,7 +193,7 @@ export function Navbar({ className }: NavbarProps) {
                           <Link
                             href={child.href}
                             className={cn(
-                              'block px-4 py-2.5 text-sm transition-colors',
+                              'block px-4 py-2.5 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-burgundy-700',
                               isChildActive(child.href)
                                 ? 'bg-burgundy-100 text-burgundy-700'
                                 : 'text-wood-800 hover:bg-cream-100 hover:text-burgundy-700'
@@ -213,7 +213,7 @@ export function Navbar({ className }: NavbarProps) {
                     <Link
                       href={item.href!}
                       className={cn(
-                        'rounded-lg px-4 py-2 text-sm font-medium transition-colors',
+                        'rounded-lg px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-burgundy-700 focus-visible:ring-offset-2',
                         isActive(item)
                           ? 'text-burgundy-700'
                           : 'text-wood-800 hover:text-burgundy-700'
@@ -265,7 +265,7 @@ export function Navbar({ className }: NavbarProps) {
                   <button
                     type="button"
                     className={cn(
-                      'flex w-full items-center justify-between rounded-lg px-4 py-3 text-base font-medium transition-colors',
+                      'flex w-full items-center justify-between rounded-lg px-4 py-3 text-base font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-burgundy-700',
                       isActive(item) ? 'text-burgundy-700' : 'text-wood-800'
                     )}
                     aria-expanded={activeAccordion === item.label}
@@ -296,7 +296,7 @@ export function Navbar({ className }: NavbarProps) {
                         <Link
                           href={child.href}
                           className={cn(
-                            'block rounded-lg py-2.5 pl-8 pr-4 text-sm transition-colors',
+                            'flex min-h-[44px] items-center rounded-lg pl-8 pr-4 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-burgundy-700',
                             isChildActive(child.href)
                               ? 'bg-burgundy-100 text-burgundy-700'
                               : 'text-wood-800 hover:text-burgundy-700'
@@ -316,7 +316,7 @@ export function Navbar({ className }: NavbarProps) {
                   <Link
                     href={item.href!}
                     className={cn(
-                      'block rounded-lg px-4 py-3 text-base font-medium transition-colors',
+                      'block rounded-lg px-4 py-3 text-base font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-burgundy-700',
                       isActive(item)
                         ? 'bg-burgundy-100 text-burgundy-700'
                         : 'text-wood-800 hover:text-burgundy-700'

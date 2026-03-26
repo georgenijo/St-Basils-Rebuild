@@ -41,19 +41,19 @@ export function Footer() {
           <div>
             <h2 className="font-heading text-xl font-600 text-cream-50">Quick Links</h2>
             <nav aria-label="Footer navigation" className="mt-4">
-              <ul className="space-y-2 text-cream-50/80">
+              <ul className="-mx-2 space-y-0.5 text-cream-50/80">
                 <li>
-                  <Link href="/contact" className="transition-colors hover:text-cream-50">
+                  <Link href="/contact" className="inline-flex min-h-[44px] items-center rounded-lg px-2 transition-colors hover:text-cream-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cream-50/50">
                     Contact Us
                   </Link>
                 </li>
                 <li>
-                  <Link href="/privacy-policy" className="transition-colors hover:text-cream-50">
+                  <Link href="/privacy-policy" className="inline-flex min-h-[44px] items-center rounded-lg px-2 transition-colors hover:text-cream-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cream-50/50">
                     Privacy Policy
                   </Link>
                 </li>
                 <li>
-                  <Link href="/terms-of-use" className="transition-colors hover:text-cream-50">
+                  <Link href="/terms-of-use" className="inline-flex min-h-[44px] items-center rounded-lg px-2 transition-colors hover:text-cream-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cream-50/50">
                     Terms of Use
                   </Link>
                 </li>
@@ -65,7 +65,7 @@ export function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="St. Basil's on Facebook"
-                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-cream-50/20 text-cream-50/80 transition-colors hover:border-cream-50/40 hover:text-cream-50"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-cream-50/20 text-cream-50/80 transition-colors hover:border-cream-50/40 hover:text-cream-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cream-50/50"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"

@@ -35,7 +35,7 @@ export function SectionHeader({
       <GoldDivider className={cn('my-4', !isCenter && 'mx-0')} />
 
       {subtitle && (
-        <p className="font-body text-base leading-relaxed text-wood-800/60">{subtitle}</p>
+        <p className="font-body text-base leading-relaxed text-wood-800/80">{subtitle}</p>
       )}
     </div>
   )

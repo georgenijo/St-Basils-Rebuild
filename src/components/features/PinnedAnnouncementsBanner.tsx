@@ -77,7 +77,7 @@ export function PinnedAnnouncementsBanner({
         <button
           type="button"
           onClick={() => setDismissed(true)}
-          className="shrink-0 rounded-lg p-1.5 text-cream-50/80 transition-colors hover:bg-cream-50/10 hover:text-cream-50"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-cream-50/80 transition-colors hover:bg-cream-50/10 hover:text-cream-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cream-50/50"
           aria-label="Dismiss announcements banner"
         >
           <svg

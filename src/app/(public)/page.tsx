@@ -190,7 +190,7 @@ export default async function HomePage() {
               </div>
             </>
           ) : (
-            <p className="mt-12 text-center text-wood-800/60">
+            <p className="mt-12 text-center text-wood-800/80">
               No announcements at this time. Check back soon.
             </p>
           )}
