@@ -11,6 +11,7 @@ interface Subscriber {
   email: string
   confirmed: boolean
   confirmed_at: string | null
+  unsubscribed_at: string | null
   created_at: string
 }
 
@@ -26,8 +27,8 @@ const PAGE_SIZE = 20
 // ─── Helpers ─────────────────────────────────────────────────────────
 
 function getStatus(s: Subscriber): 'active' | 'unconfirmed' | 'unsubscribed' {
+  if (s.unsubscribed_at !== null) return 'unsubscribed'
   if (s.confirmed) return 'active'
-  if (s.confirmed_at !== null) return 'unsubscribed'
   return 'unconfirmed'
 }
 

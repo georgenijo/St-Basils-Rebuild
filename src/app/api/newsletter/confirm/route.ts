@@ -30,12 +30,13 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(new URL('/?confirmed=already', req.url))
   }
 
-  // Activate subscription
+  // Activate subscription — clear unsubscribed_at in case of re-subscribe
   const { error: updateError } = await supabase
     .from('email_subscribers')
     .update({
       confirmed: true,
       confirmed_at: new Date().toISOString(),
+      unsubscribed_at: null,
     })
     .eq('id', subscriber.id)
 

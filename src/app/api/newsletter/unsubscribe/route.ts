@@ -15,14 +15,14 @@ export async function GET(req: NextRequest) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
 
-  // Deactivate subscription
+  // Deactivate subscription — preserve confirmed_at for audit trail
   const { data: subscriber, error } = await supabase
     .from('email_subscribers')
     .update({
-      confirmed: false,
-      confirmed_at: null,
+      unsubscribed_at: new Date().toISOString(),
     })
     .eq('unsubscribe_token', token)
+    .is('unsubscribed_at', null)
     .select('id, email')
     .single()
 

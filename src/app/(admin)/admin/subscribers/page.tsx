@@ -12,12 +12,13 @@ export default async function SubscribersPage() {
 
   const { data: subscribers } = await supabase
     .from('email_subscribers')
-    .select('id, email, confirmed, confirmed_at, created_at')
+    .select('id, email, confirmed, confirmed_at, unsubscribed_at, created_at')
     .order('created_at', { ascending: false })
 
   const all = subscribers ?? []
-  const activeCount = all.filter((s) => s.confirmed).length
-  const unconfirmedCount = all.filter((s) => !s.confirmed && s.confirmed_at === null).length
+  const activeCount = all.filter((s) => s.confirmed && s.unsubscribed_at === null).length
+  const unconfirmedCount = all.filter((s) => !s.confirmed && s.unsubscribed_at === null).length
+  const unsubscribedCount = all.filter((s) => s.unsubscribed_at !== null).length
 
   return (
     <main className="px-4 py-8 sm:px-6 lg:px-8">
@@ -31,10 +32,11 @@ export default async function SubscribersPage() {
       </div>
 
       {/* Summary cards */}
-      <div className="mb-8 grid gap-4 sm:grid-cols-3">
+      <div className="mb-8 grid gap-4 sm:grid-cols-4">
         <SummaryCard label="Total" count={all.length} />
         <SummaryCard label="Active" count={activeCount} accent="green" />
         <SummaryCard label="Unconfirmed" count={unconfirmedCount} accent="amber" />
+        <SummaryCard label="Unsubscribed" count={unsubscribedCount} accent="red" />
       </div>
 
       <SubscribersTable subscribers={all} />
@@ -51,14 +53,16 @@ function SummaryCard({
 }: {
   label: string
   count: number
-  accent?: 'green' | 'amber'
+  accent?: 'green' | 'amber' | 'red'
 }) {
   const dotColor =
     accent === 'green'
       ? 'bg-emerald-500'
       : accent === 'amber'
         ? 'bg-amber-500'
-        : 'bg-burgundy-700'
+        : accent === 'red'
+          ? 'bg-red-500'
+          : 'bg-burgundy-700'
 
   return (
     <div className="rounded-2xl border border-wood-800/10 bg-cream-50 p-5">
