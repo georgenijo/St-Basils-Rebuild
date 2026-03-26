@@ -38,7 +38,7 @@ const navigation: NavItem[] = [
   {
     label: 'Resources',
     children: [
-      { label: 'Events Calendar', href: '/events-calendar' },
+      { label: 'Events Calendar', href: '/events' },
       { label: 'Useful Links', href: '/useful-links' },
       { label: 'First Time Visiting?', href: '/first-time' },
     ],

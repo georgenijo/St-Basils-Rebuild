@@ -45,6 +45,11 @@ const nextConfig: NextConfig = {
         permanent: true,
       },
       {
+        source: '/events-calendar',
+        destination: '/events',
+        permanent: true,
+      },
+      {
         source: '/useful-links.html',
         destination: '/useful-links',
         permanent: true,
