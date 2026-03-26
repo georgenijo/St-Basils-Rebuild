@@ -37,7 +37,7 @@ const ScrollRevealContext = createContext<{
 
 function getVariants(
   direction: Direction,
-  reducedMotion: boolean,
+  reducedMotion: boolean
 ): { hidden: Variant; visible: Variant } {
   if (reducedMotion) {
     return {

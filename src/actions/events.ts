@@ -56,7 +56,10 @@ export async function createEvent(
   })
 
   if (!parsed.success) {
-    console.error('[createEvent] Zod validation failed:', JSON.stringify(parsed.error.flatten().fieldErrors))
+    console.error(
+      '[createEvent] Zod validation failed:',
+      JSON.stringify(parsed.error.flatten().fieldErrors)
+    )
     return {
       success: false,
       message: 'Validation failed',
@@ -64,7 +67,12 @@ export async function createEvent(
     }
   }
 
-  console.log('[createEvent] Validation passed:', { title: parsed.data.title, slug: parsed.data.slug, start_at: parsed.data.start_at, category: parsed.data.category })
+  console.log('[createEvent] Validation passed:', {
+    title: parsed.data.title,
+    slug: parsed.data.slug,
+    start_at: parsed.data.start_at,
+    category: parsed.data.category,
+  })
 
   const startAt = parseDatetimeLocalInTimeZone(parsed.data.start_at)
   if (!startAt) {
@@ -73,9 +81,7 @@ export async function createEvent(
   }
   console.log('[createEvent] Timezone conversion:', parsed.data.start_at, '→', startAt)
 
-  const endAt = parsed.data.end_at
-    ? parseDatetimeLocalInTimeZone(parsed.data.end_at)
-    : null
+  const endAt = parsed.data.end_at ? parseDatetimeLocalInTimeZone(parsed.data.end_at) : null
 
   if (parsed.data.end_at && !endAt) return invalidTimeError('end_at')
 
@@ -112,7 +118,12 @@ export async function createEvent(
     try {
       descriptionJson = JSON.parse(parsed.data.description)
     } catch {
-      descriptionJson = { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: parsed.data.description }] }] }
+      descriptionJson = {
+        type: 'doc',
+        content: [
+          { type: 'paragraph', content: [{ type: 'text', text: parsed.data.description }] },
+        ],
+      }
     }
   }
 
@@ -137,7 +148,11 @@ export async function createEvent(
   if (error) {
     console.error('[createEvent] DB insert failed:', error.code, error.message, error.details)
     if (error.code === '23505') {
-      return { success: false, message: 'An event with this slug already exists', errors: { slug: ['Slug is already taken'] } }
+      return {
+        success: false,
+        message: 'An event with this slug already exists',
+        errors: { slug: ['Slug is already taken'] },
+      }
     }
     return { success: false, message: 'Failed to create event' }
   }
@@ -205,9 +220,7 @@ export async function updateEvent(
   const startAt = parseDatetimeLocalInTimeZone(parsed.data.start_at)
   if (!startAt) return invalidTimeError('start_at')
 
-  const endAt = parsed.data.end_at
-    ? parseDatetimeLocalInTimeZone(parsed.data.end_at)
-    : null
+  const endAt = parsed.data.end_at ? parseDatetimeLocalInTimeZone(parsed.data.end_at) : null
 
   if (parsed.data.end_at && !endAt) return invalidTimeError('end_at')
 
@@ -240,7 +253,12 @@ export async function updateEvent(
     try {
       descriptionJson = JSON.parse(parsed.data.description)
     } catch {
-      descriptionJson = { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: parsed.data.description }] }] }
+      descriptionJson = {
+        type: 'doc',
+        content: [
+          { type: 'paragraph', content: [{ type: 'text', text: parsed.data.description }] },
+        ],
+      }
     }
   }
 
@@ -261,7 +279,11 @@ export async function updateEvent(
 
   if (error) {
     if (error.code === '23505') {
-      return { success: false, message: 'An event with this slug already exists', errors: { slug: ['Slug is already taken'] } }
+      return {
+        success: false,
+        message: 'An event with this slug already exists',
+        errors: { slug: ['Slug is already taken'] },
+      }
     }
     return { success: false, message: 'Failed to update event' }
   }

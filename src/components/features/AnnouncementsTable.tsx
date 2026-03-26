@@ -161,18 +161,25 @@ export function AnnouncementsTable({ announcements }: AnnouncementsTableProps) {
                 Title
                 <SortIcon active={sortKey === 'title'} dir={sortDir} />
               </th>
-              <th className={cn(thClass, 'hidden sm:table-cell')}>
-                Status
-              </th>
-              <th className={cn(thClass, 'hidden md:table-cell')} onClick={() => toggleSort('priority')}>
+              <th className={cn(thClass, 'hidden sm:table-cell')}>Status</th>
+              <th
+                className={cn(thClass, 'hidden md:table-cell')}
+                onClick={() => toggleSort('priority')}
+              >
                 Priority
                 <SortIcon active={sortKey === 'priority'} dir={sortDir} />
               </th>
-              <th className={cn(thClass, 'hidden lg:table-cell')} onClick={() => toggleSort('published_at')}>
+              <th
+                className={cn(thClass, 'hidden lg:table-cell')}
+                onClick={() => toggleSort('published_at')}
+              >
                 Published
                 <SortIcon active={sortKey === 'published_at'} dir={sortDir} />
               </th>
-              <th className={cn(thClass, 'hidden lg:table-cell')} onClick={() => toggleSort('created_at')}>
+              <th
+                className={cn(thClass, 'hidden lg:table-cell')}
+                onClick={() => toggleSort('created_at')}
+              >
                 Created
                 <SortIcon active={sortKey === 'created_at'} dir={sortDir} />
               </th>
@@ -197,10 +204,7 @@ export function AnnouncementsTable({ announcements }: AnnouncementsTableProps) {
               filtered.map((announcement) => {
                 const status = getStatus(announcement)
                 return (
-                  <tr
-                    key={announcement.id}
-                    className="transition-colors hover:bg-cream-100/30"
-                  >
+                  <tr key={announcement.id} className="transition-colors hover:bg-cream-100/30">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         <Link

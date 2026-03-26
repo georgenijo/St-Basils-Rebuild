@@ -108,17 +108,12 @@ export async function waitForMockEmail(
     if (filters.subject) params.set('subject', filters.subject)
     if (filters.template) params.set('template', filters.template)
 
-    const response = await request.get(
-      `${getBaseUrl()}/api/test/email-sink?${params.toString()}`,
-      {
-        headers: { 'x-test-secret': getTestSupportSecret() },
-      }
-    )
+    const response = await request.get(`${getBaseUrl()}/api/test/email-sink?${params.toString()}`, {
+      headers: { 'x-test-secret': getTestSupportSecret() },
+    })
 
     if (!response.ok()) {
-      throw new Error(
-        `Failed to list mock emails: ${response.status()} ${await response.text()}`
-      )
+      throw new Error(`Failed to list mock emails: ${response.status()} ${await response.text()}`)
     }
 
     const payload = (await response.json()) as { emails: MockEmailRecord[] }
@@ -201,9 +196,7 @@ export async function fetchAnnouncementBySlug(slug: string): Promise<Announcemen
     .single()
 
   if (error || !data) {
-    throw new Error(
-      `Failed to fetch announcement ${slug}: ${error?.message || 'not found'}`
-    )
+    throw new Error(`Failed to fetch announcement ${slug}: ${error?.message || 'not found'}`)
   }
 
   return data as AnnouncementRow

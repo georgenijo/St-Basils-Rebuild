@@ -60,9 +60,7 @@ export function AnnouncementForm({ announcement }: AnnouncementFormProps) {
   const [title, setTitle] = useState(announcement?.title ?? '')
   const [slug, setSlug] = useState(announcement?.slug ?? '')
   const [slugManual, setSlugManual] = useState(isEditing)
-  const [body, setBody] = useState(
-    announcement?.body ? JSON.stringify(announcement.body) : ''
-  )
+  const [body, setBody] = useState(announcement?.body ? JSON.stringify(announcement.body) : '')
   const [isPinned, setIsPinned] = useState(announcement?.is_pinned ?? false)
   const [sendEmail, setSendEmail] = useState(announcement?.send_email ?? false)
   const [isPublished, setIsPublished] = useState(!!announcement?.published_at)
@@ -83,26 +81,18 @@ export function AnnouncementForm({ announcement }: AnnouncementFormProps) {
 
   return (
     <form ref={formRef} action={formAction} className="space-y-6">
-      {isEditing && (
-        <input type="hidden" name="announcement_id" value={announcement.id} />
-      )}
+      {isEditing && <input type="hidden" name="announcement_id" value={announcement.id} />}
 
       {/* Server error message */}
       {!state.success && state.message && !state.errors && (
-        <div
-          className="rounded-lg border border-red-200 bg-red-50 px-4 py-3"
-          role="alert"
-        >
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3" role="alert">
           <p className="font-body text-sm text-red-600">{state.message}</p>
         </div>
       )}
 
       {/* Title */}
       <div>
-        <label
-          htmlFor="title"
-          className="mb-1.5 block font-body text-sm font-medium text-wood-900"
-        >
+        <label htmlFor="title" className="mb-1.5 block font-body text-sm font-medium text-wood-900">
           Title <span className="text-burgundy-700">*</span>
         </label>
         <input
@@ -121,10 +111,7 @@ export function AnnouncementForm({ announcement }: AnnouncementFormProps) {
 
       {/* Slug */}
       <div>
-        <label
-          htmlFor="slug"
-          className="mb-1.5 block font-body text-sm font-medium text-wood-900"
-        >
+        <label htmlFor="slug" className="mb-1.5 block font-body text-sm font-medium text-wood-900">
           Slug <span className="text-burgundy-700">*</span>
         </label>
         <div className="flex gap-2">
@@ -140,11 +127,7 @@ export function AnnouncementForm({ announcement }: AnnouncementFormProps) {
               setSlug(e.target.value)
             }}
             placeholder="lenten-service-schedule-update"
-            className={cn(
-              inputBase,
-              'font-mono text-sm',
-              state.errors?.slug && 'border-red-400'
-            )}
+            className={cn(inputBase, 'font-mono text-sm', state.errors?.slug && 'border-red-400')}
           />
           {slugManual && (
             <button
@@ -168,11 +151,7 @@ export function AnnouncementForm({ announcement }: AnnouncementFormProps) {
           Body
         </p>
         <div aria-labelledby="body-label">
-          <TiptapEditor
-            content={body}
-            onChange={setBody}
-            error={!!state.errors?.body}
-          />
+          <TiptapEditor content={body} onChange={setBody} error={!!state.errors?.body} />
         </div>
         <input type="hidden" name="body" value={body} />
         <FieldError errors={state.errors?.body} />
@@ -242,9 +221,7 @@ export function AnnouncementForm({ announcement }: AnnouncementFormProps) {
             )}
           />
         </button>
-        <span className="font-body text-sm font-medium text-wood-900">
-          Pin to top
-        </span>
+        <span className="font-body text-sm font-medium text-wood-900">Pin to top</span>
         <input type="hidden" name="is_pinned" value={isPinned ? 'true' : 'false'} />
       </div>
 
@@ -268,9 +245,7 @@ export function AnnouncementForm({ announcement }: AnnouncementFormProps) {
             )}
           />
         </button>
-        <span className="font-body text-sm font-medium text-wood-900">
-          Send email on publish
-        </span>
+        <span className="font-body text-sm font-medium text-wood-900">Send email on publish</span>
         <input type="hidden" name="send_email" value={sendEmail ? 'true' : 'false'} />
       </div>
 
@@ -305,11 +280,7 @@ export function AnnouncementForm({ announcement }: AnnouncementFormProps) {
         <Button type="submit" disabled={isPending}>
           {isPending ? (
             <span className="flex items-center gap-2">
-              <svg
-                className="h-4 w-4 animate-spin"
-                viewBox="0 0 24 24"
-                fill="none"
-              >
+              <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
                 <circle
                   className="opacity-25"
                   cx="12"

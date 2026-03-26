@@ -9,11 +9,7 @@ export const metadata: Metadata = {
   title: 'Edit Event',
 }
 
-export default async function EditEventPage({
-  params,
-}: {
-  params: Promise<{ id: string }>
-}) {
+export default async function EditEventPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const supabase = await createClient()
 
@@ -61,9 +57,7 @@ export default async function EditEventPage({
           </svg>
           Back to Events
         </Link>
-        <h1 className="mt-2 font-heading text-3xl font-semibold text-wood-900">
-          Edit Event
-        </h1>
+        <h1 className="mt-2 font-heading text-3xl font-semibold text-wood-900">Edit Event</h1>
       </div>
 
       <div className="max-w-2xl">

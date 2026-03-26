@@ -49,9 +49,7 @@ test.describe('Legacy .html redirects @smoke', () => {
 
       const location = response.headers()['location']
       // Next.js may return absolute or relative Location headers
-      const resolved = location?.startsWith('http')
-        ? new URL(location).pathname
-        : location
+      const resolved = location?.startsWith('http') ? new URL(location).pathname : location
 
       expect(resolved).toBe(destination)
     })

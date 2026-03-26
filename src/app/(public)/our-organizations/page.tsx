@@ -37,7 +37,9 @@ export default async function OurOrganizationsPage() {
 
   return (
     <>
-      <JsonLd data={breadcrumbSchema([{ name: 'Our Organizations', path: '/our-organizations' }])} />
+      <JsonLd
+        data={breadcrumbSchema([{ name: 'Our Organizations', path: '/our-organizations' }])}
+      />
 
       {/* Parallax Hero */}
       <section className="relative flex h-[40vh] items-center justify-center overflow-hidden md:h-[60vh]">
@@ -61,10 +63,7 @@ export default async function OurOrganizationsPage() {
           return (
             <section
               key={org._id}
-              className={cn(
-                'py-16 md:py-22 lg:py-28',
-                isAlternateBg ? 'bg-sand' : 'bg-cream-50'
-              )}
+              className={cn('py-16 md:py-22 lg:py-28', isAlternateBg ? 'bg-sand' : 'bg-cream-50')}
             >
               <div className="mx-auto max-w-[1200px] px-4 sm:px-6 lg:px-8">
                 <ScrollReveal direction="up">

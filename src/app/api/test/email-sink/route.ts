@@ -15,8 +15,7 @@ function notFoundResponse() {
 
 function isAuthorized(request: NextRequest): boolean {
   return (
-    isTestSupportEnabled() &&
-    isAuthorizedTestSupportRequest(request.headers.get('x-test-secret'))
+    isTestSupportEnabled() && isAuthorizedTestSupportRequest(request.headers.get('x-test-secret'))
   )
 }
 

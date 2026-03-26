@@ -58,7 +58,11 @@ export function EventCalendar({ events }: EventCalendarProps) {
   return (
     <div>
       {/* Category Filter */}
-      <div className="mb-6 flex flex-wrap gap-2" role="group" aria-label="Filter events by category">
+      <div
+        className="mb-6 flex flex-wrap gap-2"
+        role="group"
+        aria-label="Filter events by category"
+      >
         {CATEGORIES.map((cat) => (
           <button
             key={cat.value}

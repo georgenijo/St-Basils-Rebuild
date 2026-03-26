@@ -180,10 +180,7 @@ export function EventsTable({ events }: EventsTableProps) {
               </tr>
             ) : (
               filtered.map((event) => (
-                <tr
-                  key={event.id}
-                  className="transition-colors hover:bg-cream-100/30"
-                >
+                <tr key={event.id} className="transition-colors hover:bg-cream-100/30">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <Link

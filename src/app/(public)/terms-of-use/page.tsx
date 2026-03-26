@@ -10,8 +10,7 @@ import type { PageContent } from '@/lib/sanity/types'
 
 export const revalidate = 60
 
-const fallbackDescription =
-  "Terms of Use for St. Basil's Syriac Orthodox Church website."
+const fallbackDescription = "Terms of Use for St. Basil's Syriac Orthodox Church website."
 
 const fallbackPage: PageContent = {
   _id: 'fallback-terms-of-use',

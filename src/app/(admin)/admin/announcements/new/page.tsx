@@ -31,9 +31,7 @@ export default function NewAnnouncementPage() {
           </svg>
           Back to Announcements
         </Link>
-        <h1 className="mt-2 font-heading text-3xl font-semibold text-wood-900">
-          New Announcement
-        </h1>
+        <h1 className="mt-2 font-heading text-3xl font-semibold text-wood-900">New Announcement</h1>
       </div>
 
       <div className="max-w-2xl">

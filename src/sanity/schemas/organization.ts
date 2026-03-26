@@ -28,10 +28,7 @@ export default defineType({
       name: 'description',
       title: 'Description',
       type: 'array',
-      of: [
-        { type: 'block' },
-        { type: 'image', options: { hotspot: true } },
-      ],
+      of: [{ type: 'block' }, { type: 'image', options: { hotspot: true } }],
     }),
     defineField({
       name: 'missionStatement',
@@ -60,8 +57,7 @@ export default defineType({
       name: 'externalLink',
       title: 'External Link',
       type: 'url',
-      validation: (Rule) =>
-        Rule.uri({ allowRelative: false, scheme: ['http', 'https'] }),
+      validation: (Rule) => Rule.uri({ allowRelative: false, scheme: ['http', 'https'] }),
     }),
     defineField({
       name: 'backgroundColor',

@@ -17,9 +17,7 @@ export function LoginForm({ redirectTo }: LoginFormProps) {
 
   return (
     <form action={formAction} className="space-y-5">
-      {redirectTo && (
-        <input type="hidden" name="redirectTo" value={redirectTo} />
-      )}
+      {redirectTo && <input type="hidden" name="redirectTo" value={redirectTo} />}
 
       {state.message && !state.errors && (
         <div
@@ -43,9 +41,7 @@ export function LoginForm({ redirectTo }: LoginFormProps) {
           className="block w-full rounded-lg border border-wood-800/20 bg-cream-50 px-4 py-3 text-wood-800 placeholder:text-wood-800/40 focus-visible:border-burgundy-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-burgundy-700 focus-visible:ring-offset-2"
           placeholder="you@example.com"
         />
-        {state.errors?.email && (
-          <p className="text-sm text-red-600">{state.errors.email[0]}</p>
-        )}
+        {state.errors?.email && <p className="text-sm text-red-600">{state.errors.email[0]}</p>}
       </div>
 
       <div className="space-y-1.5">

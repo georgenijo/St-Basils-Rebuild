@@ -40,9 +40,7 @@ export async function GET() {
   const icsEvents: EventAttributes[] = (events as EventRow[]).map((event) => {
     const start = toUtcDateArray(event.start_at)
     const descriptionHtml = renderTiptapHTML(event.description)
-    const description = descriptionHtml
-      ? descriptionHtml.replace(/<[^>]*>/g, '').trim()
-      : undefined
+    const description = descriptionHtml ? descriptionHtml.replace(/<[^>]*>/g, '').trim() : undefined
 
     const recurrenceRule =
       event.is_recurring && event.recurrence_rules.length > 0

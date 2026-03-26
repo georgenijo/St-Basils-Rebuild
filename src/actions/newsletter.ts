@@ -85,7 +85,10 @@ export async function subscribeNewsletter(
       return { success: false, message: 'Failed to send confirmation email. Please try again.' }
     }
 
-    return { success: true, message: 'A confirmation email has been sent. Please check your inbox.' }
+    return {
+      success: true,
+      message: 'A confirmation email has been sent. Please check your inbox.',
+    }
   }
 
   // 5. Insert new subscriber

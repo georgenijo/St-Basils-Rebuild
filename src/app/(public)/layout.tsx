@@ -15,7 +15,9 @@ export default function PublicLayout({
         Skip to main content
       </a>
       <Navbar />
-      <main id="main-content" className="flex-1 pt-16">{children}</main>
+      <main id="main-content" className="flex-1 pt-16">
+        {children}
+      </main>
       <Footer />
     </div>
   )

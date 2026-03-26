@@ -50,8 +50,7 @@ export function CandleFlame({ className }: CandleFlameProps) {
       <div
         className="h-20 w-8 rounded-sm"
         style={{
-          background:
-            'linear-gradient(180deg, #fff8e1 0%, #ffe4b5 30%, #ffd4a3 70%, #ffcc99 100%)',
+          background: 'linear-gradient(180deg, #fff8e1 0%, #ffe4b5 30%, #ffd4a3 70%, #ffcc99 100%)',
           boxShadow: '0 2px 8px rgba(0,0,0,0.2), inset 0 -10px 15px rgba(139,69,19,0.15)',
         }}
       >

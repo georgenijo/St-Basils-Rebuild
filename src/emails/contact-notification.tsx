@@ -17,12 +17,7 @@ interface ContactNotificationProps {
   message: string
 }
 
-export function ContactNotification({
-  name,
-  email,
-  subject,
-  message,
-}: ContactNotificationProps) {
+export function ContactNotification({ name, email, subject, message }: ContactNotificationProps) {
   return (
     <Html>
       <Head />
@@ -54,8 +49,7 @@ export function ContactNotification({
 
 const body = {
   backgroundColor: '#f6f6f6',
-  fontFamily:
-    '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
 }
 
 const container = {

@@ -46,7 +46,9 @@ export default async function SpiritualLeadersPage() {
 
   return (
     <>
-      <JsonLd data={breadcrumbSchema([{ name: 'Our Spiritual Fathers', path: '/spiritual-leaders' }])} />
+      <JsonLd
+        data={breadcrumbSchema([{ name: 'Our Spiritual Fathers', path: '/spiritual-leaders' }])}
+      />
 
       {/* Maroon Hero Banner */}
       <section className="flex h-[40vh] items-center justify-center bg-burgundy-700 md:h-[60vh]">

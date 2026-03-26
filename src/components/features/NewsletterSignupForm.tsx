@@ -19,10 +19,7 @@ const initialState = {
   errors: undefined as Record<string, string[]> | undefined,
 }
 
-export function NewsletterSignupForm({
-  variant = 'dark',
-  className,
-}: NewsletterSignupFormProps) {
+export function NewsletterSignupForm({ variant = 'dark', className }: NewsletterSignupFormProps) {
   const [state, action, isPending] = useActionState(subscribeNewsletter, initialState)
   const formRef = useRef<HTMLFormElement>(null)
   const turnstileRef = useRef<TurnstileInstance>(null)
@@ -38,11 +35,21 @@ export function NewsletterSignupForm({
 
   if (state.success) {
     return (
-      <div className={cn('rounded-2xl p-6 text-center', isDark ? 'bg-cream-50/10' : 'border border-green-200 bg-green-50', className)} role="status" aria-live="polite">
-        <div className={cn(
-          'mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full',
-          isDark ? 'bg-cream-50/20' : 'bg-green-100'
-        )}>
+      <div
+        className={cn(
+          'rounded-2xl p-6 text-center',
+          isDark ? 'bg-cream-50/10' : 'border border-green-200 bg-green-50',
+          className
+        )}
+        role="status"
+        aria-live="polite"
+      >
+        <div
+          className={cn(
+            'mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full',
+            isDark ? 'bg-cream-50/20' : 'bg-green-100'
+          )}
+        >
           <svg
             className={cn('h-5 w-5', isDark ? 'text-cream-50' : 'text-green-600')}
             fill="none"
@@ -54,10 +61,7 @@ export function NewsletterSignupForm({
             <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
           </svg>
         </div>
-        <p className={cn(
-          'font-body text-sm',
-          isDark ? 'text-cream-50/90' : 'text-wood-800'
-        )}>
+        <p className={cn('font-body text-sm', isDark ? 'text-cream-50/90' : 'text-wood-800')}>
           {state.message}
         </p>
       </div>
@@ -69,7 +73,13 @@ export function NewsletterSignupForm({
       {/* Honeypot — hidden from real users */}
       <div className="hidden" aria-hidden="true">
         <label htmlFor="newsletter-website">Website</label>
-        <input type="text" id="newsletter-website" name="website" tabIndex={-1} autoComplete="off" />
+        <input
+          type="text"
+          id="newsletter-website"
+          name="website"
+          tabIndex={-1}
+          autoComplete="off"
+        />
       </div>
 
       {/* Error message */}
@@ -117,9 +127,25 @@ export function NewsletterSignupForm({
           >
             {isPending ? (
               <span className="flex items-center gap-1.5">
-                <svg className="h-3.5 w-3.5 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                <svg
+                  className="h-3.5 w-3.5 animate-spin"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  aria-hidden="true"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                  />
                 </svg>
                 Joining...
               </span>
@@ -130,10 +156,7 @@ export function NewsletterSignupForm({
         </div>
         {state.errors?.email && (
           <p
-            className={cn(
-              'mt-1.5 font-body text-sm',
-              isDark ? 'text-red-300' : 'text-red-600'
-            )}
+            className={cn('mt-1.5 font-body text-sm', isDark ? 'text-red-300' : 'text-red-600')}
             role="alert"
           >
             {state.errors.email[0]}
@@ -141,11 +164,7 @@ export function NewsletterSignupForm({
         )}
       </div>
 
-      <CaptchaField
-        turnstileRef={turnstileRef}
-        theme={isDark ? 'dark' : 'light'}
-        size="compact"
-      />
+      <CaptchaField turnstileRef={turnstileRef} theme={isDark ? 'dark' : 'light'} size="compact" />
     </form>
   )
 }

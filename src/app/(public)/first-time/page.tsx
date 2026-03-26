@@ -31,7 +31,7 @@ const guidelines = [
   {
     title: 'Sacred Covering for Women',
     paragraphs: [
-      "In reverence to our ancient tradition and in accordance with the Apostle Paul\u2019s teaching in 1 Corinthians 11, we humbly request that women cover their heads with a veil during the Divine Liturgy. This blessed practice expresses honor and reverence for God, symbolizes submission to divine authority, and reflects the holiness of this sacred space. We follow the example of the blessed women of Scripture who worshipped the Lord with covered heads. If you are able, please bring a veil when entering the sanctuary.",
+      'In reverence to our ancient tradition and in accordance with the Apostle Paul\u2019s teaching in 1 Corinthians 11, we humbly request that women cover their heads with a veil during the Divine Liturgy. This blessed practice expresses honor and reverence for God, symbolizes submission to divine authority, and reflects the holiness of this sacred space. We follow the example of the blessed women of Scripture who worshipped the Lord with covered heads. If you are able, please bring a veil when entering the sanctuary.',
     ],
   },
   {
@@ -43,14 +43,14 @@ const guidelines = [
   {
     title: 'The Sign of the Cross',
     paragraphs: [
-      "We make the sacred sign of the cross frequently throughout our worship, particularly when the Trinity is invoked or when venerating the cross and icons. Using our right hand, we touch our forehead, chest, left shoulder, then right shoulder, holding our thumb and first two fingers together to represent the Holy Trinity. Don\u2019t feel compelled to follow every gesture perfectly\u2014your sincere participation is what God desires.",
+      'We make the sacred sign of the cross frequently throughout our worship, particularly when the Trinity is invoked or when venerating the cross and icons. Using our right hand, we touch our forehead, chest, left shoulder, then right shoulder, holding our thumb and first two fingers together to represent the Holy Trinity. Don\u2019t feel compelled to follow every gesture perfectly\u2014your sincere participation is what God desires.',
     ],
   },
   {
     title: 'The Holy Eucharist',
     paragraphs: [
       'The most sacred moment of our worship is the reception of Holy Communion\u2014the true Body and Blood of our Lord Jesus Christ. This blessed sacrament is reserved for those who have been baptized into the faith and have prepared their hearts through prayer and fasting.',
-      "When the faithful approach for communion, we stand in reverence and open our mouths to receive the wine-soaked bread, now transformed into Christ\u2019s Body and Blood. After receiving communion, we are offered water to ensure that no particle of our Lord\u2019s precious Body and Blood remains in our mouths when we speak or sing.",
+      'When the faithful approach for communion, we stand in reverence and open our mouths to receive the wine-soaked bread, now transformed into Christ\u2019s Body and Blood. After receiving communion, we are offered water to ensure that no particle of our Lord\u2019s precious Body and Blood remains in our mouths when we speak or sing.',
       'Following the Divine Liturgy, blessed bread may be distributed as a sign of fellowship, allowing all present to share in the common loaf, even those who have not received the Eucharist.',
     ],
   },
@@ -103,11 +103,11 @@ export default function FirstTimePage() {
         <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
           <ScrollReveal>
             <p className="text-center font-body text-base italic leading-relaxed text-wood-800 md:text-lg">
-              Whether you are joining us for the first time or returning to worship after some
-              time away, we hope these gentle reminders and insights will help you fully
-              participate in the sacred beauty of our Divine Liturgy. Our desire is that every
-              soul who enters this holy place may encounter the living God and experience the
-              profound joy of Syrian Orthodox worship.
+              Whether you are joining us for the first time or returning to worship after some time
+              away, we hope these gentle reminders and insights will help you fully participate in
+              the sacred beauty of our Divine Liturgy. Our desire is that every soul who enters this
+              holy place may encounter the living God and experience the profound joy of Syrian
+              Orthodox worship.
             </p>
           </ScrollReveal>
         </div>
@@ -120,20 +120,19 @@ export default function FirstTimePage() {
             <Card variant="dark" className="p-8 md:p-10">
               <blockquote>
                 <p className="font-heading text-lg italic leading-relaxed text-cream-50 md:text-xl">
-                  &ldquo;In the Holy Syrian Orthodox Church the beauty and bliss of the
-                  religious life is its rich and inviting worship and the Holy Qurbono is the
-                  central act of worship. In the Holy Services of our Church the whole
-                  person&mdash;all the senses&mdash;are involved. Seeing the divine experience
-                  unfolding in the altar, hearing the melodious chants and hymns of the
-                  celebrant and congregation, smelling the fragrant aroma of incense which
-                  purifies the body and spirit, the gentle touch of our fellow brethren during
-                  the kiss of peace, and the pleasant taste of the body and blood of our dear
-                  Lord Jesus Christ emulates the most breathtaking heavenly experience. Hence a
-                  person should come with a prepared heart and mind to participate in the Holy
-                  Sacrament. The Sacrament is only as meaningful as the effort put forth by the
-                  individual. Participating in the Sacrament by singing the hymns, meditating
-                  in the prayers, and giving proper and timely responses will definitely
-                  transpire us to an amazing and unique experience.&rdquo;
+                  &ldquo;In the Holy Syrian Orthodox Church the beauty and bliss of the religious
+                  life is its rich and inviting worship and the Holy Qurbono is the central act of
+                  worship. In the Holy Services of our Church the whole person&mdash;all the
+                  senses&mdash;are involved. Seeing the divine experience unfolding in the altar,
+                  hearing the melodious chants and hymns of the celebrant and congregation, smelling
+                  the fragrant aroma of incense which purifies the body and spirit, the gentle touch
+                  of our fellow brethren during the kiss of peace, and the pleasant taste of the
+                  body and blood of our dear Lord Jesus Christ emulates the most breathtaking
+                  heavenly experience. Hence a person should come with a prepared heart and mind to
+                  participate in the Holy Sacrament. The Sacrament is only as meaningful as the
+                  effort put forth by the individual. Participating in the Sacrament by singing the
+                  hymns, meditating in the prayers, and giving proper and timely responses will
+                  definitely transpire us to an amazing and unique experience.&rdquo;
                 </p>
                 <cite className="mt-6 block text-right font-body text-base text-gold-500 not-italic">
                   &mdash; A Guide to the Holy Qurbono, Prepared by Archbishop Mor Titus Yeldho
@@ -198,8 +197,8 @@ export default function FirstTimePage() {
           <ScrollReveal>
             <Card variant="dark" className="p-8 md:p-10">
               <p className="text-center font-heading text-lg italic leading-relaxed text-cream-50 md:text-xl">
-                &ldquo;We pray that your visit will be blessed and that you will find here the
-                peace and joy that only Christ can give.&rdquo;
+                &ldquo;We pray that your visit will be blessed and that you will find here the peace
+                and joy that only Christ can give.&rdquo;
               </p>
             </Card>
           </ScrollReveal>

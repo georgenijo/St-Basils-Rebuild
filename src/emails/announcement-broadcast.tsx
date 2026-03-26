@@ -76,8 +76,7 @@ export default AnnouncementBroadcast
 
 const body = {
   backgroundColor: '#f6f6f6',
-  fontFamily:
-    '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
   margin: '0',
   padding: '0',
 }

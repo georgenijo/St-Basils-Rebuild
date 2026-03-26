@@ -30,9 +30,7 @@ export function AddToCalendar({
       title,
       start,
       startInputType: 'utc',
-      ...(endAt
-        ? { end: toUtcDateArray(endAt), endInputType: 'utc' }
-        : { duration: { hours: 1 } }),
+      ...(endAt ? { end: toUtcDateArray(endAt), endInputType: 'utc' } : { duration: { hours: 1 } }),
       ...(description && { description }),
       ...(location && { location }),
       ...(rruleString && { recurrenceRule: rruleString }),

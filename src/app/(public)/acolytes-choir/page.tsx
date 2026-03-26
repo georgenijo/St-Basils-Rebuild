@@ -55,7 +55,9 @@ export default async function AcolytesChoirPage() {
 
   return (
     <>
-      <JsonLd data={breadcrumbSchema([{ name: 'Our Acolytes & Choir', path: '/acolytes-choir' }])} />
+      <JsonLd
+        data={breadcrumbSchema([{ name: 'Our Acolytes & Choir', path: '/acolytes-choir' }])}
+      />
 
       {/* Parallax Hero */}
       <section className="relative flex h-[40vh] items-center justify-center overflow-hidden md:h-[60vh]">
@@ -83,10 +85,7 @@ export default async function AcolytesChoirPage() {
             <ScrollReveal direction="up">
               <GoldDivider className="mb-8" />
               <div className="space-y-4 text-center text-base leading-relaxed text-wood-800 md:text-lg">
-                <PortableText
-                  value={page.description}
-                  components={portableTextComponents}
-                />
+                <PortableText value={page.description} components={portableTextComponents} />
               </div>
               <GoldDivider className="mt-8" />
             </ScrollReveal>

@@ -69,14 +69,12 @@ export async function submitContact(
 
   // 5. Store in Supabase
   const supabase = await createClient()
-  const { error: dbError } = await supabase
-    .from('contact_submissions')
-    .insert({
-      name: parsed.data.name,
-      email: parsed.data.email,
-      subject: parsed.data.subject,
-      message: parsed.data.message,
-    })
+  const { error: dbError } = await supabase.from('contact_submissions').insert({
+    name: parsed.data.name,
+    email: parsed.data.email,
+    subject: parsed.data.subject,
+    message: parsed.data.message,
+  })
 
   if (dbError) {
     // Email was sent successfully, so still return success to the user

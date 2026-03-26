@@ -89,9 +89,7 @@ export function RRuleBuilder({
       {/* Day picker — only show for WEEKLY */}
       {frequency === 'WEEKLY' && (
         <div>
-          <p className="mb-1.5 font-body text-sm font-medium text-wood-900">
-            Repeat on
-          </p>
+          <p className="mb-1.5 font-body text-sm font-medium text-wood-900">Repeat on</p>
           <div className="flex flex-wrap gap-2">
             {DAYS.map((day) => (
               <button

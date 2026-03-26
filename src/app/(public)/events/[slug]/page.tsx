@@ -57,9 +57,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     return { title: 'Event Not Found' }
   }
 
-  const description = event.location
-    ? `${event.title} at ${event.location}`
-    : event.title
+  const description = event.location ? `${event.title} at ${event.location}` : event.title
 
   return {
     title: event.title,
@@ -98,12 +96,9 @@ export default async function EventDetailPage({ params }: PageProps) {
   if (!event) notFound()
 
   const descriptionHtml = renderTiptapHTML(event.description)
-  const recurrenceRule = event.is_recurring && event.recurrence_rules.length > 0
-    ? event.recurrence_rules[0]
-    : null
-  const recurrenceText = recurrenceRule
-    ? describeRecurrence(recurrenceRule.rrule_string)
-    : null
+  const recurrenceRule =
+    event.is_recurring && event.recurrence_rules.length > 0 ? event.recurrence_rules[0] : null
+  const recurrenceText = recurrenceRule ? describeRecurrence(recurrenceRule.rrule_string) : null
 
   const plainText = descriptionHtml ? stripHtml(descriptionHtml) : null
 
@@ -178,7 +173,16 @@ export default async function EventDetailPage({ params }: PageProps) {
                 {/* Date & Time */}
                 <DetailRow
                   icon={
-                    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <svg
+                      className="h-5 w-5"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
                       <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
                       <line x1="16" y1="2" x2="16" y2="6" />
                       <line x1="8" y1="2" x2="8" y2="6" />
@@ -191,7 +195,16 @@ export default async function EventDetailPage({ params }: PageProps) {
 
                 <DetailRow
                   icon={
-                    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <svg
+                      className="h-5 w-5"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
                       <circle cx="12" cy="12" r="10" />
                       <polyline points="12 6 12 12 16 14" />
                     </svg>
@@ -204,7 +217,16 @@ export default async function EventDetailPage({ params }: PageProps) {
                 {event.location && (
                   <DetailRow
                     icon={
-                      <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <svg
+                        className="h-5 w-5"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden="true"
+                      >
                         <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
                         <circle cx="12" cy="10" r="3" />
                       </svg>
@@ -218,7 +240,16 @@ export default async function EventDetailPage({ params }: PageProps) {
                 {recurrenceText && (
                   <DetailRow
                     icon={
-                      <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <svg
+                        className="h-5 w-5"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden="true"
+                      >
                         <polyline points="23 4 23 10 17 10" />
                         <polyline points="1 20 1 14 7 14" />
                         <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />

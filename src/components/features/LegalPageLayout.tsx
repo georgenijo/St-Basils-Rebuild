@@ -8,9 +8,7 @@ import type { PageContent } from '@/lib/sanity/types'
 
 const legalComponents: Partial<PortableTextReactComponents> = {
   block: {
-    normal: ({ children }) => (
-      <p className="mb-6 text-[17px] leading-[1.8]">{children}</p>
-    ),
+    normal: ({ children }) => <p className="mb-6 text-[17px] leading-[1.8]">{children}</p>,
     h2: ({ children }) => (
       <h2 className="mb-4 mt-10 font-heading text-[1.75rem] font-semibold leading-[1.3] text-wood-900 md:text-[2.25rem]">
         {children}
@@ -29,14 +27,10 @@ const legalComponents: Partial<PortableTextReactComponents> = {
   },
   list: {
     bullet: ({ children }) => (
-      <ul className="mb-6 list-disc space-y-2 pl-6 text-[17px] leading-[1.8]">
-        {children}
-      </ul>
+      <ul className="mb-6 list-disc space-y-2 pl-6 text-[17px] leading-[1.8]">{children}</ul>
     ),
     number: ({ children }) => (
-      <ol className="mb-6 list-decimal space-y-2 pl-6 text-[17px] leading-[1.8]">
-        {children}
-      </ol>
+      <ol className="mb-6 list-decimal space-y-2 pl-6 text-[17px] leading-[1.8]">{children}</ol>
     ),
   },
   listItem: {
@@ -90,9 +84,7 @@ export function LegalPageLayout({ page }: LegalPageLayoutProps) {
       <section className="py-16 md:py-22 lg:py-28">
         <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
           {formattedDate && (
-            <p className="mb-8 text-sm text-wood-800/60">
-              Effective Date: {formattedDate}
-            </p>
+            <p className="mb-8 text-sm text-wood-800/60">Effective Date: {formattedDate}</p>
           )}
 
           <div className="font-legal text-justify text-wood-800">

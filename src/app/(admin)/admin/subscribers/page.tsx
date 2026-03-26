@@ -23,9 +23,7 @@ export default async function SubscribersPage() {
   return (
     <main className="px-4 py-8 sm:px-6 lg:px-8">
       <div className="mb-6">
-        <h1 className="font-heading text-3xl font-semibold text-wood-900">
-          Subscribers
-        </h1>
+        <h1 className="font-heading text-3xl font-semibold text-wood-900">Subscribers</h1>
         <p className="mt-1 font-body text-sm text-wood-800/60">
           View and manage newsletter subscribers.
         </p>

@@ -43,17 +43,26 @@ export function Footer() {
             <nav aria-label="Footer navigation" className="mt-4">
               <ul className="space-y-2 text-cream-50/80">
                 <li>
-                  <Link href="/contact" className="inline-flex min-h-[44px] items-center transition-colors hover:text-cream-50">
+                  <Link
+                    href="/contact"
+                    className="inline-flex min-h-[44px] items-center transition-colors hover:text-cream-50"
+                  >
                     Contact Us
                   </Link>
                 </li>
                 <li>
-                  <Link href="/privacy-policy" className="inline-flex min-h-[44px] items-center transition-colors hover:text-cream-50">
+                  <Link
+                    href="/privacy-policy"
+                    className="inline-flex min-h-[44px] items-center transition-colors hover:text-cream-50"
+                  >
                     Privacy Policy
                   </Link>
                 </li>
                 <li>
-                  <Link href="/terms-of-use" className="inline-flex min-h-[44px] items-center transition-colors hover:text-cream-50">
+                  <Link
+                    href="/terms-of-use"
+                    className="inline-flex min-h-[44px] items-center transition-colors hover:text-cream-50"
+                  >
                     Terms of Use
                   </Link>
                 </li>

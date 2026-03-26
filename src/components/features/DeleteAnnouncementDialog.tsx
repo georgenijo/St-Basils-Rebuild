@@ -48,32 +48,21 @@ export function DeleteAnnouncementDialog({
       className="m-auto w-full max-w-md rounded-2xl border border-wood-800/10 bg-cream-50 p-0 shadow-lg backdrop:bg-charcoal/50"
     >
       <div className="p-6">
-        <h2 className="font-heading text-xl font-semibold text-wood-900">
-          Delete Announcement
-        </h2>
+        <h2 className="font-heading text-xl font-semibold text-wood-900">Delete Announcement</h2>
         <p className="mt-2 font-body text-sm text-wood-800/80">
           Are you sure you want to delete{' '}
-          <strong className="text-wood-900">&ldquo;{announcementTitle}&rdquo;</strong>?
-          This action cannot be undone.
+          <strong className="text-wood-900">&ldquo;{announcementTitle}&rdquo;</strong>? This action
+          cannot be undone.
         </p>
 
         {state.message && !state.success && (
-          <div
-            className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3"
-            role="alert"
-          >
+          <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3" role="alert">
             <p className="font-body text-sm text-red-600">{state.message}</p>
           </div>
         )}
 
         <div className="mt-6 flex justify-end gap-3">
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={onClose}
-            disabled={isPending}
-          >
+          <Button type="button" variant="ghost" size="sm" onClick={onClose} disabled={isPending}>
             Cancel
           </Button>
           <form action={action}>
@@ -85,11 +74,7 @@ export function DeleteAnnouncementDialog({
             >
               {isPending ? (
                 <span className="flex items-center gap-2">
-                  <svg
-                    className="h-4 w-4 animate-spin"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                  >
+                  <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
                     <circle
                       className="opacity-25"
                       cx="12"

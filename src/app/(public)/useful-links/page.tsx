@@ -114,9 +114,11 @@ export default async function UsefulLinksPageRoute() {
                 <div key={category} className={catIndex > 0 ? 'mt-16' : ''}>
                   <ScrollReveal direction="up">
                     <SectionHeader
-                      title={pageContent?.sectionTitle && categories.length === 1
-                        ? pageContent.sectionTitle
-                        : category}
+                      title={
+                        pageContent?.sectionTitle && categories.length === 1
+                          ? pageContent.sectionTitle
+                          : category
+                      }
                       as="h2"
                       align="left"
                       className="mb-8"
@@ -134,11 +136,7 @@ export default async function UsefulLinksPageRoute() {
               <>
                 {pageContent?.sectionTitle && (
                   <ScrollReveal direction="up">
-                    <SectionHeader
-                      title={pageContent.sectionTitle}
-                      as="h2"
-                      className="mb-10"
-                    />
+                    <SectionHeader title={pageContent.sectionTitle} as="h2" className="mb-10" />
                   </ScrollReveal>
                 )}
                 <div className="space-y-4">
@@ -206,12 +204,7 @@ function LinkCard({ link, index }: { link: UsefulLink; index: number }) {
           viewBox="0 0 24 24"
           aria-hidden="true"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M9 5l7 7-7 7"
-          />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
         </svg>
       </a>
     </ScrollReveal>

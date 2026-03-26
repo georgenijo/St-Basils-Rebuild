@@ -26,10 +26,7 @@ type CardComponent = React.FC<CardProps> & {
 const Card: CardComponent = Object.assign(
   function Card({ variant = 'default', className, children, ...props }: CardProps) {
     return (
-      <div
-        className={cn('rounded-2xl shadow-sm', variants[variant], className)}
-        {...props}
-      >
+      <div className={cn('rounded-2xl shadow-sm', variants[variant], className)} {...props}>
         {children}
       </div>
     )

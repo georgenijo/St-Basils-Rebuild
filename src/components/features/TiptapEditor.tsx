@@ -30,9 +30,7 @@ function ToolbarButton({
       title={title}
       className={cn(
         'rounded px-2 py-1 text-sm transition-colors',
-        active
-          ? 'bg-burgundy-700 text-cream-50'
-          : 'text-wood-800 hover:bg-cream-100'
+        active ? 'bg-burgundy-700 text-cream-50' : 'text-wood-800 hover:bg-cream-100'
       )}
     >
       {children}
@@ -90,18 +88,10 @@ export function TiptapEditor({ content, onChange, error }: TiptapEditorProps) {
       )}
     >
       <div className="flex flex-wrap gap-1 border-b bg-cream-100/50 px-2 py-1.5">
-        <ToolbarButton
-          active={editor.isActive('bold')}
-          onClick={toggleBold}
-          title="Bold"
-        >
+        <ToolbarButton active={editor.isActive('bold')} onClick={toggleBold} title="Bold">
           <strong>B</strong>
         </ToolbarButton>
-        <ToolbarButton
-          active={editor.isActive('italic')}
-          onClick={toggleItalic}
-          title="Italic"
-        >
+        <ToolbarButton active={editor.isActive('italic')} onClick={toggleItalic} title="Italic">
           <em>I</em>
         </ToolbarButton>
         <div className="mx-1 w-px bg-wood-800/10" />
@@ -125,9 +115,23 @@ export function TiptapEditor({ content, onChange, error }: TiptapEditorProps) {
           onClick={toggleBulletList}
           title="Bullet List"
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <line x1="8" y1="6" x2="21" y2="6" /><line x1="8" y1="12" x2="21" y2="12" /><line x1="8" y1="18" x2="21" y2="18" />
-            <circle cx="3" cy="6" r="1" fill="currentColor" /><circle cx="3" cy="12" r="1" fill="currentColor" /><circle cx="3" cy="18" r="1" fill="currentColor" />
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <line x1="8" y1="6" x2="21" y2="6" />
+            <line x1="8" y1="12" x2="21" y2="12" />
+            <line x1="8" y1="18" x2="21" y2="18" />
+            <circle cx="3" cy="6" r="1" fill="currentColor" />
+            <circle cx="3" cy="12" r="1" fill="currentColor" />
+            <circle cx="3" cy="18" r="1" fill="currentColor" />
           </svg>
         </ToolbarButton>
         <ToolbarButton
@@ -135,11 +139,50 @@ export function TiptapEditor({ content, onChange, error }: TiptapEditorProps) {
           onClick={toggleOrderedList}
           title="Ordered List"
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <line x1="10" y1="6" x2="21" y2="6" /><line x1="10" y1="12" x2="21" y2="12" /><line x1="10" y1="18" x2="21" y2="18" />
-            <text x="1" y="8" fontSize="8" fill="currentColor" stroke="none" fontFamily="sans-serif">1</text>
-            <text x="1" y="14" fontSize="8" fill="currentColor" stroke="none" fontFamily="sans-serif">2</text>
-            <text x="1" y="20" fontSize="8" fill="currentColor" stroke="none" fontFamily="sans-serif">3</text>
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <line x1="10" y1="6" x2="21" y2="6" />
+            <line x1="10" y1="12" x2="21" y2="12" />
+            <line x1="10" y1="18" x2="21" y2="18" />
+            <text
+              x="1"
+              y="8"
+              fontSize="8"
+              fill="currentColor"
+              stroke="none"
+              fontFamily="sans-serif"
+            >
+              1
+            </text>
+            <text
+              x="1"
+              y="14"
+              fontSize="8"
+              fill="currentColor"
+              stroke="none"
+              fontFamily="sans-serif"
+            >
+              2
+            </text>
+            <text
+              x="1"
+              y="20"
+              fontSize="8"
+              fill="currentColor"
+              stroke="none"
+              fontFamily="sans-serif"
+            >
+              3
+            </text>
           </svg>
         </ToolbarButton>
       </div>

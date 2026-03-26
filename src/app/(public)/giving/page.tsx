@@ -22,7 +22,17 @@ const ministries = [
     description:
       'Through God\u2019s provision and the generosity of our congregation, we have been blessed to contribute toward building homes for families in need throughout India. These modest dwellings provide shelter, dignity, and a foundation for families to build their lives upon, reflecting Christ\u2019s love through practical care.',
     icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="h-8 w-8" aria-hidden="true">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="h-8 w-8"
+        aria-hidden="true"
+      >
         <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
         <polyline points="9 22 9 12 15 12 15 22" />
       </svg>
@@ -33,7 +43,17 @@ const ministries = [
     description:
       'Our church family believes in supporting one another through life\u2019s most difficult moments. We are moved by Christian love to provide assistance during serious health challenges and times of loss, reflecting our understanding that we are called to bear one another\u2019s burdens and show compassion.',
     icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="h-8 w-8" aria-hidden="true">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="h-8 w-8"
+        aria-hidden="true"
+      >
         <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
         <path d="M12 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />
       </svg>
@@ -44,7 +64,17 @@ const ministries = [
     description:
       'Learning of a newly ordained deacon in India facing difficult living conditions, our congregation felt moved to help provide him with a proper home. This space enables him to prepare spiritually for the Divine Liturgy and serve his community with dignity.',
     icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="h-8 w-8" aria-hidden="true">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="h-8 w-8"
+        aria-hidden="true"
+      >
         <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
         <circle cx="8.5" cy="7" r="4" />
         <line x1="20" y1="8" x2="20" y2="14" />
@@ -57,7 +87,17 @@ const ministries = [
     description:
       'We have received heartfelt requests from individuals and families in India facing serious medical challenges\u2014kidney transplants, cancer treatments, and other urgent procedures. Through our congregation\u2019s compassionate giving, we provide financial assistance for life-saving treatments.',
     icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="h-8 w-8" aria-hidden="true">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="h-8 w-8"
+        aria-hidden="true"
+      >
         <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
         <polyline points="8 13 11 16 16 10" />
       </svg>
@@ -68,7 +108,17 @@ const ministries = [
     description:
       'We are honored to support Solace Charity, an organization dedicated to caring for severely ill and underprivileged children in Kerala, India. Solace provides comprehensive support\u2014from funding critical medical procedures to offering emotional support for families.',
     icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="h-8 w-8" aria-hidden="true">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="h-8 w-8"
+        aria-hidden="true"
+      >
         <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
         <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67" />
         <path d="M13.73 21a2 2 0 0 1-3.46 0" />
@@ -80,7 +130,17 @@ const ministries = [
     description:
       'The Pelican Centre in Kerala, India, serves as \u201Can open door for the needy and mentally challenged people of our society,\u201D providing rehabilitation and care that enables individuals to lead fuller, more independent lives. Our support reflects our belief that every person deserves compassion and dignity.',
     icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="h-8 w-8" aria-hidden="true">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="h-8 w-8"
+        aria-hidden="true"
+      >
         <circle cx="12" cy="12" r="10" />
         <path d="M12 8a2 2 0 0 1 2 2v4a2 2 0 0 1-4 0v-4a2 2 0 0 1 2-2z" />
         <path d="M8 14s1.5 2 4 2 4-2 4-2" />
@@ -103,8 +163,8 @@ export default function GivingPage() {
           <ScrollReveal>
             <div className="space-y-6 text-center">
               <p className="font-body text-base leading-relaxed text-wood-800 md:text-lg">
-                Giving is an act of worship and a reflection of God&rsquo;s abundant love for us.
-                As we have been blessed, we are called to bless others through our faithful
+                Giving is an act of worship and a reflection of God&rsquo;s abundant love for us. As
+                we have been blessed, we are called to bless others through our faithful
                 stewardship. Your generous offerings support our church&rsquo;s ministry, help us
                 care for our community, and enable us to share Christ&rsquo;s love through
                 charitable works.
@@ -170,7 +230,11 @@ export default function GivingPage() {
             <p className="font-body text-base text-cream-50/60">
               Contact us to learn more about our ongoing outreach efforts.
             </p>
-            <Button href="/contact" variant="secondary" className="mt-6 border-cream-50/30 text-cream-50 hover:bg-cream-50/10 hover:text-cream-50">
+            <Button
+              href="/contact"
+              variant="secondary"
+              className="mt-6 border-cream-50/30 text-cream-50 hover:bg-cream-50/10 hover:text-cream-50"
+            >
               Get in Touch
             </Button>
           </ScrollReveal>

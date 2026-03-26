@@ -60,7 +60,11 @@ export function PinnedAnnouncementsBanner({
             <p className="text-sm font-medium">
               {announcements.map((a, i) => (
                 <span key={a.id}>
-                  {i > 0 && <span className="mx-1.5 text-cream-50/50" aria-hidden="true">&middot;</span>}
+                  {i > 0 && (
+                    <span className="mx-1.5 text-cream-50/50" aria-hidden="true">
+                      &middot;
+                    </span>
+                  )}
                   <Link
                     href={`/announcements/${a.slug}`}
                     className="text-cream-50 underline-offset-4 hover:underline"

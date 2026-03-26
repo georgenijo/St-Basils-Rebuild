@@ -1,10 +1,7 @@
 import { z } from 'zod'
 
 export const announcementSchema = z.object({
-  title: z
-    .string()
-    .min(1, 'Title is required')
-    .max(200, 'Title must be 200 characters or less'),
+  title: z.string().min(1, 'Title is required').max(200, 'Title must be 200 characters or less'),
   slug: z
     .string()
     .min(1, 'Slug is required')

@@ -87,9 +87,7 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
           height={36}
           className="h-9 w-auto"
         />
-        <span className="font-heading text-lg font-semibold text-cream-50">
-          Admin
-        </span>
+        <span className="font-heading text-lg font-semibold text-cream-50">Admin</span>
       </div>
 
       {/* Gold accent line */}
@@ -127,10 +125,7 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
 
       {/* Back to site link */}
       <div className="px-3 pb-4">
-        <div
-          className="mx-1 mb-3 h-px bg-cream-50/10"
-          aria-hidden="true"
-        />
+        <div className="mx-1 mb-3 h-px bg-cream-50/10" aria-hidden="true" />
         <Link
           href="/"
           className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-cream-50/60 transition-colors hover:bg-cream-50/5 hover:text-cream-50"
@@ -181,10 +176,7 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
 
       {/* Desktop sidebar */}
       <aside
-        className={cn(
-          'hidden w-64 flex-shrink-0 flex-col bg-charcoal lg:flex',
-          className
-        )}
+        className={cn('hidden w-64 flex-shrink-0 flex-col bg-charcoal lg:flex', className)}
         aria-label="Admin sidebar"
       >
         {sidebarContent}
@@ -197,7 +189,17 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
 
 function DashboardIcon() {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
       <rect x="3" y="3" width="7" height="9" rx="1" />
       <rect x="14" y="3" width="7" height="5" rx="1" />
       <rect x="14" y="12" width="7" height="9" rx="1" />
@@ -208,7 +210,17 @@ function DashboardIcon() {
 
 function CalendarIcon() {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
       <rect x="3" y="4" width="18" height="18" rx="2" />
       <path d="M16 2v4M8 2v4M3 10h18" />
     </svg>
@@ -217,7 +229,17 @@ function CalendarIcon() {
 
 function MegaphoneIcon() {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
       <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
       <path d="M13.73 21a2 2 0 0 1-3.46 0" />
     </svg>
@@ -226,7 +248,17 @@ function MegaphoneIcon() {
 
 function UsersIcon() {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
       <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
       <circle cx="9" cy="7" r="4" />
       <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
@@ -237,7 +269,17 @@ function UsersIcon() {
 
 function ArrowLeftIcon() {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
       <path d="M19 12H5M12 19l-7-7 7-7" />
     </svg>
   )
@@ -245,7 +287,17 @@ function ArrowLeftIcon() {
 
 function HamburgerIcon() {
   return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
       <path d="M3 6h18M3 12h18M3 18h18" />
     </svg>
   )
@@ -253,7 +305,17 @@ function HamburgerIcon() {
 
 function CloseIcon() {
   return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
       <path d="M18 6L6 18M6 6l12 12" />
     </svg>
   )

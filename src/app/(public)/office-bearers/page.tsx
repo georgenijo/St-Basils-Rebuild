@@ -159,9 +159,7 @@ export default async function OfficeBearersPage() {
                       {member.name}
                     </h3>
                     {member.role && (
-                      <p className="mt-1 text-sm text-burgundy-700 italic">
-                        {member.role}
-                      </p>
+                      <p className="mt-1 text-sm text-burgundy-700 italic">{member.role}</p>
                     )}
                   </article>
                 </ScrollReveal>

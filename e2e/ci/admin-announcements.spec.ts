@@ -53,9 +53,7 @@ test.describe('CI admin announcements', () => {
     })
 
     expect(email.metadata.announcementUrl).toContain(`/announcements/${slug}`)
-    expect(email.metadata.unsubscribeUrl).toContain(
-      '/api/newsletter/unsubscribe?token='
-    )
+    expect(email.metadata.unsubscribeUrl).toContain('/api/newsletter/unsubscribe?token=')
 
     await page.goto('/announcements', { waitUntil: 'domcontentloaded' })
     await expect(page.getByText(title)).toBeVisible()

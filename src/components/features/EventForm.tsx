@@ -112,26 +112,18 @@ export function EventForm({ event }: EventFormProps) {
   }, [state.success])
   return (
     <form ref={formRef} action={formAction} className="space-y-6">
-      {isEditing && (
-        <input type="hidden" name="event_id" value={event.id} />
-      )}
+      {isEditing && <input type="hidden" name="event_id" value={event.id} />}
 
       {/* Server error message */}
       {!state.success && state.message && !state.errors && (
-        <div
-          className="rounded-lg border border-red-200 bg-red-50 px-4 py-3"
-          role="alert"
-        >
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3" role="alert">
           <p className="font-body text-sm text-red-600">{state.message}</p>
         </div>
       )}
 
       {/* Title */}
       <div>
-        <label
-          htmlFor="title"
-          className="mb-1.5 block font-body text-sm font-medium text-wood-900"
-        >
+        <label htmlFor="title" className="mb-1.5 block font-body text-sm font-medium text-wood-900">
           Title <span className="text-burgundy-700">*</span>
         </label>
         <input
@@ -150,10 +142,7 @@ export function EventForm({ event }: EventFormProps) {
 
       {/* Slug */}
       <div>
-        <label
-          htmlFor="slug"
-          className="mb-1.5 block font-body text-sm font-medium text-wood-900"
-        >
+        <label htmlFor="slug" className="mb-1.5 block font-body text-sm font-medium text-wood-900">
           Slug <span className="text-burgundy-700">*</span>
         </label>
         <div className="flex gap-2">
@@ -169,11 +158,7 @@ export function EventForm({ event }: EventFormProps) {
               setSlug(e.target.value)
             }}
             placeholder="sunday-holy-qurbono"
-            className={cn(
-              inputBase,
-              'font-mono text-sm',
-              state.errors?.slug && 'border-red-400'
-            )}
+            className={cn(inputBase, 'font-mono text-sm', state.errors?.slug && 'border-red-400')}
           />
           {slugManual && (
             <button
@@ -265,10 +250,7 @@ export function EventForm({ event }: EventFormProps) {
             name="start_at"
             required
             defaultValue={formatIsoForDatetimeLocal(event?.start_at)}
-            className={cn(
-              inputBase,
-              state.errors?.start_at && 'border-red-400'
-            )}
+            className={cn(inputBase, state.errors?.start_at && 'border-red-400')}
           />
           <FieldError errors={state.errors?.start_at} />
         </div>
@@ -284,10 +266,7 @@ export function EventForm({ event }: EventFormProps) {
             id="end_at"
             name="end_at"
             defaultValue={formatIsoForDatetimeLocal(event?.end_at)}
-            className={cn(
-              inputBase,
-              state.errors?.end_at && 'border-red-400'
-            )}
+            className={cn(inputBase, state.errors?.end_at && 'border-red-400')}
           />
           <FieldError errors={state.errors?.end_at} />
         </div>
@@ -316,14 +295,8 @@ export function EventForm({ event }: EventFormProps) {
             )}
           />
         </button>
-        <span className="font-body text-sm font-medium text-wood-900">
-          Recurring event
-        </span>
-        <input
-          type="hidden"
-          name="is_recurring"
-          value={isRecurring ? 'true' : 'false'}
-        />
+        <span className="font-body text-sm font-medium text-wood-900">Recurring event</span>
+        <input type="hidden" name="is_recurring" value={isRecurring ? 'true' : 'false'} />
       </div>
 
       {/* RRULE Builder */}
@@ -346,11 +319,7 @@ export function EventForm({ event }: EventFormProps) {
         <Button type="submit" disabled={isPending}>
           {isPending ? (
             <span className="flex items-center gap-2">
-              <svg
-                className="h-4 w-4 animate-spin"
-                viewBox="0 0 24 24"
-                fill="none"
-              >
+              <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
                 <circle
                   className="opacity-25"
                   cx="12"

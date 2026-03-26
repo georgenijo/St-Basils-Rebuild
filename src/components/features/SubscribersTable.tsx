@@ -209,7 +209,10 @@ export function SubscribersTable({ subscribers }: SubscribersTableProps) {
                 Status
                 <SortIcon active={sortKey === 'status'} dir={sortDir} />
               </th>
-              <th className={cn(thClass, 'hidden sm:table-cell')} onClick={() => toggleSort('created_at')}>
+              <th
+                className={cn(thClass, 'hidden sm:table-cell')}
+                onClick={() => toggleSort('created_at')}
+              >
                 Signed Up
                 <SortIcon active={sortKey === 'created_at'} dir={sortDir} />
               </th>
@@ -231,10 +234,7 @@ export function SubscribersTable({ subscribers }: SubscribersTableProps) {
               paginated.map((subscriber) => {
                 const status = getStatus(subscriber)
                 return (
-                  <tr
-                    key={subscriber.id}
-                    className="transition-colors hover:bg-cream-100/30"
-                  >
+                  <tr key={subscriber.id} className="transition-colors hover:bg-cream-100/30">
                     <td className="px-4 py-3 font-body text-sm text-wood-900">
                       {subscriber.email}
                     </td>

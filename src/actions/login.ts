@@ -4,19 +4,12 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
 import { createClient } from '@/lib/supabase/server'
+import { isValidRedirectUrl } from '@/lib/validators/redirect'
 
 type LoginState = {
   success: boolean
   message: string
   errors?: Record<string, string[]>
-}
-
-/**
- * Validates that a redirect URL is internal-only to prevent open redirect attacks.
- * Must start with `/` and not contain protocol schemes or protocol-relative URLs.
- */
-function isValidRedirectUrl(url: string): boolean {
-  return url.startsWith('/') && !url.startsWith('//') && !url.includes('://')
 }
 
 export async function login(prevState: LoginState, formData: FormData): Promise<LoginState> {
@@ -53,10 +46,7 @@ export async function login(prevState: LoginState, formData: FormData): Promise<
 
   revalidatePath('/', 'layout')
 
-  const destination =
-    redirectTo && isValidRedirectUrl(redirectTo)
-      ? redirectTo
-      : '/admin/dashboard'
+  const destination = redirectTo && isValidRedirectUrl(redirectTo) ? redirectTo : '/admin/dashboard'
 
   redirect(destination)
 }

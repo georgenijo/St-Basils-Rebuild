@@ -37,7 +37,11 @@ export function ContactForm() {
 
   if (state.success) {
     return (
-      <div className="rounded-2xl border border-green-200 bg-green-50 p-8 text-center" role="status" aria-live="polite">
+      <div
+        className="rounded-2xl border border-green-200 bg-green-50 p-8 text-center"
+        role="status"
+        aria-live="polite"
+      >
         <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
           <svg
             className="h-6 w-6 text-green-600"
@@ -76,7 +80,10 @@ export function ContactForm() {
 
       <div className="grid gap-6 sm:grid-cols-2">
         <div>
-          <label htmlFor="name" className="mb-1.5 block font-body text-sm font-medium text-wood-900">
+          <label
+            htmlFor="name"
+            className="mb-1.5 block font-body text-sm font-medium text-wood-900"
+          >
             Name <span className="text-burgundy-700">*</span>
           </label>
           <input
@@ -92,7 +99,10 @@ export function ContactForm() {
         </div>
 
         <div>
-          <label htmlFor="email" className="mb-1.5 block font-body text-sm font-medium text-wood-900">
+          <label
+            htmlFor="email"
+            className="mb-1.5 block font-body text-sm font-medium text-wood-900"
+          >
             Email <span className="text-burgundy-700">*</span>
           </label>
           <input
@@ -108,7 +118,10 @@ export function ContactForm() {
       </div>
 
       <div>
-        <label htmlFor="subject" className="mb-1.5 block font-body text-sm font-medium text-wood-900">
+        <label
+          htmlFor="subject"
+          className="mb-1.5 block font-body text-sm font-medium text-wood-900"
+        >
           Subject <span className="text-burgundy-700">*</span>
         </label>
         <input
@@ -124,7 +137,10 @@ export function ContactForm() {
       </div>
 
       <div>
-        <label htmlFor="message" className="mb-1.5 block font-body text-sm font-medium text-wood-900">
+        <label
+          htmlFor="message"
+          className="mb-1.5 block font-body text-sm font-medium text-wood-900"
+        >
           Message <span className="text-burgundy-700">*</span>
         </label>
         <textarea
@@ -144,9 +160,25 @@ export function ContactForm() {
       <Button type="submit" disabled={isPending} className="w-full sm:w-auto">
         {isPending ? (
           <span className="flex items-center gap-2">
-            <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            <svg
+              className="h-4 w-4 animate-spin"
+              viewBox="0 0 24 24"
+              fill="none"
+              aria-hidden="true"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+              />
             </svg>
             Sending...
           </span>

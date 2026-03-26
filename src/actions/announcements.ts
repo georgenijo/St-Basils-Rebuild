@@ -62,28 +62,33 @@ export async function createAnnouncement(
     try {
       bodyJson = JSON.parse(parsed.data.body)
     } catch {
-      bodyJson = { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: parsed.data.body }] }] }
+      bodyJson = {
+        type: 'doc',
+        content: [{ type: 'paragraph', content: [{ type: 'text', text: parsed.data.body }] }],
+      }
     }
   }
 
   // 5. Insert announcement
-  const { error } = await supabase
-    .from('announcements')
-    .insert({
-      title: parsed.data.title,
-      slug: parsed.data.slug,
-      body: bodyJson,
-      priority: parsed.data.priority,
-      is_pinned: parsed.data.is_pinned,
-      expires_at: expiresAtUtc,
-      send_email: parsed.data.send_email,
-      published_at: parsed.data.published ? new Date().toISOString() : null,
-      author_id: user.id,
-    })
+  const { error } = await supabase.from('announcements').insert({
+    title: parsed.data.title,
+    slug: parsed.data.slug,
+    body: bodyJson,
+    priority: parsed.data.priority,
+    is_pinned: parsed.data.is_pinned,
+    expires_at: expiresAtUtc,
+    send_email: parsed.data.send_email,
+    published_at: parsed.data.published ? new Date().toISOString() : null,
+    author_id: user.id,
+  })
 
   if (error) {
     if (error.code === '23505') {
-      return { success: false, message: 'An announcement with this slug already exists', errors: { slug: ['Slug is already taken'] } }
+      return {
+        success: false,
+        message: 'An announcement with this slug already exists',
+        errors: { slug: ['Slug is already taken'] },
+      }
     }
     return { success: false, message: 'Failed to create announcement' }
   }
@@ -153,7 +158,10 @@ export async function updateAnnouncement(
     try {
       bodyJson = JSON.parse(parsed.data.body)
     } catch {
-      bodyJson = { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: parsed.data.body }] }] }
+      bodyJson = {
+        type: 'doc',
+        content: [{ type: 'paragraph', content: [{ type: 'text', text: parsed.data.body }] }],
+      }
     }
   }
 
@@ -181,7 +189,11 @@ export async function updateAnnouncement(
 
   if (error) {
     if (error.code === '23505') {
-      return { success: false, message: 'An announcement with this slug already exists', errors: { slug: ['Slug is already taken'] } }
+      return {
+        success: false,
+        message: 'An announcement with this slug already exists',
+        errors: { slug: ['Slug is already taken'] },
+      }
     }
     return { success: false, message: 'Failed to update announcement' }
   }

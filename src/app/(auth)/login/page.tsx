@@ -8,7 +8,7 @@ import { LoginForm } from '@/components/features/LoginForm'
 
 export const metadata: Metadata = {
   title: 'Login',
-  description: 'Sign in to the St. Basil\'s church admin portal.',
+  description: "Sign in to the St. Basil's church admin portal.",
 }
 
 export default async function LoginPage({
@@ -38,9 +38,7 @@ export default async function LoginPage({
             height={42}
             priority
           />
-          <h1 className="font-heading text-2xl font-semibold text-wood-900">
-            Admin Login
-          </h1>
+          <h1 className="font-heading text-2xl font-semibold text-wood-900">Admin Login</h1>
         </div>
 
         <LoginForm redirectTo={redirectTo} />

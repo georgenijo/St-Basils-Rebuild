@@ -36,8 +36,8 @@ export function NewsletterConfirmation({
             <Heading style={heading}>Confirm Your Subscription</Heading>
             <Hr style={goldDivider} />
             <Text style={paragraph}>
-              Thank you for subscribing to announcements from {CHURCH_NAME}.
-              Please confirm your email address by clicking the button below.
+              Thank you for subscribing to announcements from {CHURCH_NAME}. Please confirm your
+              email address by clicking the button below.
             </Text>
             <Section style={ctaSection}>
               <Link href={confirmUrl} style={ctaButton}>
@@ -72,8 +72,7 @@ export default NewsletterConfirmation
 
 const body = {
   backgroundColor: '#f6f6f6',
-  fontFamily:
-    '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
   margin: '0',
   padding: '0',
 }

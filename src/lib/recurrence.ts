@@ -35,8 +35,7 @@ export function describeRecurrence(rruleString: string): string {
   let description = `Every ${freqLabel}`
 
   if (map.BYDAY) {
-    const days = map.BYDAY.split(',')
-      .map((d) => DAY_NAMES[d] || d)
+    const days = map.BYDAY.split(',').map((d) => DAY_NAMES[d] || d)
     description += ` on ${formatList(days)}`
   }
 

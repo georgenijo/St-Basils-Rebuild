@@ -3,10 +3,8 @@ import type { DateArray } from 'ics'
 export const CHURCH_TIME_ZONE = 'America/New_York'
 
 const LOCALE = 'en-US'
-const DATETIME_LOCAL_PATTERN =
-  /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/
-const RRULE_UTC_PATTERN =
-  /^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z$/
+const DATETIME_LOCAL_PATTERN = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/
+const RRULE_UTC_PATTERN = /^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z$/
 
 interface DateTimeParts {
   year: number
@@ -17,10 +15,7 @@ interface DateTimeParts {
   second: number
 }
 
-function getFormatter(
-  timeZone: string,
-  options: Intl.DateTimeFormatOptions
-): Intl.DateTimeFormat {
+function getFormatter(timeZone: string, options: Intl.DateTimeFormatOptions): Intl.DateTimeFormat {
   return new Intl.DateTimeFormat(LOCALE, {
     timeZone,
     ...options,
@@ -42,9 +37,7 @@ function getDateTimeParts(date: Date, timeZone: string): DateTimeParts {
   const parts = formatter.formatToParts(date)
   const values = Object.fromEntries(
     parts
-      .filter((part) =>
-        ['year', 'month', 'day', 'hour', 'minute', 'second'].includes(part.type)
-      )
+      .filter((part) => ['year', 'month', 'day', 'hour', 'minute', 'second'].includes(part.type))
       .map((part) => [part.type, Number(part.value)])
   ) as Record<keyof DateTimeParts, number>
 
@@ -68,8 +61,7 @@ function getTimeZoneOffsetMinutes(date: Date, timeZone: string): number {
   })
 
   const timeZoneName =
-    formatter.formatToParts(date).find((part) => part.type === 'timeZoneName')
-      ?.value ?? 'GMT'
+    formatter.formatToParts(date).find((part) => part.type === 'timeZoneName')?.value ?? 'GMT'
 
   const match = timeZoneName.match(/^GMT(?:(\+|-)(\d{1,2})(?::?(\d{2}))?)?$/)
   if (match) {
@@ -182,9 +174,7 @@ export function parseDatetimeLocalInTimeZone(
 
   const isoString = new Date(utcMillis).toISOString()
 
-  return formatIsoForDatetimeLocal(isoString, timeZone) === value
-    ? isoString
-    : null
+  return formatIsoForDatetimeLocal(isoString, timeZone) === value ? isoString : null
 }
 
 export function toUtcDateArray(isoString: string): DateArray {
@@ -198,10 +188,7 @@ export function toUtcDateArray(isoString: string): DateArray {
   ]
 }
 
-export function toTimeZoneDateArray(
-  isoString: string,
-  timeZone = CHURCH_TIME_ZONE
-): DateArray {
+export function toTimeZoneDateArray(isoString: string, timeZone = CHURCH_TIME_ZONE): DateArray {
   const parts = getDateTimeParts(new Date(isoString), timeZone)
   return [parts.year, parts.month, parts.day, parts.hour, parts.minute]
 }
@@ -238,10 +225,7 @@ export function buildRecurrenceUntilIso(
   )
 }
 
-export function parseRRuleUntilToDateInput(
-  rawUntil: string,
-  timeZone = CHURCH_TIME_ZONE
-): string {
+export function parseRRuleUntilToDateInput(rawUntil: string, timeZone = CHURCH_TIME_ZONE): string {
   const utcMatch = rawUntil.match(RRULE_UTC_PATTERN)
   if (utcMatch) {
     const isoString = `${utcMatch[1]}-${utcMatch[2]}-${utcMatch[3]}T${utcMatch[4]}:${utcMatch[5]}:${utcMatch[6]}Z`

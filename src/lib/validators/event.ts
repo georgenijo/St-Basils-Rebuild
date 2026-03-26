@@ -17,10 +17,7 @@ export type RRuleFormData = z.infer<typeof rruleSchema>
 
 export const eventSchema = z
   .object({
-    title: z
-      .string()
-      .min(1, 'Title is required')
-      .max(200, 'Title must be 200 characters or less'),
+    title: z.string().min(1, 'Title is required').max(200, 'Title must be 200 characters or less'),
     slug: z
       .string()
       .min(1, 'Slug is required')
@@ -78,8 +75,7 @@ export function buildRRuleString(data: {
 
   if (data.until) {
     const untilTimestamp =
-      data.startsAtLocal &&
-      buildRecurrenceUntilTimestamp(data.until, data.startsAtLocal)
+      data.startsAtLocal && buildRecurrenceUntilTimestamp(data.until, data.startsAtLocal)
 
     if (untilTimestamp) {
       parts.push(`UNTIL=${untilTimestamp}`)

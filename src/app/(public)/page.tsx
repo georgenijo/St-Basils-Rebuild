@@ -47,7 +47,8 @@ export default async function HomePage() {
     .order('priority', { ascending: false })
 
   const recent = (recentAnnouncements as AnnouncementRow[]) || []
-  const pinned = (pinnedAnnouncements as { id: string; title: string; slug: string; priority: number }[]) || []
+  const pinned =
+    (pinnedAnnouncements as { id: string; title: string; slug: string; priority: number }[]) || []
 
   return (
     <>
@@ -97,9 +98,7 @@ export default async function HomePage() {
         <dl className="mx-auto grid max-w-[1200px] grid-cols-1 gap-6 px-4 text-center sm:grid-cols-3 sm:px-6 lg:px-8">
           <div>
             <dt className="font-heading text-lg font-semibold text-cream-50">Location</dt>
-            <dd className="mt-1 text-sm text-cream-50/80">
-              73 Ellis Street, Newton, MA 02464
-            </dd>
+            <dd className="mt-1 text-sm text-cream-50/80">73 Ellis Street, Newton, MA 02464</dd>
           </div>
           <div>
             <dt className="font-heading text-lg font-semibold text-cream-50">Sunday Services</dt>
@@ -110,7 +109,10 @@ export default async function HomePage() {
           <div>
             <dt className="font-heading text-lg font-semibold text-cream-50">Contact</dt>
             <dd className="mt-1 text-sm text-cream-50/80">
-              <a href="tel:+16175270527" className="inline-flex min-h-[44px] items-center transition-colors hover:text-cream-50">
+              <a
+                href="tel:+16175270527"
+                className="inline-flex min-h-[44px] items-center transition-colors hover:text-cream-50"
+              >
                 (617) 527-0527
               </a>
             </dd>
@@ -127,14 +129,14 @@ export default async function HomePage() {
               subtitle="A home for faith, fellowship, and tradition in the heart of New England."
             />
             <p className="mt-8 text-base leading-relaxed text-wood-800">
-              St. Basil&#39;s Syriac Orthodox Church has been a spiritual home for the
-              Jacobite Malayalee community in the greater Boston area. Rooted in the
-              ancient traditions of the Syriac Orthodox faith, our parish gathers each
-              Sunday for the Holy Qurbono, fellowship, and the shared life of Christ.
+              St. Basil&#39;s Syriac Orthodox Church has been a spiritual home for the Jacobite
+              Malayalee community in the greater Boston area. Rooted in the ancient traditions of
+              the Syriac Orthodox faith, our parish gathers each Sunday for the Holy Qurbono,
+              fellowship, and the shared life of Christ.
             </p>
             <p className="mt-4 text-base leading-relaxed text-wood-800">
-              Whether you are a lifelong member or visiting for the first time, you are
-              welcome here.
+              Whether you are a lifelong member or visiting for the first time, you are welcome
+              here.
             </p>
             <div className="mt-10">
               <Button href="/about">Learn Our History</Button>
@@ -206,8 +208,8 @@ export default async function HomePage() {
               subtitle="From feast days to fellowship gatherings, there is always something happening at St. Basil's."
             />
             <p className="mt-8 text-base leading-relaxed text-wood-800">
-              Check our events calendar for service schedules, special observances, and
-              community gatherings throughout the year.
+              Check our events calendar for service schedules, special observances, and community
+              gatherings throughout the year.
             </p>
             <div className="mt-10">
               <Button href="/events">View Events Calendar</Button>
@@ -225,8 +227,7 @@ export default async function HomePage() {
             </h2>
             <GoldDivider className="my-4" />
             <p className="mt-6 text-base leading-relaxed text-cream-50/80">
-              Meet the dedicated office bearers who serve our parish and guide our
-              community.
+              Meet the dedicated office bearers who serve our parish and guide our community.
             </p>
             <div className="mt-10">
               <Button

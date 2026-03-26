@@ -9,17 +9,12 @@ interface CaptchaFieldProps {
   size?: 'normal' | 'compact'
 }
 
-const isTurnstileBypassEnabled =
-  process.env.NEXT_PUBLIC_ALLOW_TURNSTILE_TEST_BYPASS === 'true'
+const isTurnstileBypassEnabled = process.env.NEXT_PUBLIC_ALLOW_TURNSTILE_TEST_BYPASS === 'true'
 
 const turnstileBypassToken =
   process.env.NEXT_PUBLIC_TURNSTILE_TEST_BYPASS_TOKEN || 'ci-turnstile-pass'
 
-export function CaptchaField({
-  turnstileRef,
-  theme,
-  size = 'normal',
-}: CaptchaFieldProps) {
+export function CaptchaField({ turnstileRef, theme, size = 'normal' }: CaptchaFieldProps) {
   if (isTurnstileBypassEnabled) {
     return <input type="hidden" name="cf-turnstile-response" value={turnstileBypassToken} />
   }

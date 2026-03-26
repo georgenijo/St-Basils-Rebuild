@@ -14,7 +14,9 @@
     "test:e2e": "playwright test",
     "test:e2e:ci": "playwright test e2e/ci e2e/smoke",
     "test:smoke": "playwright test --grep @smoke",
-    "test:smoke:prod": "playwright test e2e/smoke/public-pages.spec.ts e2e/smoke/forms.spec.ts e2e/smoke/mobile-nav.spec.ts e2e/smoke/images.spec.ts e2e/smoke/redirects.spec.ts e2e/smoke/calendar-announcements.spec.ts",
+    "test:smoke:prod": "playwright test e2e/smoke/public-pages.spec.ts e2e/smoke/forms.spec.ts e2e/smoke/mobile-nav.spec.ts e2e/smoke/images.spec.ts e2e/smoke/redirects.spec.ts e2e/smoke/calendar-announcements.spec.ts e2e/smoke/admin.spec.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "ci:validate": "npm run format:check && npm run lint && npm run typecheck && npm run build"
   },
   "dependencies": {
@@ -64,6 +66,7 @@
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "prettier": "^3.8.1",
     "tailwindcss": "^4.1.4",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vitest": "^4.0.18"
   }
 }

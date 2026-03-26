@@ -45,14 +45,7 @@ export interface SanityImageProps extends Omit<ImageProps, 'src'> {
   lqip?: string
 }
 
-export function SanityImage({
-  image,
-  alt,
-  lqip,
-  className,
-  style,
-  ...props
-}: SanityImageProps) {
+export function SanityImage({ image, alt, lqip, className, style, ...props }: SanityImageProps) {
   const imageUrl = urlFor(image).auto('format').url()
   const hotspotPosition = getHotspotPosition(image)
 
