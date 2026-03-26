@@ -120,7 +120,7 @@ describe('parseDatetimeLocalInTimeZone', () => {
   })
 
   it('handles midnight correctly', () => {
-    const result = parseDatetimeLocalInTimeZone('2026-01-15T00:00')
+    const result = parseDatetimeLocalInTimeZone('2026-01-15T00:00', 'America/New_York')
     // Midnight EST = 05:00 UTC
     expect(result).toBe('2026-01-15T05:00:00.000Z')
   })
