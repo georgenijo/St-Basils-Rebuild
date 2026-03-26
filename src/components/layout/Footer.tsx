@@ -1,6 +1,7 @@
 import Link from 'next/link'
 
 import { GoldDivider } from '@/components/ui'
+import { NewsletterSignupForm } from '@/components/features/NewsletterSignupForm'
 
 export function Footer() {
   const currentYear = new Date().getFullYear()
@@ -8,7 +9,7 @@ export function Footer() {
   return (
     <footer className="bg-charcoal text-cream-50">
       <div className="mx-auto max-w-[1200px] px-4 py-16 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 gap-12 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-4">
           {/* Church Info */}
           <div>
             <h2 className="font-heading text-xl font-600 text-cream-50">
@@ -78,6 +79,15 @@ export function Footer() {
                 </svg>
               </a>
             </div>
+          </div>
+
+          {/* Newsletter Signup */}
+          <div>
+            <h2 className="font-heading text-xl font-600 text-cream-50">Stay Connected</h2>
+            <p className="mt-4 text-sm leading-relaxed text-cream-50/80">
+              Get church announcements and updates delivered to your inbox.
+            </p>
+            <NewsletterSignupForm variant="dark" className="mt-4" />
           </div>
         </div>
 
