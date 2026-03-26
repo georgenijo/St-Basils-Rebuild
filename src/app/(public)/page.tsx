@@ -1,6 +1,9 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 
+import { createClient } from '@/lib/supabase/server'
 import { Button, Card, GoldDivider, ScrollReveal, SectionHeader } from '@/components/ui'
+import { PinnedAnnouncementsBanner } from '@/components/features/PinnedAnnouncementsBanner'
 
 export const metadata: Metadata = {
   title: {
@@ -15,30 +18,42 @@ export const metadata: Metadata = {
   },
 }
 
-const announcements = [
-  {
-    title: 'Great Lent Begins',
-    date: 'March 10, 2026',
-    description:
-      'The season of Great Lent begins this Monday. Join us for special evening prayers throughout the Lenten season.',
-  },
-  {
-    title: 'Annual General Body Meeting',
-    date: 'April 5, 2026',
-    description:
-      'The annual general body meeting will be held following Holy Qurbono. All members are encouraged to attend.',
-  },
-  {
-    title: 'Sunday School Registration',
-    date: 'Open Now',
-    description:
-      'Registration for the upcoming Sunday School year is now open. Contact the Sunday School superintendent for details.',
-  },
-]
+interface AnnouncementRow {
+  id: string
+  title: string
+  slug: string
+  body: unknown
+  priority: number
+  is_pinned: boolean
+  published_at: string
+}
 
-export default function HomePage() {
+export default async function HomePage() {
+  const supabase = await createClient()
+
+  // Fetch recent announcements for the section (max 3)
+  const { data: recentAnnouncements } = await supabase
+    .from('announcements')
+    .select('id, title, slug, body, priority, is_pinned, published_at')
+    .order('priority', { ascending: false })
+    .order('published_at', { ascending: false })
+    .limit(3)
+
+  // Fetch pinned announcements for the banner
+  const { data: pinnedAnnouncements } = await supabase
+    .from('announcements')
+    .select('id, title, slug, priority')
+    .eq('is_pinned', true)
+    .order('priority', { ascending: false })
+
+  const recent = (recentAnnouncements as AnnouncementRow[]) || []
+  const pinned = (pinnedAnnouncements as { id: string; title: string; slug: string; priority: number }[]) || []
+
   return (
     <>
+      {/* ── Pinned Announcements Banner ────────────────────────── */}
+      <PinnedAnnouncementsBanner announcements={pinned} />
+
       {/* ── Hero ─────────────────────────────────────────────── */}
       <section className="relative flex min-h-[calc(100svh-4rem)] items-center justify-center bg-charcoal">
         {/* TODO: Replace gradient with video/image background */}
@@ -128,26 +143,57 @@ export default function HomePage() {
         </ScrollReveal>
       </section>
 
-      {/* ── Announcements (static placeholder) ───────────────── */}
+      {/* ── Announcements ──────────────────────────────────────── */}
       <section className="bg-sand py-16 md:py-22 lg:py-28">
         <ScrollReveal className="mx-auto max-w-[1200px] px-4 sm:px-6 lg:px-8">
           <SectionHeader
             title="Announcements"
             subtitle="Stay up to date with the latest from our parish."
           />
-          <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {announcements.map((item) => (
-              <Card key={item.title} variant="outlined" className="h-full">
-                <Card.Body>
-                  <p className="text-sm font-medium text-burgundy-700">{item.date}</p>
-                  <h3 className="mt-2 font-heading text-xl font-semibold">{item.title}</h3>
-                  <p className="mt-3 text-sm leading-relaxed text-wood-800/80">
-                    {item.description}
-                  </p>
-                </Card.Body>
-              </Card>
-            ))}
-          </div>
+          {recent.length > 0 ? (
+            <>
+              <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {recent.map((item) => (
+                  <Link
+                    key={item.id}
+                    href={`/announcements/${item.slug}`}
+                    className="group block h-full"
+                  >
+                    <Card
+                      variant="outlined"
+                      className="h-full transition-shadow duration-200 group-hover:shadow-md"
+                    >
+                      <Card.Body>
+                        <time
+                          dateTime={item.published_at}
+                          className="text-sm font-medium text-burgundy-700"
+                        >
+                          {formatDate(item.published_at)}
+                        </time>
+                        <h3 className="mt-2 font-heading text-xl font-semibold text-wood-900 transition-colors group-hover:text-burgundy-700">
+                          {item.title}
+                        </h3>
+                        {extractPlainText(item.body) && (
+                          <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-wood-800/80">
+                            {extractPlainText(item.body)}
+                          </p>
+                        )}
+                      </Card.Body>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
+              <div className="mt-10 text-center">
+                <Button href="/announcements" variant="secondary">
+                  View All Announcements
+                </Button>
+              </div>
+            </>
+          ) : (
+            <p className="mt-12 text-center text-wood-800/60">
+              No announcements at this time. Check back soon.
+            </p>
+          )}
         </ScrollReveal>
       </section>
 
@@ -196,4 +242,38 @@ export default function HomePage() {
       </section>
     </>
   )
+}
+
+function formatDate(dateString: string): string {
+  return new Date(dateString).toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  })
+}
+
+function extractPlainText(body: unknown): string {
+  if (!body) return ''
+
+  let parsed: unknown = body
+  if (typeof parsed === 'string') {
+    try {
+      parsed = JSON.parse(parsed)
+    } catch {
+      return body as string
+    }
+  }
+
+  if (typeof parsed === 'object' && parsed !== null && 'content' in parsed) {
+    const doc = parsed as { content: Array<{ content?: Array<{ text?: string }> }> }
+    const texts: string[] = []
+    for (const node of doc.content || []) {
+      for (const child of node.content || []) {
+        if (child.text) texts.push(child.text)
+      }
+    }
+    return texts.join(' ')
+  }
+
+  return ''
 }
