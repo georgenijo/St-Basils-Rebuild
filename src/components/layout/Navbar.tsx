@@ -28,7 +28,7 @@ const navigation: NavItem[] = [
     label: 'About',
     children: [
       { label: 'Our History', href: '/about' },
-      { label: 'Our Spiritual Fathers', href: '/spiritual-leader' },
+      { label: 'Our Spiritual Fathers', href: '/spiritual-leaders' },
       { label: 'Our Clergy', href: '/our-clergy' },
       { label: 'Our Office Bearers', href: '/office-bearers' },
       { label: 'Our Acolytes & Choir', href: '/acolytes-choir' },
@@ -44,7 +44,7 @@ const navigation: NavItem[] = [
     ],
   },
   { label: 'Giving', href: '/giving' },
-  { label: 'Contact Us', href: '/contact-us' },
+  { label: 'Contact Us', href: '/contact' },
 ]
 
 // ─── Component ───────────────────────────────────────────────────────
@@ -57,9 +57,14 @@ export function Navbar({ className }: NavbarProps) {
   const pathname = usePathname()
   const navRef = useRef<HTMLElement>(null)
   const hamburgerRef = useRef<HTMLButtonElement>(null)
+  const [isClientReady, setIsClientReady] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
   const [activeAccordion, setActiveAccordion] = useState<string | null>(null)
+
+  useEffect(() => {
+    setIsClientReady(true)
+  }, [])
 
   // Close everything on route change
   useEffect(() => {
@@ -116,14 +121,13 @@ export function Navbar({ className }: NavbarProps) {
   return (
     <>
       {/* Backdrop overlay for mobile menu */}
-      <div
-        className={cn(
-          'fixed inset-0 z-40 bg-black/20 transition-opacity duration-300 xl:hidden',
-          mobileOpen ? 'opacity-100' : 'pointer-events-none opacity-0'
-        )}
-        aria-hidden="true"
-        onClick={() => setMobileOpen(false)}
-      />
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/20 xl:hidden"
+          aria-hidden="true"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
 
       <nav
         ref={navRef}
@@ -230,17 +234,24 @@ export function Navbar({ className }: NavbarProps) {
             </ul>
 
             {/* ── Hamburger button ── */}
-            <button
-              ref={hamburgerRef}
-              type="button"
-              className="flex h-11 w-11 items-center justify-center rounded-lg text-wood-800 transition-colors hover:text-burgundy-700 xl:hidden"
-              onClick={() => setMobileOpen(!mobileOpen)}
-              aria-expanded={mobileOpen}
-              aria-controls="mobile-menu"
-              aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
-            >
-              {mobileOpen ? <CloseIcon /> : <HamburgerIcon />}
-            </button>
+            {isClientReady ? (
+              <button
+                ref={hamburgerRef}
+                type="button"
+                className="flex h-11 w-11 items-center justify-center rounded-lg text-wood-800 transition-colors hover:text-burgundy-700 xl:hidden"
+                onClick={(event) => {
+                  event.stopPropagation()
+                  setMobileOpen((open) => !open)
+                }}
+                aria-expanded={mobileOpen}
+                aria-controls="mobile-menu"
+                aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+              >
+                {mobileOpen ? <CloseIcon /> : <HamburgerIcon />}
+              </button>
+            ) : (
+              <div className="h-11 w-11 xl:hidden" aria-hidden="true" />
+            )}
           </div>
         </div>
 
@@ -253,10 +264,9 @@ export function Navbar({ className }: NavbarProps) {
         {/* ── Mobile menu ── */}
         <div
           id="mobile-menu"
-          className={cn(
-            'overflow-hidden bg-cream-50 transition-all duration-300 ease-in-out motion-reduce:transition-none xl:hidden',
-            mobileOpen ? 'max-h-[calc(100vh-4.25rem)]' : 'max-h-0'
-          )}
+          hidden={!mobileOpen}
+          aria-hidden={!mobileOpen}
+          className="relative z-10 overflow-hidden bg-cream-50 xl:hidden"
         >
           <ul className="max-h-[calc(100vh-5rem)] space-y-1 overflow-y-auto px-4 py-4">
             {navigation.map((item) =>
