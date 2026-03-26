@@ -31,6 +31,25 @@
   /* Animations */
   --animate-drop-in: drop-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
   --animate-flicker: flicker 2s infinite ease-in-out;
+  --animate-fade-in-delay: fadeInDelay 2.5s ease-out 0.5s forwards;
+
+  @keyframes typewriter {
+    from { width: 0; }
+    to { width: 100%; }
+  }
+
+  @keyframes blinkCursor {
+    50% { border-color: transparent; }
+  }
+
+  @keyframes removeCursor {
+    to { border-right-color: transparent; }
+  }
+
+  @keyframes fadeInDelay {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
 
   @keyframes drop-in {
     from {
@@ -101,10 +120,31 @@ select:focus:not(:focus-visible),
   outline: none;
 }
 
+/* ─── Typewriter composite (multi-animation + structural styles) ─── */
+.typewriter-text {
+  display: inline-block;
+  overflow: hidden;
+  white-space: nowrap;
+  width: 0;
+  border-right: 3px solid var(--color-cream-50);
+  padding-right: 3px;
+  animation:
+    typewriter 2.5s steps(15, end) 0.5s forwards,
+    blinkCursor 0.75s step-end 0.5s 4,
+    removeCursor 0s 3.5s forwards;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-drop-in,
-  .animate-flicker {
+  .animate-flicker,
+  .animate-fade-in-delay {
     animation: none;
+  }
+
+  .typewriter-text {
+    animation: none;
+    width: auto;
+    border-right: none;
   }
 }
 

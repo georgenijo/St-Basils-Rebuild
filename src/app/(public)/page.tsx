@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { Button, Card, GoldDivider, ScrollReveal, SectionHeader } from '@/components/ui'
 import { PinnedAnnouncementsBanner } from '@/components/features/PinnedAnnouncementsBanner'
+import { HomeHero } from '@/components/features/HomeHero'
 
 export const metadata: Metadata = {
   title: {
@@ -56,42 +57,7 @@ export default async function HomePage() {
       <PinnedAnnouncementsBanner announcements={pinned} />
 
       {/* ── Hero ─────────────────────────────────────────────── */}
-      <section className="relative flex min-h-[calc(100svh-4rem)] items-center justify-center bg-charcoal">
-        {/* TODO: Replace gradient with video/image background */}
-        <div
-          className="pointer-events-none absolute inset-0 bg-gradient-to-b from-charcoal via-charcoal/90 to-charcoal/70"
-          aria-hidden="true"
-        />
-
-        <div className="relative z-10 mx-auto max-w-3xl px-4 text-center">
-          <h1 className="animate-drop-in font-heading text-[2.5rem] font-light leading-[1.1] text-cream-50 md:text-[4rem]">
-            St. Basil&#39;s Syriac Orthodox Church
-          </h1>
-          <p className="mt-6 text-lg leading-relaxed text-cream-50/80">
-            Serving the Jacobite Malayalee community in New England
-          </p>
-        </div>
-
-        {/* Scroll chevron */}
-        <div
-          className="pointer-events-none absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce motion-reduce:animate-none"
-          aria-hidden="true"
-        >
-          <svg
-            width="32"
-            height="32"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="text-cream-50/60"
-          >
-            <path d="M6 9l6 6 6-6" />
-          </svg>
-        </div>
-      </section>
+      <HomeHero />
 
       {/* ── Service Times Bar ────────────────────────────────── */}
       <section className="bg-burgundy-700 py-6 text-cream-50">
