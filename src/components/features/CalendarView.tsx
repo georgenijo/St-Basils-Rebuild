@@ -9,6 +9,7 @@ import listPlugin from '@fullcalendar/list'
 import interactionPlugin from '@fullcalendar/interaction'
 import rrulePlugin from '@fullcalendar/rrule'
 
+import { CHURCH_TIME_ZONE } from '@/lib/event-time'
 import type { EventClickArg } from '@fullcalendar/core'
 import type { CalendarEvent } from '@/components/features/EventCalendar'
 
@@ -58,6 +59,7 @@ export function CalendarView({ events }: CalendarViewProps) {
       events={coloredEvents}
       eventClick={handleEventClick}
       height="auto"
+      timeZone={CHURCH_TIME_ZONE}
       dayMaxEvents={3}
       eventDisplay="block"
       nowIndicator

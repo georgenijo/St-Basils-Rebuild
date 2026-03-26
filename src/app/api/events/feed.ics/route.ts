@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server'
 import { createEvents } from 'ics'
 
+import { toUtcDateArray } from '@/lib/event-time'
 import { createClient } from '@/lib/supabase/server'
 import { renderTiptapHTML } from '@/lib/tiptap'
 
-import type { EventAttributes, DateArray } from 'ics'
+import type { EventAttributes } from 'ics'
 
 interface EventRow {
   id: string
@@ -37,7 +38,7 @@ export async function GET() {
   }
 
   const icsEvents: EventAttributes[] = (events as EventRow[]).map((event) => {
-    const start = toDateArray(event.start_at)
+    const start = toUtcDateArray(event.start_at)
     const descriptionHtml = renderTiptapHTML(event.description)
     const description = descriptionHtml
       ? descriptionHtml.replace(/<[^>]*>/g, '').trim()
@@ -54,7 +55,7 @@ export async function GET() {
       start,
       startInputType: 'utc',
       ...(event.end_at
-        ? { end: toDateArray(event.end_at), endInputType: 'utc' as const }
+        ? { end: toUtcDateArray(event.end_at), endInputType: 'utc' as const }
         : { duration: { hours: 1 } }),
       ...(description && { description }),
       ...(event.location && { location: event.location }),
@@ -85,15 +86,4 @@ export async function GET() {
       'Cache-Control': 'public, max-age=3600, s-maxage=3600',
     },
   })
-}
-
-function toDateArray(isoString: string): DateArray {
-  const d = new Date(isoString)
-  return [
-    d.getUTCFullYear(),
-    d.getUTCMonth() + 1,
-    d.getUTCDate(),
-    d.getUTCHours(),
-    d.getUTCMinutes(),
-  ]
 }

@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useState, useMemo } from 'react'
 
+import { formatInChurchTimeZone } from '@/lib/event-time'
 import { cn } from '@/lib/utils'
 import { DeleteEventDialog } from '@/components/features/DeleteEventDialog'
 
@@ -37,12 +38,13 @@ const CATEGORY_COLORS: Record<string, string> = {
 }
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-US', {
+  return formatInChurchTimeZone(iso, {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
     hour: 'numeric',
     minute: '2-digit',
+    timeZoneName: 'short',
   })
 }
 

@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+import { buildRecurrenceUntilTimestamp, parseRRuleUntilToDateInput } from '@/lib/event-time'
+
 export const eventCategory = z.enum(['liturgical', 'community', 'special'])
 
 export type EventCategory = z.infer<typeof eventCategory>
@@ -42,7 +44,7 @@ export const eventSchema = z
   .refine(
     (data) => {
       if (data.end_at && data.start_at) {
-        return new Date(data.end_at) > new Date(data.start_at)
+        return data.end_at > data.start_at
       }
       return true
     },
@@ -66,6 +68,7 @@ export function buildRRuleString(data: {
   byDay?: string
   until?: string
   count?: string
+  startsAtLocal?: string
 }): string {
   const parts = [`FREQ=${data.frequency}`]
 
@@ -74,8 +77,13 @@ export function buildRRuleString(data: {
   }
 
   if (data.until) {
-    const d = new Date(data.until)
-    parts.push(`UNTIL=${d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')}`)
+    const untilTimestamp =
+      data.startsAtLocal &&
+      buildRecurrenceUntilTimestamp(data.until, data.startsAtLocal)
+
+    if (untilTimestamp) {
+      parts.push(`UNTIL=${untilTimestamp}`)
+    }
   } else if (data.count) {
     parts.push(`COUNT=${data.count}`)
   }
@@ -99,9 +107,7 @@ export function parseRRuleString(rrule: string): {
 
   let until = ''
   if (map.UNTIL) {
-    // Parse YYYYMMDDTHHMMSSZ back to YYYY-MM-DD
-    const raw = map.UNTIL
-    until = `${raw.slice(0, 4)}-${raw.slice(4, 6)}-${raw.slice(6, 8)}`
+    until = parseRRuleUntilToDateInput(map.UNTIL)
   }
 
   return {

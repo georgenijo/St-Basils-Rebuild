@@ -2,6 +2,11 @@
 
 import { revalidatePath } from 'next/cache'
 
+import {
+  CHURCH_TIME_ZONE,
+  buildRecurrenceUntilIso,
+  parseDatetimeLocalInTimeZone,
+} from '@/lib/event-time'
 import { createClient } from '@/lib/supabase/server'
 import { eventSchema, buildRRuleString } from '@/lib/validators/event'
 
@@ -11,10 +16,29 @@ type ActionState = {
   errors?: Record<string, string[]>
 }
 
+function invalidTimeError(field: 'start_at' | 'end_at' | 'rrule_until'): ActionState {
+  const label =
+    field === 'rrule_until'
+      ? 'Recurrence end date'
+      : field === 'start_at'
+        ? 'Start date/time'
+        : 'End date/time'
+
+  return {
+    success: false,
+    message: 'Validation failed',
+    errors: {
+      [field]: [`${label} is invalid for ${CHURCH_TIME_ZONE}.`],
+    },
+  }
+}
+
 export async function createEvent(
   prevState: ActionState,
   formData: FormData
 ): Promise<ActionState> {
+  console.log('[createEvent] Called with formData keys:', [...formData.keys()])
+
   // 1. Validate with Zod
   const parsed = eventSchema.safeParse({
     title: formData.get('title'),
@@ -25,13 +49,14 @@ export async function createEvent(
     end_at: formData.get('end_at'),
     is_recurring: formData.get('is_recurring') === 'true',
     category: formData.get('category'),
-    rrule_frequency: formData.get('rrule_frequency'),
-    rrule_by_day: formData.get('rrule_by_day'),
-    rrule_until: formData.get('rrule_until'),
-    rrule_count: formData.get('rrule_count'),
+    rrule_frequency: formData.get('rrule_frequency') ?? '',
+    rrule_by_day: formData.get('rrule_by_day') ?? '',
+    rrule_until: formData.get('rrule_until') ?? '',
+    rrule_count: formData.get('rrule_count') ?? '',
   })
 
   if (!parsed.success) {
+    console.error('[createEvent] Zod validation failed:', JSON.stringify(parsed.error.flatten().fieldErrors))
     return {
       success: false,
       message: 'Validation failed',
@@ -39,12 +64,47 @@ export async function createEvent(
     }
   }
 
+  console.log('[createEvent] Validation passed:', { title: parsed.data.title, slug: parsed.data.slug, start_at: parsed.data.start_at, category: parsed.data.category })
+
+  const startAt = parseDatetimeLocalInTimeZone(parsed.data.start_at)
+  if (!startAt) {
+    console.error('[createEvent] Failed to parse start_at timezone:', parsed.data.start_at)
+    return invalidTimeError('start_at')
+  }
+  console.log('[createEvent] Timezone conversion:', parsed.data.start_at, '→', startAt)
+
+  const endAt = parsed.data.end_at
+    ? parseDatetimeLocalInTimeZone(parsed.data.end_at)
+    : null
+
+  if (parsed.data.end_at && !endAt) return invalidTimeError('end_at')
+
+  if (endAt && new Date(endAt) <= new Date(startAt)) {
+    return {
+      success: false,
+      message: 'Validation failed',
+      errors: { end_at: ['End date must be after start date'] },
+    }
+  }
+
+  const recurrenceUntil = parsed.data.rrule_until
+    ? buildRecurrenceUntilIso(parsed.data.rrule_until, parsed.data.start_at)
+    : null
+
+  if (parsed.data.rrule_until && !recurrenceUntil) {
+    return invalidTimeError('rrule_until')
+  }
+
   // 2. Auth check
   const supabase = await createClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
-  if (!user) return { success: false, message: 'Unauthorized' }
+  if (!user) {
+    console.error('[createEvent] User not authenticated')
+    return { success: false, message: 'Unauthorized' }
+  }
+  console.log('[createEvent] Auth OK, user:', user.email)
 
   // 3. Parse description JSON
   let descriptionJson = null
@@ -57,6 +117,7 @@ export async function createEvent(
   }
 
   // 4. Insert event
+  console.log('[createEvent] Inserting event...')
   const { data: event, error } = await supabase
     .from('events')
     .insert({
@@ -64,8 +125,8 @@ export async function createEvent(
       slug: parsed.data.slug,
       description: descriptionJson,
       location: parsed.data.location || null,
-      start_at: parsed.data.start_at,
-      end_at: parsed.data.end_at || null,
+      start_at: startAt,
+      end_at: endAt,
       is_recurring: parsed.data.is_recurring,
       category: parsed.data.category,
       created_by: user.id,
@@ -74,11 +135,13 @@ export async function createEvent(
     .single()
 
   if (error) {
+    console.error('[createEvent] DB insert failed:', error.code, error.message, error.details)
     if (error.code === '23505') {
       return { success: false, message: 'An event with this slug already exists', errors: { slug: ['Slug is already taken'] } }
     }
     return { success: false, message: 'Failed to create event' }
   }
+  console.log('[createEvent] Event created:', event.id)
 
   // 5. Insert recurrence rule if recurring
   if (parsed.data.is_recurring && parsed.data.rrule_frequency) {
@@ -87,13 +150,14 @@ export async function createEvent(
       byDay: parsed.data.rrule_by_day || undefined,
       until: parsed.data.rrule_until || undefined,
       count: parsed.data.rrule_count || undefined,
+      startsAtLocal: parsed.data.start_at,
     })
 
     const { error: rruleError } = await supabase.from('recurrence_rules').insert({
       event_id: event.id,
       rrule_string: rruleString,
-      dtstart: parsed.data.start_at,
-      until: parsed.data.rrule_until || null,
+      dtstart: startAt,
+      until: recurrenceUntil,
     })
 
     if (rruleError) {
@@ -124,10 +188,10 @@ export async function updateEvent(
     end_at: formData.get('end_at'),
     is_recurring: formData.get('is_recurring') === 'true',
     category: formData.get('category'),
-    rrule_frequency: formData.get('rrule_frequency'),
-    rrule_by_day: formData.get('rrule_by_day'),
-    rrule_until: formData.get('rrule_until'),
-    rrule_count: formData.get('rrule_count'),
+    rrule_frequency: formData.get('rrule_frequency') ?? '',
+    rrule_by_day: formData.get('rrule_by_day') ?? '',
+    rrule_until: formData.get('rrule_until') ?? '',
+    rrule_count: formData.get('rrule_count') ?? '',
   })
 
   if (!parsed.success) {
@@ -136,6 +200,31 @@ export async function updateEvent(
       message: 'Validation failed',
       errors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
     }
+  }
+
+  const startAt = parseDatetimeLocalInTimeZone(parsed.data.start_at)
+  if (!startAt) return invalidTimeError('start_at')
+
+  const endAt = parsed.data.end_at
+    ? parseDatetimeLocalInTimeZone(parsed.data.end_at)
+    : null
+
+  if (parsed.data.end_at && !endAt) return invalidTimeError('end_at')
+
+  if (endAt && new Date(endAt) <= new Date(startAt)) {
+    return {
+      success: false,
+      message: 'Validation failed',
+      errors: { end_at: ['End date must be after start date'] },
+    }
+  }
+
+  const recurrenceUntil = parsed.data.rrule_until
+    ? buildRecurrenceUntilIso(parsed.data.rrule_until, parsed.data.start_at)
+    : null
+
+  if (parsed.data.rrule_until && !recurrenceUntil) {
+    return invalidTimeError('rrule_until')
   }
 
   // 2. Auth check
@@ -163,8 +252,8 @@ export async function updateEvent(
       slug: parsed.data.slug,
       description: descriptionJson,
       location: parsed.data.location || null,
-      start_at: parsed.data.start_at,
-      end_at: parsed.data.end_at || null,
+      start_at: startAt,
+      end_at: endAt,
       is_recurring: parsed.data.is_recurring,
       category: parsed.data.category,
     })
@@ -184,6 +273,7 @@ export async function updateEvent(
       byDay: parsed.data.rrule_by_day || undefined,
       until: parsed.data.rrule_until || undefined,
       count: parsed.data.rrule_count || undefined,
+      startsAtLocal: parsed.data.start_at,
     })
 
     // Delete existing rules and insert new one
@@ -191,8 +281,8 @@ export async function updateEvent(
     const { error: rruleError } = await supabase.from('recurrence_rules').insert({
       event_id: eventId,
       rrule_string: rruleString,
-      dtstart: parsed.data.start_at,
-      until: parsed.data.rrule_until || null,
+      dtstart: startAt,
+      until: recurrenceUntil,
     })
 
     if (rruleError) {

@@ -3,6 +3,7 @@
 import { useCallback } from 'react'
 
 import { Button } from '@/components/ui'
+import { toUtcDateArray } from '@/lib/event-time'
 
 interface AddToCalendarProps {
   title: string
@@ -24,13 +25,13 @@ export function AddToCalendar({
   const handleDownload = useCallback(async () => {
     const { createEvent } = await import('ics')
 
-    const start = toDateArray(startAt)
+    const start = toUtcDateArray(startAt)
     const eventAttrs: Parameters<typeof createEvent>[0] = {
       title,
       start,
       startInputType: 'utc',
       ...(endAt
-        ? { end: toDateArray(endAt), endInputType: 'utc' }
+        ? { end: toUtcDateArray(endAt), endInputType: 'utc' }
         : { duration: { hours: 1 } }),
       ...(description && { description }),
       ...(location && { location }),
@@ -72,15 +73,4 @@ export function AddToCalendar({
       Add to Calendar
     </Button>
   )
-}
-
-function toDateArray(isoString: string): [number, number, number, number, number] {
-  const d = new Date(isoString)
-  return [
-    d.getUTCFullYear(),
-    d.getUTCMonth() + 1,
-    d.getUTCDate(),
-    d.getUTCHours(),
-    d.getUTCMinutes(),
-  ]
 }

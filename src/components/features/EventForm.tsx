@@ -6,6 +6,11 @@ import { createEvent, updateEvent } from '@/actions/events'
 import { Button } from '@/components/ui'
 import { RRuleBuilder } from '@/components/features/RRuleBuilder'
 import { TiptapEditor } from '@/components/features/TiptapEditor'
+import {
+  CHURCH_TIME_ZONE,
+  formatIsoForDatetimeLocal,
+  parseRRuleUntilToDateInput,
+} from '@/lib/event-time'
 import { slugify } from '@/lib/validators/event'
 import { cn } from '@/lib/utils'
 
@@ -86,8 +91,7 @@ export function EventForm({ event }: EventFormProps) {
       setRruleFrequency(map.FREQ || '')
       setRruleByDay(map.BYDAY ? map.BYDAY.split(',') : [])
       if (map.UNTIL) {
-        const raw = map.UNTIL
-        setRruleUntil(`${raw.slice(0, 4)}-${raw.slice(4, 6)}-${raw.slice(6, 8)}`)
+        setRruleUntil(parseRRuleUntilToDateInput(map.UNTIL))
       }
       if (map.COUNT) setRruleCount(map.COUNT)
     }
@@ -106,15 +110,6 @@ export function EventForm({ event }: EventFormProps) {
       window.location.href = '/admin/events'
     }
   }, [state.success])
-
-  // Format datetime for input
-  function toDatetimeLocal(iso: string | null | undefined): string {
-    if (!iso) return ''
-    const d = new Date(iso)
-    const pad = (n: number) => n.toString().padStart(2, '0')
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
-  }
-
   return (
     <form ref={formRef} action={formAction} className="space-y-6">
       {isEditing && (
@@ -269,7 +264,7 @@ export function EventForm({ event }: EventFormProps) {
             id="start_at"
             name="start_at"
             required
-            defaultValue={toDatetimeLocal(event?.start_at)}
+            defaultValue={formatIsoForDatetimeLocal(event?.start_at)}
             className={cn(
               inputBase,
               state.errors?.start_at && 'border-red-400'
@@ -288,7 +283,7 @@ export function EventForm({ event }: EventFormProps) {
             type="datetime-local"
             id="end_at"
             name="end_at"
-            defaultValue={toDatetimeLocal(event?.end_at)}
+            defaultValue={formatIsoForDatetimeLocal(event?.end_at)}
             className={cn(
               inputBase,
               state.errors?.end_at && 'border-red-400'
@@ -297,6 +292,9 @@ export function EventForm({ event }: EventFormProps) {
           <FieldError errors={state.errors?.end_at} />
         </div>
       </div>
+      <p className="text-sm text-wood-800/60">
+        Event times are entered and displayed in Eastern Time ({CHURCH_TIME_ZONE}).
+      </p>
 
       {/* Recurring toggle */}
       <div className="flex items-center gap-3">

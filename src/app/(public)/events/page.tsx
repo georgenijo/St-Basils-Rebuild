@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 
+import { toRRuleUtcTimestamp } from '@/lib/event-time'
 import { createClient } from '@/lib/supabase/server'
 import { breadcrumbSchema } from '@/lib/structured-data'
 import { PageHero, SectionHeader, ScrollReveal, JsonLd } from '@/components/ui'
@@ -49,11 +50,7 @@ function transformEvents(events: EventRow[]): CalendarEvent[] {
 
     if (event.is_recurring && event.recurrence_rules.length > 0) {
       const rule = event.recurrence_rules[0]
-      const dtstart = new Date(rule.dtstart)
-        .toISOString()
-        .replace(/[-:]/g, '')
-        .split('.')[0]
-      const rruleStr = `DTSTART:${dtstart}Z\nRRULE:${rule.rrule_string}`
+      const rruleStr = `DTSTART:${toRRuleUtcTimestamp(rule.dtstart)}\nRRULE:${rule.rrule_string}`
 
       let duration: string | undefined
       if (event.end_at) {

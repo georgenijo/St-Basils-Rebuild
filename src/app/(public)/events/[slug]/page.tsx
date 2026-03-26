@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
+import { formatInChurchTimeZone, getChurchTimeZoneName } from '@/lib/event-time'
 import { createClient } from '@/lib/supabase/server'
 import { renderTiptapHTML } from '@/lib/tiptap'
 import { describeRecurrence } from '@/lib/recurrence'
@@ -96,8 +97,6 @@ export default async function EventDetailPage({ params }: PageProps) {
 
   if (!event) notFound()
 
-  const startDate = new Date(event.start_at)
-  const endDate = event.end_at ? new Date(event.end_at) : null
   const descriptionHtml = renderTiptapHTML(event.description)
   const recurrenceRule = event.is_recurring && event.recurrence_rules.length > 0
     ? event.recurrence_rules[0]
@@ -187,7 +186,7 @@ export default async function EventDetailPage({ params }: PageProps) {
                     </svg>
                   }
                   label="Date"
-                  value={formatDate(startDate)}
+                  value={formatDate(event.start_at)}
                 />
 
                 <DetailRow
@@ -198,7 +197,7 @@ export default async function EventDetailPage({ params }: PageProps) {
                     </svg>
                   }
                   label="Time"
-                  value={formatTimeRange(startDate, endDate)}
+                  value={formatTimeRange(event.start_at, event.end_at)}
                 />
 
                 {/* Location */}
@@ -291,8 +290,8 @@ function DetailRow({
   )
 }
 
-function formatDate(date: Date): string {
-  return date.toLocaleDateString('en-US', {
+function formatDate(isoString: string): string {
+  return formatInChurchTimeZone(isoString, {
     weekday: 'long',
     month: 'long',
     day: 'numeric',
@@ -300,20 +299,21 @@ function formatDate(date: Date): string {
   })
 }
 
-function formatTimeRange(start: Date, end: Date | null): string {
-  const startTime = start.toLocaleTimeString('en-US', {
+function formatTimeRange(startIso: string, endIso: string | null): string {
+  const startTime = formatInChurchTimeZone(startIso, {
+    hour: 'numeric',
+    minute: '2-digit',
+  })
+  const timeZoneName = getChurchTimeZoneName(startIso)
+
+  if (!endIso) return `${startTime} ${timeZoneName}`
+
+  const endTime = formatInChurchTimeZone(endIso, {
     hour: 'numeric',
     minute: '2-digit',
   })
 
-  if (!end) return startTime
-
-  const endTime = end.toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-  })
-
-  return `${startTime} \u2013 ${endTime}`
+  return `${startTime} \u2013 ${endTime} ${timeZoneName}`
 }
 
 function stripHtml(html: string): string {
