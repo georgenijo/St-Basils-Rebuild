@@ -12,6 +12,7 @@
     "format:check": "prettier --check ."
   },
   "dependencies": {
+    "@marsidev/react-turnstile": "^1.4.2",
     "@react-email/components": "^1.0.10",
     "@sanity/image-url": "^2.0.3",
     "@sanity/vision": "^4.22.0",
