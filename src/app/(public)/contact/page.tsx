@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { PageHero, SectionHeader, Card } from '@/components/ui'
 import { ScrollReveal } from '@/components/ui/ScrollReveal'
 import { ContactForm } from '@/components/features/ContactForm'
+import { LazyMap } from '@/components/features/LazyMap'
 
 export const metadata: Metadata = {
   title: 'Contact Us',
@@ -126,8 +127,25 @@ export default function ContactPage() {
         </div>
       </section>
 
-      {/* Contact Form */}
+      {/* Google Maps Embed */}
       <section className="bg-cream-50 py-16 md:py-22 lg:py-28">
+        <div className="mx-auto max-w-[1200px] px-4 sm:px-6 lg:px-8">
+          <ScrollReveal>
+            <SectionHeader title="Find Us" as="h2" />
+          </ScrollReveal>
+
+          <ScrollReveal className="mt-10">
+            <LazyMap
+              src="https://maps.google.com/maps?q=73+Ellis+Street,+Newton,+MA+02464&z=15&output=embed"
+              title="St. Basil's Syriac Orthodox Church location at 73 Ellis Street, Newton, MA"
+              className="aspect-video shadow-md"
+            />
+          </ScrollReveal>
+        </div>
+      </section>
+
+      {/* Contact Form */}
+      <section className="bg-sand py-16 md:py-22 lg:py-28">
         <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
           <ScrollReveal>
             <SectionHeader
