@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 
+import { parseDatetimeLocalInTimeZone, CHURCH_TIME_ZONE } from '@/lib/event-time'
 import { createClient } from '@/lib/supabase/server'
 import { announcementSchema } from '@/lib/validators/announcement'
 
@@ -35,14 +36,27 @@ export async function createAnnouncement(
     }
   }
 
-  // 2. Auth check
+  // 2. Convert expires_at to UTC
+  let expiresAtUtc: string | null = null
+  if (parsed.data.expires_at) {
+    expiresAtUtc = parseDatetimeLocalInTimeZone(parsed.data.expires_at)
+    if (!expiresAtUtc) {
+      return {
+        success: false,
+        message: 'Validation failed',
+        errors: { expires_at: [`Expiry time is invalid for ${CHURCH_TIME_ZONE}.`] },
+      }
+    }
+  }
+
+  // 3. Auth check
   const supabase = await createClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
   if (!user) return { success: false, message: 'Unauthorized' }
 
-  // 3. Parse body JSON
+  // 4. Parse body JSON
   let bodyJson = null
   if (parsed.data.body) {
     try {
@@ -52,7 +66,7 @@ export async function createAnnouncement(
     }
   }
 
-  // 4. Insert announcement
+  // 5. Insert announcement
   const { error } = await supabase
     .from('announcements')
     .insert({
@@ -61,7 +75,7 @@ export async function createAnnouncement(
       body: bodyJson,
       priority: parsed.data.priority,
       is_pinned: parsed.data.is_pinned,
-      expires_at: parsed.data.expires_at || null,
+      expires_at: expiresAtUtc,
       send_email: parsed.data.send_email,
       published_at: parsed.data.published ? new Date().toISOString() : null,
       author_id: user.id,
@@ -74,7 +88,7 @@ export async function createAnnouncement(
     return { success: false, message: 'Failed to create announcement' }
   }
 
-  // 5. Revalidate and return
+  // 6. Revalidate and return
   revalidatePath('/admin/announcements')
   return { success: true, message: 'Announcement created successfully' }
 }
@@ -106,21 +120,34 @@ export async function updateAnnouncement(
     }
   }
 
-  // 2. Auth check
+  // 2. Convert expires_at to UTC
+  let expiresAtUtc: string | null = null
+  if (parsed.data.expires_at) {
+    expiresAtUtc = parseDatetimeLocalInTimeZone(parsed.data.expires_at)
+    if (!expiresAtUtc) {
+      return {
+        success: false,
+        message: 'Validation failed',
+        errors: { expires_at: [`Expiry time is invalid for ${CHURCH_TIME_ZONE}.`] },
+      }
+    }
+  }
+
+  // 3. Auth check
   const supabase = await createClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
   if (!user) return { success: false, message: 'Unauthorized' }
 
-  // 3. Fetch existing to check published_at transition
+  // 4. Fetch existing to check published_at transition
   const { data: existing } = await supabase
     .from('announcements')
     .select('published_at')
     .eq('id', announcementId)
     .single()
 
-  // 4. Parse body JSON
+  // 5. Parse body JSON
   let bodyJson = null
   if (parsed.data.body) {
     try {
@@ -130,14 +157,14 @@ export async function updateAnnouncement(
     }
   }
 
-  // 5. Determine published_at
+  // 6. Determine published_at
   let publishedAt: string | null = null
   if (parsed.data.published) {
     // Keep existing published_at if already published, otherwise set now
     publishedAt = existing?.published_at ?? new Date().toISOString()
   }
 
-  // 6. Update announcement
+  // 7. Update announcement
   const { error } = await supabase
     .from('announcements')
     .update({
@@ -146,7 +173,7 @@ export async function updateAnnouncement(
       body: bodyJson,
       priority: parsed.data.priority,
       is_pinned: parsed.data.is_pinned,
-      expires_at: parsed.data.expires_at || null,
+      expires_at: expiresAtUtc,
       send_email: parsed.data.send_email,
       published_at: publishedAt,
     })

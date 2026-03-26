@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
+import { formatInChurchTimeZone } from '@/lib/event-time'
 import { createClient } from '@/lib/supabase/server'
 import { renderTiptapHTML } from '@/lib/tiptap'
 import { articleSchema, breadcrumbSchema } from '@/lib/structured-data'
@@ -253,7 +254,7 @@ function DetailRow({
 }
 
 function formatDate(dateString: string): string {
-  return new Date(dateString).toLocaleDateString('en-US', {
+  return formatInChurchTimeZone(dateString, {
     weekday: 'long',
     month: 'long',
     day: 'numeric',

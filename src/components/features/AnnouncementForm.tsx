@@ -5,6 +5,7 @@ import { useActionState, useState, useEffect, useRef } from 'react'
 import { createAnnouncement, updateAnnouncement } from '@/actions/announcements'
 import { Button } from '@/components/ui'
 import { TiptapEditor } from '@/components/features/TiptapEditor'
+import { CHURCH_TIME_ZONE, formatIsoForDatetimeLocal } from '@/lib/event-time'
 import { slugify } from '@/lib/validators/event'
 import { cn } from '@/lib/utils'
 
@@ -79,14 +80,6 @@ export function AnnouncementForm({ announcement }: AnnouncementFormProps) {
       window.location.href = '/admin/announcements'
     }
   }, [state.success])
-
-  // Format datetime for input
-  function toDatetimeLocal(iso: string | null | undefined): string {
-    if (!iso) return ''
-    const d = new Date(iso)
-    const pad = (n: number) => n.toString().padStart(2, '0')
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
-  }
 
   return (
     <form ref={formRef} action={formAction} className="space-y-6">
@@ -220,11 +213,11 @@ export function AnnouncementForm({ announcement }: AnnouncementFormProps) {
           type="datetime-local"
           id="expires_at"
           name="expires_at"
-          defaultValue={toDatetimeLocal(announcement?.expires_at)}
+          defaultValue={formatIsoForDatetimeLocal(announcement?.expires_at)}
           className={cn(inputBase, state.errors?.expires_at && 'border-red-400')}
         />
         <p className="mt-1 font-body text-xs text-wood-800/50">
-          Leave empty for no expiration.
+          Leave empty for no expiration. Times are in Eastern Time ({CHURCH_TIME_ZONE}).
         </p>
         <FieldError errors={state.errors?.expires_at} />
       </div>
