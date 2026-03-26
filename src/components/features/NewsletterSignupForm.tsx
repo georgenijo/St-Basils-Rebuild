@@ -37,7 +37,7 @@ export function NewsletterSignupForm({
 
   if (state.success) {
     return (
-      <div className={cn('rounded-2xl p-6 text-center', isDark ? 'bg-cream-50/10' : 'border border-green-200 bg-green-50', className)}>
+      <div className={cn('rounded-2xl p-6 text-center', isDark ? 'bg-cream-50/10' : 'border border-green-200 bg-green-50', className)} role="status" aria-live="polite">
         <div className={cn(
           'mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full',
           isDark ? 'bg-cream-50/20' : 'bg-green-100'
@@ -97,10 +97,10 @@ export function NewsletterSignupForm({
             placeholder="Enter your email"
             aria-label="Email address for newsletter signup"
             className={cn(
-              'min-w-0 flex-1 rounded-lg border px-4 py-2.5 font-body text-sm transition-colors focus:outline-none focus:ring-2',
+              'min-w-0 flex-1 rounded-lg border px-4 py-2.5 font-body text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
               isDark
-                ? 'border-cream-50/20 bg-cream-50/10 text-cream-50 placeholder:text-cream-50/40 focus:border-cream-50/40 focus:ring-cream-50/20'
-                : 'border-wood-800/20 bg-cream-50 text-wood-800 placeholder:text-wood-800/40 focus:border-burgundy-700 focus:ring-burgundy-700/20',
+                ? 'border-cream-50/20 bg-cream-50/10 text-cream-50 placeholder:text-cream-50/40 focus-visible:border-cream-50/40 focus-visible:ring-cream-50'
+                : 'border-wood-800/20 bg-cream-50 text-wood-800 placeholder:text-wood-800/40 focus-visible:border-burgundy-700 focus-visible:ring-burgundy-700',
               state.errors?.email && (isDark ? 'border-red-400/60' : 'border-red-400')
             )}
           />

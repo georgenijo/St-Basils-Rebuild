@@ -40,7 +40,7 @@ export function LoginForm({ redirectTo }: LoginFormProps) {
           type="email"
           autoComplete="email"
           required
-          className="block w-full rounded-lg border border-wood-800/20 bg-cream-50 px-4 py-3 text-wood-800 placeholder:text-wood-800/40 focus:border-burgundy-700 focus:outline-none focus:ring-2 focus:ring-burgundy-700/20"
+          className="block w-full rounded-lg border border-wood-800/20 bg-cream-50 px-4 py-3 text-wood-800 placeholder:text-wood-800/40 focus-visible:border-burgundy-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-burgundy-700 focus-visible:ring-offset-2"
           placeholder="you@example.com"
         />
         {state.errors?.email && (
@@ -58,7 +58,7 @@ export function LoginForm({ redirectTo }: LoginFormProps) {
           type="password"
           autoComplete="current-password"
           required
-          className="block w-full rounded-lg border border-wood-800/20 bg-cream-50 px-4 py-3 text-wood-800 placeholder:text-wood-800/40 focus:border-burgundy-700 focus:outline-none focus:ring-2 focus:ring-burgundy-700/20"
+          className="block w-full rounded-lg border border-wood-800/20 bg-cream-50 px-4 py-3 text-wood-800 placeholder:text-wood-800/40 focus-visible:border-burgundy-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-burgundy-700 focus-visible:ring-offset-2"
           placeholder="Enter your password"
         />
         {state.errors?.password && (

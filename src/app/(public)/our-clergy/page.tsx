@@ -246,12 +246,12 @@ export default async function OurClergyPage() {
                         )}
                       </div>
 
-                      <h3 className="font-heading text-xl font-semibold text-burgundy-700 md:text-2xl">
+                      <p className="font-heading text-xl font-semibold text-burgundy-700 md:text-2xl">
                         In Loving Memory
-                      </h3>
-                      <h4 className="mt-2 font-heading text-lg font-semibold text-wood-900 md:text-xl">
+                      </p>
+                      <h3 className="mt-2 font-heading text-lg font-semibold text-wood-900 md:text-xl">
                         {member.name}
-                      </h4>
+                      </h3>
                       {member.role && (
                         <p className="mt-1 text-sm text-wood-800/60 italic">{member.role}</p>
                       )}

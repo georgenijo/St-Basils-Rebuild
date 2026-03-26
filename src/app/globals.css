@@ -79,6 +79,27 @@ h6 {
   color: var(--color-wood-900);
 }
 
+/* ─── Focus-visible styles (WCAG 2.1 AA) ─── */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--color-burgundy-700);
+  outline-offset: 2px;
+}
+
+/* Remove default outline on focus (non-visible) to avoid double rings */
+a:focus:not(:focus-visible),
+button:focus:not(:focus-visible),
+input:focus:not(:focus-visible),
+textarea:focus:not(:focus-visible),
+select:focus:not(:focus-visible),
+[tabindex]:focus:not(:focus-visible) {
+  outline: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-drop-in {
     animation: none;
@@ -162,4 +183,16 @@ h6 {
 .fc .fc-toolbar {
   flex-wrap: wrap;
   gap: 0.5rem;
+}
+
+.fc .fc-button:focus-visible {
+  outline: 2px solid var(--color-burgundy-700);
+  outline-offset: 2px;
+  box-shadow: none;
+}
+
+.fc .fc-daygrid-day:focus-visible,
+.fc .fc-event:focus-visible {
+  outline: 2px solid var(--color-burgundy-700);
+  outline-offset: -2px;
 }
