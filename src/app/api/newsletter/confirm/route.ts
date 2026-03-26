@@ -1,6 +1,8 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 
+import { addContactToAudience } from '@/lib/resend'
+
 export async function GET(req: NextRequest) {
   const token = req.nextUrl.searchParams.get('token')
 
@@ -16,7 +18,7 @@ export async function GET(req: NextRequest) {
   // Look up subscriber by confirmation token
   const { data: subscriber, error: fetchError } = await supabase
     .from('email_subscribers')
-    .select('id, confirmed')
+    .select('id, email, confirmed')
     .eq('confirmation_token', token)
     .single()
 
@@ -41,6 +43,9 @@ export async function GET(req: NextRequest) {
     console.error('Failed to confirm subscriber:', updateError)
     return NextResponse.redirect(new URL('/?confirmed=error', req.url))
   }
+
+  // Sync to Resend Audience
+  await addContactToAudience(subscriber.email)
 
   return NextResponse.redirect(new URL('/?confirmed=success', req.url))
 }

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 
 import { createClient } from '@/lib/supabase/server'
 import { Card } from '@/components/ui'
@@ -71,20 +72,19 @@ export default async function DashboardPage() {
         </h2>
         <div className="mt-4 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {placeholderCards.map((card) => (
-            <Card key={card.title} variant="outlined" className="p-6">
-              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-burgundy-100 text-burgundy-700">
-                {card.icon}
-              </div>
-              <h3 className="font-heading text-lg font-semibold text-wood-900">
-                {card.title}
-              </h3>
-              <p className="mt-1 text-sm text-wood-800/60">
-                {card.description}
-              </p>
-              <p className="mt-4 text-xs font-medium text-wood-800/40">
-                Coming soon
-              </p>
-            </Card>
+            <Link key={card.title} href={card.href}>
+              <Card variant="outlined" className="p-6 transition-shadow hover:shadow-md">
+                <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-burgundy-100 text-burgundy-700">
+                  {card.icon}
+                </div>
+                <h3 className="font-heading text-lg font-semibold text-wood-900">
+                  {card.title}
+                </h3>
+                <p className="mt-1 text-sm text-wood-800/60">
+                  {card.description}
+                </p>
+              </Card>
+            </Link>
           ))}
         </div>
       </section>
