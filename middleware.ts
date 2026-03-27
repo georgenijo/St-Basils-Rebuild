@@ -1,3 +1,4 @@
+// Relative import required — @/ alias doesn't resolve in Vercel's Edge Function bundler
 import { updateSession } from './src/lib/supabase/middleware'
 import type { NextRequest } from 'next/server'
 
