@@ -5,6 +5,7 @@ import type { Metadata } from 'next'
 
 import { createClient } from '@/lib/supabase/server'
 import { LoginForm } from '@/components/features/LoginForm'
+import { isValidRedirectUrl } from '@/lib/validators/redirect'
 
 export const metadata: Metadata = {
   title: 'Login',
@@ -22,14 +23,20 @@ export default async function LoginPage({
   } = await supabase.auth.getUser()
 
   const { redirectTo } = await searchParams
-  const destination = redirectTo || '/admin/dashboard'
+  const destination =
+    redirectTo && isValidRedirectUrl(redirectTo) ? redirectTo : '/admin/dashboard'
 
   if (user) {
     redirect(destination)
   }
 
-  // Auto-login bypass for dev/preview environments
-  if (process.env.DEV_ADMIN_BYPASS === 'true') {
+  // Auto-login bypass for dev/preview environments (blocked in production)
+  if (
+    process.env.DEV_ADMIN_BYPASS === 'true' &&
+    process.env.VERCEL_ENV !== 'production' &&
+    process.env.DEV_ADMIN_EMAIL &&
+    process.env.DEV_ADMIN_PASSWORD
+  ) {
     const bypassUrl = `/api/auth/dev-bypass?redirectTo=${encodeURIComponent(destination)}`
     redirect(bypassUrl)
   }
