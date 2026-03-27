@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Cormorant_Garamond, DM_Sans, Poppins } from 'next/font/google'
+import { Raleway, Roboto, Libre_Baskerville } from 'next/font/google'
 
 import { Analytics } from '@vercel/analytics/next'
 import { SpeedInsights } from '@vercel/speed-insights/next'
@@ -10,24 +10,24 @@ import { JsonLd } from '@/components/ui'
 
 import './globals.css'
 
-const cormorantGaramond = Cormorant_Garamond({
+const raleway = Raleway({
   subsets: ['latin'],
   weight: ['300', '400', '600', '700'],
-  variable: '--font-cormorant-garamond',
+  variable: '--font-raleway',
   display: 'swap',
 })
 
-const dmSans = DM_Sans({
+const roboto = Roboto({
   subsets: ['latin'],
-  weight: ['400', '500', '600'],
-  variable: '--font-dm-sans',
+  weight: ['400', '500', '700'],
+  variable: '--font-roboto',
   display: 'swap',
 })
 
-const poppins = Poppins({
+const libreBaskerville = Libre_Baskerville({
   subsets: ['latin'],
-  weight: ['400', '500', '600'],
-  variable: '--font-poppins',
+  weight: ['400', '700'],
+  variable: '--font-libre-baskerville',
   display: 'swap',
 })
 
@@ -73,7 +73,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={cn(cormorantGaramond.variable, dmSans.variable, poppins.variable)}>
+    <html lang="en" className={cn(raleway.variable, roboto.variable, libreBaskerville.variable)}>
       <body>
         <JsonLd data={churchSchema} />
         {children}

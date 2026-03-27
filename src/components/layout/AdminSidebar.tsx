@@ -85,7 +85,7 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
           alt="St. Basil's Syriac Orthodox Church"
           width={36}
           height={36}
-          className="h-9 w-auto"
+          className="h-9 w-9 flex-shrink-0 object-contain"
         />
         <span className="font-heading text-lg font-semibold text-cream-50">Admin</span>
       </div>
