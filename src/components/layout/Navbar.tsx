@@ -142,8 +142,8 @@ export function Navbar({ className }: NavbarProps) {
               <Image
                 src="/logo.png"
                 alt="St. Basil's Syriac Orthodox Church"
-                width={48}
-                height={48}
+                width={207}
+                height={40}
                 className="h-10 w-auto"
                 priority
               />
