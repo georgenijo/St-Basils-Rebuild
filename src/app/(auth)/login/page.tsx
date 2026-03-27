@@ -21,11 +21,23 @@ export default async function LoginPage({
     data: { user },
   } = await supabase.auth.getUser()
 
+  const { redirectTo } = await searchParams
+  const destination = redirectTo || '/admin/dashboard'
+
   if (user) {
-    redirect('/admin/dashboard')
+    redirect(destination)
   }
 
-  const { redirectTo } = await searchParams
+  // Auto-login bypass for dev/preview environments
+  if (process.env.DEV_ADMIN_BYPASS === 'true') {
+    const { error } = await supabase.auth.signInWithPassword({
+      email: process.env.DEV_ADMIN_EMAIL!,
+      password: process.env.DEV_ADMIN_PASSWORD!,
+    })
+    if (!error) {
+      redirect(destination)
+    }
+  }
 
   return (
     <main className="w-full max-w-md px-4">
