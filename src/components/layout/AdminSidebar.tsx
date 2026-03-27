@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 
 import { cn } from '@/lib/utils'
@@ -78,16 +77,9 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
 
   const sidebarContent = (
     <>
-      {/* Logo */}
-      <div className="flex h-16 items-center justify-between px-3">
-        <span className="px-3 font-heading text-lg font-semibold text-cream-50">Admin</span>
-        <Image
-          src="/logo.png"
-          alt="St. Basil's Syriac Orthodox Church"
-          width={40}
-          height={40}
-          className="h-10 w-auto flex-shrink-0"
-        />
+      {/* Header */}
+      <div className="flex h-16 items-center px-6">
+        <span className="font-heading text-lg font-semibold text-cream-50">Admin</span>
       </div>
 
       {/* Gold accent line */}
