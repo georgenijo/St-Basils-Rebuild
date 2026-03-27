@@ -30,13 +30,8 @@ export default async function LoginPage({
 
   // Auto-login bypass for dev/preview environments
   if (process.env.DEV_ADMIN_BYPASS === 'true') {
-    const { error } = await supabase.auth.signInWithPassword({
-      email: process.env.DEV_ADMIN_EMAIL!,
-      password: process.env.DEV_ADMIN_PASSWORD!,
-    })
-    if (!error) {
-      redirect(destination)
-    }
+    const bypassUrl = `/api/auth/dev-bypass?redirectTo=${encodeURIComponent(destination)}`
+    redirect(bypassUrl)
   }
 
   return (
