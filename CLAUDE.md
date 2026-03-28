@@ -10,9 +10,9 @@ Static HTML website for St. Basil's Syriac Orthodox Church in Boston, Massachuse
 - **Frontend**: Static HTML5, CSS3, JavaScript (no build step)
 - **CSS Framework**: Bootstrap 5.3.3 (Squadfree template base)
 - **Backend**: PHP contact forms (currently non-functional)
-- **Hosting**: GoDaddy/Plesk (Windows/IIS)
-- **CI/CD**: GitHub Actions deploying via FTP
-- **Domain Management**: Vercel
+- **Hosting**: Vercel
+- **CI/CD**: GitHub Actions (Supabase migrations), Vercel (deployments)
+- **Database**: Supabase (Postgres)
 
 ## Project Structure
 
@@ -74,8 +74,11 @@ starter-page.html       # Squadfree template page
 └── newsletter.php          # Newsletter handler (BROKEN - see Known Issues)
 
 /.github/workflows/
-├── deploy-main.yml         # Production deploy: push to main → FTP to /new_website/root/
-└── deploy-staging.yml      # Staging deploy: PR to main → FTP to /preprod.stbasilsboston.org/
+├── ci.yml                  # Validate + unit tests + smoke tests on PRs/pushes to main
+├── migrate.yml             # Supabase migrations: push to main with changes in supabase/migrations/
+├── claude.yml              # Claude Code automation
+├── claude-code-review.yml  # Claude Code PR review
+└── lighthouse.yml          # Lighthouse performance checks
 ```
 
 ## Navigation Structure
@@ -136,10 +139,10 @@ Contact Us
 - PureCounter number animations
 
 ## Deployment
-- **Production**: Push to `main` triggers `.github/workflows/deploy-main.yml` → FTP to GoDaddy `/new_website/root/`
-- **Staging**: PR to `main` triggers `.github/workflows/deploy-staging.yml` → FTP to GoDaddy `/preprod.stbasilsboston.org/`
-- Both use `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD` GitHub Secrets
-- Node.js build steps are commented out in both workflows (ready for future use)
+- **Production**: Vercel auto-deploys on push to `main`
+- **Preview**: Vercel deploys preview URLs on PRs
+- **Supabase Migrations**: Push to `main` with changes in `supabase/migrations/` triggers `.github/workflows/migrate.yml` → runs `supabase db push`
+- Migration workflow requires GitHub Secrets: `SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_ID`, `SUPABASE_DB_PASSWORD`
 
 ## Known Issues
 
