@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Member Portal — Mockup</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Roboto', system-ui, sans-serif; background: #fffdf8; color: #4a3729; overflow-x: hidden; }
+  h1, h2, h3, h4 { font-family: 'Raleway', system-ui, sans-serif; }
+
+  .layout { display: flex; min-height: 100vh; }
+
+  /* Sidebar */
+  .sidebar { width: 256px; background: #253341; color: #fffdf8; flex-shrink: 0; display: flex; flex-direction: column; }
+  .sidebar-header { padding: 16px 24px; font-size: 18px; font-weight: 600; }
+  .sidebar-divider { height: 1px; margin: 0 16px; background: linear-gradient(to right, transparent, #d4a017, transparent); }
+  .sidebar nav { padding: 16px 12px; flex: 1; }
+  .sidebar nav ul { list-style: none; }
+  .sidebar nav li a { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; color: rgba(255,253,248,0.6); text-decoration: none; font-size: 14px; font-weight: 500; transition: all 0.15s; cursor: pointer; }
+  .sidebar nav li a:hover { background: rgba(255,253,248,0.05); color: #fffdf8; }
+  .sidebar nav li a.active { background: rgba(255,253,248,0.1); color: #fffdf8; }
+  .sidebar-bottom { padding: 12px; border-top: 1px solid rgba(255,253,248,0.1); }
+  .sidebar-bottom a { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; color: rgba(255,253,248,0.6); text-decoration: none; font-size: 14px; font-weight: 500; }
+
+  /* Main */
+  .main { flex: 1; display: flex; flex-direction: column; }
+  .topbar { padding: 12px 32px; border-bottom: 1px solid rgba(74,55,41,0.1); display: flex; justify-content: flex-end; align-items: center; gap: 16px; font-size: 14px; color: rgba(74,55,41,0.6); }
+  .topbar button { background: none; border: 1px solid rgba(74,55,41,0.2); border-radius: 8px; padding: 6px 16px; font-size: 13px; cursor: pointer; color: #4a3729; }
+  .content { padding: 32px; flex: 1; }
+
+  /* Page header */
+  .page-header { margin-bottom: 24px; }
+  .page-header h1 { font-size: 28px; font-weight: 600; color: #2c1810; }
+  .page-header .welcome-sub { margin-top: 4px; font-size: 14px; color: rgba(74,55,41,0.6); }
+  .membership-badge { display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+  .badge-active-membership { background: #d1fae5; color: #065f46; }
+  .badge-expired { background: #fee2e2; color: #991b1b; }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 2px; border-bottom: 1px solid rgba(74,55,41,0.1); margin-bottom: 28px; }
+  .tab { padding: 10px 20px; font-size: 14px; font-weight: 500; color: rgba(74,55,41,0.5); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; margin-bottom: -1px; }
+  .tab:hover { color: #4a3729; }
+  .tab.active { color: #9b1b3d; border-bottom-color: #9b1b3d; }
+
+  /* Tab panels */
+  .tab-panel { display: none; animation: fadeIn 0.3s ease; }
+  .tab-panel.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* Summary cards */
+  .summary-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+  .summary-card { background: #fffdf8; border: 1px solid rgba(74,55,41,0.1); border-radius: 16px; padding: 18px; }
+  .summary-card .card-label { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; color: rgba(74,55,41,0.6); }
+  .summary-card .card-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .summary-card .card-value { margin-top: 6px; font-size: 26px; font-weight: 600; color: #2c1810; font-family: 'Raleway', system-ui, sans-serif; }
+  .summary-card .card-sub { font-size: 12px; color: rgba(74,55,41,0.45); margin-top: 2px; }
+
+  /* Cards / boxes */
+  .info-card { background: white; border: 1px solid rgba(74,55,41,0.1); border-radius: 12px; overflow: hidden; }
+  .info-card-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; border-bottom: 1px solid rgba(74,55,41,0.06); }
+  .info-card-header h3 { font-size: 15px; font-weight: 600; color: #2c1810; }
+  .info-card-body { padding: 0; }
+
+  /* Table styles */
+  .data-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .data-table thead th { text-align: left; padding: 10px 18px; font-weight: 600; font-size: 12px; color: rgba(74,55,41,0.5); text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 1px solid rgba(74,55,41,0.08); background: #fafaf7; }
+  .data-table tbody td { padding: 12px 18px; border-bottom: 1px solid rgba(74,55,41,0.05); }
+  .data-table tbody tr:last-child td { border-bottom: none; }
+  .data-table tbody tr:hover { background: rgba(74,55,41,0.015); }
+
+  /* Badges */
+  .badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .badge-green { background: #d1fae5; color: #065f46; }
+  .badge-amber { background: #fef3c7; color: #92400e; }
+  .badge-red { background: #fee2e2; color: #991b1b; }
+  .badge-blue { background: #dbeafe; color: #1e40af; }
+  .badge-gray { background: #f3f4f6; color: #6b7280; }
+  .badge-purple { background: #ede9fe; color: #5b21b6; }
+
+  /* Buttons */
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; border: none; transition: all 0.15s; }
+  .btn-primary { background: #9b1b3d; color: white; }
+  .btn-primary:hover { background: #7a1530; }
+  .btn-outline { background: white; color: #4a3729; border: 1px solid rgba(74,55,41,0.2); }
+  .btn-outline:hover { background: #f5f5f2; }
+  .btn-sm { padding: 5px 10px; font-size: 12px; }
+  .btn-gold { background: #d4a017; color: #1a1a2e; }
+  .btn-gold:hover { background: #b8890f; }
+
+  /* Detail rows */
+  .detail-row { display: flex; justify-content: space-between; padding: 10px 18px; border-bottom: 1px solid rgba(74,55,41,0.05); font-size: 14px; }
+  .detail-row:last-child { border-bottom: none; }
+  .detail-label { color: rgba(74,55,41,0.55); }
+  .detail-value { font-weight: 500; color: #2c1810; }
+
+  /* Grid layout */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .grid-2.top-align { align-items: start; }
+
+  /* Section spacing */
+  .section-gap { margin-bottom: 24px; }
+
+  /* Family member avatars */
+  .member-row { display: flex; align-items: center; gap: 14px; padding: 12px 18px; border-bottom: 1px solid rgba(74,55,41,0.05); }
+  .member-row:last-child { border-bottom: none; }
+  .member-avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; flex-shrink: 0; }
+  .member-info { flex: 1; }
+  .member-name { font-weight: 500; font-size: 14px; color: #2c1810; }
+  .member-rel { font-size: 12px; color: rgba(74,55,41,0.5); }
+
+  /* Amount styling */
+  .amount { font-family: 'Raleway', system-ui, sans-serif; font-weight: 600; }
+  .amount-due { color: #dc2626; }
+  .amount-paid { color: #059669; }
+
+  /* Empty state */
+  .empty-state { padding: 40px; text-align: center; color: rgba(74,55,41,0.4); font-size: 14px; }
+
+  /* Progress bar */
+  .progress-bar { height: 6px; background: rgba(74,55,41,0.08); border-radius: 3px; overflow: hidden; margin-top: 8px; }
+  .progress-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
+  .progress-green { background: #10b981; }
+  .progress-amber { background: #f59e0b; }
+
+  /* Slide-out panel */
+  .panel-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.3); opacity: 0; pointer-events: none; transition: opacity 0.3s ease; z-index: 40; }
+  .panel-backdrop.open { opacity: 1; pointer-events: auto; }
+  .slide-panel { position: fixed; top: 0; right: 0; bottom: 0; width: 480px; max-width: 90vw; background: #fffdf8; box-shadow: -8px 0 30px rgba(0,0,0,0.12); transform: translateX(100%); transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1); z-index: 50; display: flex; flex-direction: column; overflow-y: auto; }
+  .slide-panel.open { transform: translateX(0); }
+  .panel-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-bottom: 1px solid rgba(74,55,41,0.1); }
+  .panel-header h3 { font-size: 18px; font-weight: 600; color: #2c1810; }
+  .panel-close { width: 32px; height: 32px; border-radius: 8px; border: 1px solid rgba(74,55,41,0.15); background: white; cursor: pointer; display: flex; align-items: center; justify-content: center; color: rgba(74,55,41,0.6); }
+  .panel-close:hover { background: #f5f5f2; }
+  .panel-body { padding: 24px; flex: 1; }
+
+  /* Form styles */
+  .form-group { margin-bottom: 18px; }
+  .form-label { display: block; font-size: 13px; font-weight: 600; color: rgba(74,55,41,0.7); margin-bottom: 6px; }
+  .form-input { width: 100%; padding: 9px 12px; border: 1px solid rgba(74,55,41,0.2); border-radius: 8px; font-size: 14px; font-family: inherit; background: white; color: #2c1810; }
+  .form-input:focus { outline: none; border-color: #9b1b3d; box-shadow: 0 0 0 3px rgba(155,27,61,0.1); }
+  .form-select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%234a3729' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .form-hint { font-size: 12px; color: rgba(74,55,41,0.45); margin-top: 4px; }
+
+  /* Share name pills */
+  .share-names { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .share-pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: #fef3c7; border-radius: 20px; font-size: 13px; font-weight: 500; color: #92400e; }
+  .share-pill-remove { cursor: pointer; opacity: 0.6; font-size: 16px; line-height: 1; }
+  .share-pill-remove:hover { opacity: 1; }
+  .share-total { margin-top: 16px; padding: 14px 16px; background: rgba(212,160,23,0.08); border-radius: 10px; display: flex; justify-content: space-between; align-items: center; }
+  .share-total-label { font-size: 14px; color: rgba(74,55,41,0.7); }
+  .share-total-amount { font-size: 22px; font-weight: 700; color: #92400e; font-family: 'Raleway', system-ui, sans-serif; }
+
+  /* Instruction banner */
+  .try-it { text-align: center; padding: 12px; background: #fef3c7; border-bottom: 1px solid #fde68a; font-size: 14px; color: #92400e; }
+  .try-it strong { font-weight: 600; }
+
+  /* Due date callout */
+  .due-callout { padding: 14px 18px; background: linear-gradient(135deg, rgba(155,27,61,0.04), rgba(212,160,23,0.04)); border: 1px solid rgba(155,27,61,0.1); border-radius: 12px; display: flex; justify-content: space-between; align-items: center; }
+  .due-callout-text { font-size: 14px; color: #4a3729; }
+  .due-callout-text strong { font-weight: 600; color: #2c1810; }
+  .due-callout-amount { font-size: 24px; font-weight: 700; color: #9b1b3d; font-family: 'Raleway', system-ui, sans-serif; }
+</style>
+</head>
+<body>
+
+<div class="try-it"><strong>Interactive mockup:</strong> Click tabs to switch views. Try "Buy Shares" and "Record Donation" buttons. Click sidebar items.</div>
+
+<div class="layout">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-header">My Parish</div>
+    <div class="sidebar-divider"></div>
+    <nav>
+      <ul>
+        <li><a class="active" onclick="switchTab('overview')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+          Overview</a></li>
+        <li><a onclick="switchTab('membership')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><path d="M1 10h22"/><circle cx="12" cy="15" r="2"/></svg>
+          Membership</a></li>
+        <li><a onclick="switchTab('family')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Family</a></li>
+        <li><a onclick="switchTab('payments')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+          Payments</a></li>
+        <li><a onclick="switchTab('shares')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          Shares</a></li>
+      </ul>
+    </nav>
+    <div class="sidebar-bottom">
+      <div style="padding: 0 12px 8px; border-bottom: 1px solid rgba(255,253,248,0.06); margin-bottom: 8px;">
+        <div style="font-size:13px; color:rgba(255,253,248,0.4);">Nijo Family</div>
+        <div style="font-size:12px; color:rgba(255,253,248,0.25); margin-top:2px;">Member since 2024</div>
+      </div>
+      <a href="#">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        Back to site
+      </a>
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <div class="main">
+    <div class="topbar">
+      <span>george@stbasilsboston.org</span>
+      <button>Log out</button>
+    </div>
+
+    <div class="content">
+      <!-- Page header -->
+      <div class="page-header">
+        <h1>Welcome, George</h1>
+        <p class="welcome-sub">Nijo Family &middot; Member since March 2024</p>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tabs">
+        <div class="tab active" data-tab="overview" onclick="switchTab('overview')">Overview</div>
+        <div class="tab" data-tab="membership" onclick="switchTab('membership')">Membership</div>
+        <div class="tab" data-tab="family" onclick="switchTab('family')">Family</div>
+        <div class="tab" data-tab="payments" onclick="switchTab('payments')">Payments</div>
+        <div class="tab" data-tab="shares" onclick="switchTab('shares')">Shares</div>
+      </div>
+
+      <!-- ===== OVERVIEW TAB ===== -->
+      <div class="tab-panel active" id="panel-overview">
+        <div class="summary-cards">
+          <div class="summary-card">
+            <div class="card-label"><span class="card-dot" style="background:#10b981;"></span> Next Due</div>
+            <div class="card-value" style="font-size:22px;">Apr 1</div>
+            <div class="card-sub">$100 &middot; Monthly plan</div>
+          </div>
+          <div class="summary-card">
+            <div class="card-label"><span class="card-dot" style="background:#3b82f6;"></span> Family</div>
+            <div class="card-value">4</div>
+            <div class="card-sub">members</div>
+          </div>
+          <div class="summary-card">
+            <div class="card-label"><span class="card-dot" style="background:#d4a017;"></span> Shares</div>
+            <div class="card-value">6</div>
+            <div class="card-sub">names this year</div>
+          </div>
+          <div class="summary-card">
+            <div class="card-label"><span class="card-dot" style="background:#ef4444;"></span> Balance</div>
+            <div class="card-value amount amount-due">$75</div>
+            <div class="card-sub">outstanding</div>
+          </div>
+        </div>
+
+        <!-- Recent activity -->
+        <div class="section-gap">
+          <div class="info-card">
+            <div class="info-card-header">
+              <h3>Recent Activity</h3>
+            </div>
+            <div class="info-card-body">
+              <table class="data-table">
+                <tbody>
+                  <tr>
+                    <td><span class="badge badge-green">Paid</span></td>
+                    <td>Membership — March 2026</td>
+                    <td style="text-align:right;" class="amount amount-paid">$100.00</td>
+                    <td style="text-align:right; color:rgba(74,55,41,0.4); font-size:13px;">Mar 1</td>
+                  </tr>
+                  <tr>
+                    <td><span class="badge badge-amber">Due</span></td>
+                    <td>Family Night — Feb 2026</td>
+                    <td style="text-align:right;" class="amount amount-due">$75.00</td>
+                    <td style="text-align:right; color:rgba(74,55,41,0.4); font-size:13px;">Feb 22</td>
+                  </tr>
+                  <tr>
+                    <td><span class="badge badge-blue">Donation</span></td>
+                    <td>Christmas Caroling</td>
+                    <td style="text-align:right;" class="amount amount-paid">$50.00</td>
+                    <td style="text-align:right; color:rgba(74,55,41,0.4); font-size:13px;">Dec 20</td>
+                  </tr>
+                  <tr>
+                    <td><span class="badge badge-purple">Share</span></td>
+                    <td>Purchased 4 shares</td>
+                    <td style="text-align:right;" class="amount amount-paid">$200.00</td>
+                    <td style="text-align:right; color:rgba(74,55,41,0.4); font-size:13px;">Jan 5</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== MEMBERSHIP TAB ===== -->
+      <div class="tab-panel" id="panel-membership">
+        <div class="grid-2 top-align section-gap">
+          <!-- Current plan -->
+          <div class="info-card">
+            <div class="info-card-header">
+              <h3>Current Plan</h3>
+            </div>
+            <div class="info-card-body">
+              <div class="detail-row"><span class="detail-label">Status</span><span class="detail-value"><span class="badge badge-green">Active</span></span></div>
+              <div class="detail-row"><span class="detail-label">Plan</span><span class="detail-value">Monthly — $100/mo</span></div>
+              <div class="detail-row"><span class="detail-label">Next Payment</span><span class="detail-value">Apr 1, 2026</span></div>
+              <div class="detail-row"><span class="detail-label">Paid Through</span><span class="detail-value">Mar 31, 2026</span></div>
+              <div class="detail-row"><span class="detail-label">Member Since</span><span class="detail-value">March 2024</span></div>
+              <div style="padding: 12px 18px;">
+                <div style="display:flex; justify-content:space-between; font-size:12px; color:rgba(74,55,41,0.5); margin-bottom:4px;">
+                  <span>Year progress</span>
+                  <span>3 of 12 months paid</span>
+                </div>
+                <div class="progress-bar"><div class="progress-fill progress-green" style="width: 25%;"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Payment summary -->
+          <div class="info-card">
+            <div class="info-card-header">
+              <h3>2026 Dues Summary</h3>
+            </div>
+            <div class="info-card-body">
+              <div class="detail-row"><span class="detail-label">Annual Total</span><span class="detail-value amount" style="color:#2c1810;">$1,200</span></div>
+              <div class="detail-row"><span class="detail-label">Paid So Far</span><span class="detail-value amount amount-paid">$300</span></div>
+              <div class="detail-row"><span class="detail-label">Remaining</span><span class="detail-value amount amount-due">$900</span></div>
+              <div style="padding: 14px 18px; border-top: 1px solid rgba(74,55,41,0.05);">
+                <div style="font-size:13px; color:rgba(74,55,41,0.5); margin-bottom:8px;">Could save $200/year with annual plan</div>
+                <button class="btn btn-outline btn-sm" style="opacity:0.5; cursor:default;">Switch to Annual (coming soon)</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Membership payment history -->
+        <div class="info-card">
+          <div class="info-card-header">
+            <h3>Payment History</h3>
+          </div>
+          <div class="info-card-body">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Period</th>
+                  <th>Method</th>
+                  <th style="text-align:right;">Amount</th>
+                  <th style="text-align:right;">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="font-size:13px; color:rgba(74,55,41,0.6);">Mar 1, 2026</td>
+                  <td>March 2026</td>
+                  <td style="font-size:13px; color:rgba(74,55,41,0.5);">Check</td>
+                  <td style="text-align:right;" class="amount">$100.00</td>
+                  <td style="text-align:right;"><span class="badge badge-green">Paid</span></td>
+                </tr>
+                <tr>
+                  <td style="font-size:13px; color:rgba(74,55,41,0.6);">Feb 1, 2026</td>
+                  <td>February 2026</td>
+                  <td style="font-size:13px; color:rgba(74,55,41,0.5);">Zelle</td>
+                  <td style="text-align:right;" class="amount">$100.00</td>
+                  <td style="text-align:right;"><span class="badge badge-green">Paid</span></td>
+                </tr>
+                <tr>
+                  <td style="font-size:13px; color:rgba(74,55,41,0.6);">Jan 1, 2026</td>
+                  <td>January 2026</td>
+                  <td style="font-size:13px; color:rgba(74,55,41,0.5);">Check</td>
+                  <td style="text-align:right;" class="amount">$100.00</td>
+                  <td style="text-align:right;"><span class="badge badge-green">Paid</span></td>
+                </tr>
+                <tr>
+                  <td style="font-size:13px; color:rgba(74,55,41,0.6);">Dec 1, 2025</td>
+                  <td>December 2025</td>
+                  <td style="font-size:13px; color:rgba(74,55,41,0.5);">Cash</td>
+                  <td style="text-align:right;" class="amount">$100.00</td>
+                  <td style="text-align:right;"><span class="badge badge-green">Paid</span></td>
+                </tr>
+                <tr>
+                  <td style="font-size:13px; color:rgba(74,55,41,0.6);">Nov 1, 2025</td>
+                  <td>November 2025</td>
+                  <td style="font-size:13px; color:rgba(74,55,41,0.5);">Check</td>
+                  <td style="text-align:right;" class="amount">$100.00</td>
+                  <td style="text-align:right;"><span class="badge badge-green">Paid</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== FAMILY TAB ===== -->
+      <div class="tab-panel" id="panel-family">
+        <div class="section-gap">
+          <div class="info-card">
+            <div class="info-card-header">
+              <h3>Family Details</h3>
+              <button class="btn btn-outline btn-sm" onclick="openPanel('edit-family')">Edit</button>
+            </div>
+            <div class="info-card-body">
+              <div class="detail-row"><span class="detail-label">Family Name</span><span class="detail-value">Nijo</span></div>
+              <div class="detail-row"><span class="detail-label">Head of Household</span><span class="detail-value">George Nijo</span></div>
+              <div class="detail-row"><span class="detail-label">Phone</span><span class="detail-value">(617) 555-0142</span></div>
+              <div class="detail-row"><span class="detail-label">Address</span><span class="detail-value">45 Maple St, Newton, MA 02464</span></div>
+              <div class="detail-row"><span class="detail-label">Member Since</span><span class="detail-value">March 2024</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Family members -->
+        <div class="info-card">
+          <div class="info-card-header">
+            <h3>Family Members</h3>
+            <button class="btn btn-outline btn-sm" onclick="openPanel('add-member')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Add Member
+            </button>
+          </div>
+          <div class="info-card-body">
+            <div class="member-row">
+              <div class="member-avatar" style="background:#dbeafe; color:#1e40af;">GN</div>
+              <div class="member-info">
+                <div class="member-name">George Nijo</div>
+                <div class="member-rel">Head of Household</div>
+              </div>
+              <span class="badge badge-blue" style="font-size:10px;">You</span>
+            </div>
+            <div class="member-row">
+              <div class="member-avatar" style="background:#fce7f3; color:#9d174d;">AN</div>
+              <div class="member-info">
+                <div class="member-name">Anna Nijo</div>
+                <div class="member-rel">Spouse</div>
+              </div>
+              <button class="btn btn-outline btn-sm" style="font-size:11px;">Edit</button>
+            </div>
+            <div class="member-row">
+              <div class="member-avatar" style="background:#e0e7ff; color:#3730a3;">JN</div>
+              <div class="member-info">
+                <div class="member-name">Joshua Nijo</div>
+                <div class="member-rel">Child</div>
+              </div>
+              <button class="btn btn-outline btn-sm" style="font-size:11px;">Edit</button>
+            </div>
+            <div class="member-row">
+              <div class="member-avatar" style="background:#fef3c7; color:#92400e;">SN</div>
+              <div class="member-info">
+                <div class="member-name">Sarah Nijo</div>
+                <div class="member-rel">Child</div>
+              </div>
+              <button class="btn btn-outline btn-sm" style="font-size:11px;">Edit</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== PAYMENTS TAB ===== -->
+      <div class="tab-panel" id="panel-payments">
+        <div class="summary-cards" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 24px;">
+          <div class="summary-card">
+            <div class="card-label"><span class="card-dot" style="background:#10b981;"></span> Paid This Year</div>
+            <div class="card-value amount amount-paid">$650</div>
+          </div>
+          <div class="summary-card">
+            <div class="card-label"><span class="card-dot" style="background:#ef4444;"></span> Outstanding</div>
+            <div class="card-value amount amount-due">$75</div>
+          </div>
+          <div class="summary-card">
+            <div class="card-label"><span class="card-dot" style="background:#3b82f6;"></span> Donations</div>
+            <div class="card-value amount" style="color:#2c1810;">$150</div>
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+          <h3 style="font-size:16px; font-weight:600; color:#2c1810;">Payment History</h3>
+          <button class="btn btn-primary btn-sm" onclick="openPanel('donate')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            Record Donation
+          </button>
+        </div>
+
+        <div class="info-card">
+          <div class="info-card-body">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Type</th>
+                  <th>Description</th>
+                  <th>Method</th>
+                  <th style="text-align:right;">Amount</th>
+                  <th style="text-align:right;">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="font-size:13px; color:rgba(74,55,41,0.6);">Feb 22, 2026</td>
+                  <td><span class="badge badge-amber">Event</span></td>
+                  <td>Family Night — split cost</td>
+                  <td style="font-size:13px; color:rgba(74,55,41,0.5);">—</td>
+                  <td style="text-align:right;" class="amount amount-due">$75.00</td>
+                  <td style="text-align:right;"><span class="badge badge-amber">Due</span></td>
+                </tr>
+                <tr>
+                  <td style="font-size:13px; color:rgba(74,55,41,0.6);">Jan 5, 2026</td>
+                  <td><span class="badge badge-purple">Shares</span></td>
+                  <td>4 shares purchased</td>
+                  <td style="font-size:13px; color:rgba(74,55,41,0.5);">Cash</td>
+                  <td style="text-align:right;" class="amount">$200.00</td>
+                  <td style="text-align:right;"><span class="badge badge-green">Paid</span></td>
+                </tr>
+                <tr>
+                  <td style="font-size:13px; color:rgba(74,55,41,0.6);">Dec 20, 2025</td>
+                  <td><span class="badge badge-blue">Donation</span></td>
+                  <td>Christmas Caroling</td>
+                  <td style="font-size:13px; color:rgba(74,55,41,0.5);">Cash</td>
+                  <td style="text-align:right;" class="amount">$50.00</td>
+                  <td style="text-align:right;"><span class="badge badge-green">Paid</span></td>
+                </tr>
+                <tr>
+                  <td style="font-size:13px; color:rgba(74,55,41,0.6);">Nov 15, 2025</td>
+                  <td><span class="badge badge-blue">Donation</span></td>
+                  <td>Car Blessing</td>
+                  <td style="font-size:13px; color:rgba(74,55,41,0.5);">Cash</td>
+                  <td style="text-align:right;" class="amount">$100.00</td>
+                  <td style="text-align:right;"><span class="badge badge-green">Paid</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== SHARES TAB ===== -->
+      <div class="tab-panel" id="panel-shares">
+        <div class="summary-cards" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 24px;">
+          <div class="summary-card">
+            <div class="card-label"><span class="card-dot" style="background:#d4a017;"></span> Shares This Year</div>
+            <div class="card-value">6</div>
+            <div class="card-sub">names remembered</div>
+          </div>
+          <div class="summary-card">
+            <div class="card-label"><span class="card-dot" style="background:#10b981;"></span> Total Spent</div>
+            <div class="card-value amount" style="color:#2c1810;">$300</div>
+            <div class="card-sub">6 x $50</div>
+          </div>
+          <div class="summary-card">
+            <div class="card-label"><span class="card-dot" style="background:#3b82f6;"></span> All-Time</div>
+            <div class="card-value">14</div>
+            <div class="card-sub">shares since 2024</div>
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+          <h3 style="font-size:16px; font-weight:600; color:#2c1810;">2026 Shares</h3>
+          <button class="btn btn-gold btn-sm" onclick="openPanel('buy-shares')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Buy Shares
+          </button>
+        </div>
+
+        <div class="info-card section-gap">
+          <div class="info-card-body">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Name Remembered</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                  <th style="text-align:right;">Purchased</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="font-weight:500; color:#2c1810;">Thomas Kurian (Uncle)</td>
+                  <td class="amount">$50.00</td>
+                  <td><span class="badge badge-green">Paid</span></td>
+                  <td style="text-align:right; font-size:13px; color:rgba(74,55,41,0.5);">Jan 5, 2026</td>
+                </tr>
+                <tr>
+                  <td style="font-weight:500; color:#2c1810;">Mary Kurian (Aunt)</td>
+                  <td class="amount">$50.00</td>
+                  <td><span class="badge badge-green">Paid</span></td>
+                  <td style="text-align:right; font-size:13px; color:rgba(74,55,41,0.5);">Jan 5, 2026</td>
+                </tr>
+                <tr>
+                  <td style="font-weight:500; color:#2c1810;">Daniel Kurian (Cousin)</td>
+                  <td class="amount">$50.00</td>
+                  <td><span class="badge badge-green">Paid</span></td>
+                  <td style="text-align:right; font-size:13px; color:rgba(74,55,41,0.5);">Jan 5, 2026</td>
+                </tr>
+                <tr>
+                  <td style="font-weight:500; color:#2c1810;">Rachel Kurian (Cousin)</td>
+                  <td class="amount">$50.00</td>
+                  <td><span class="badge badge-green">Paid</span></td>
+                  <td style="text-align:right; font-size:13px; color:rgba(74,55,41,0.5);">Jan 5, 2026</td>
+                </tr>
+                <tr>
+                  <td style="font-weight:500; color:#2c1810;">Aleyamma Nijo (Grandmother)</td>
+                  <td class="amount">$50.00</td>
+                  <td><span class="badge badge-green">Paid</span></td>
+                  <td style="text-align:right; font-size:13px; color:rgba(74,55,41,0.5);">Jan 5, 2026</td>
+                </tr>
+                <tr>
+                  <td style="font-weight:500; color:#2c1810;">Chacko Nijo (Grandfather)</td>
+                  <td class="amount">$50.00</td>
+                  <td><span class="badge badge-green">Paid</span></td>
+                  <td style="text-align:right; font-size:13px; color:rgba(74,55,41,0.5);">Jan 5, 2026</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Previous years -->
+        <div class="info-card">
+          <div class="info-card-header">
+            <h3>Previous Years</h3>
+          </div>
+          <div class="info-card-body">
+            <div class="detail-row">
+              <span class="detail-label">2025</span>
+              <span class="detail-value">4 shares &middot; $200</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">2024</span>
+              <span class="detail-value">4 shares &middot; $200</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Panel backdrop -->
+<div class="panel-backdrop" id="panelBackdrop" onclick="closePanel()"></div>
+
+<!-- Slide-out panel -->
+<div class="slide-panel" id="slidePanel">
+  <div class="panel-header">
+    <h3 id="panelTitle"></h3>
+    <button class="panel-close" onclick="closePanel()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+  <div class="panel-body" id="panelBody"></div>
+</div>
+
+<script>
+// Tab switching
+function switchTab(tabName) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => { p.classList.remove('active'); });
+  document.querySelector(`.tab[data-tab="${tabName}"]`).classList.add('active');
+  document.getElementById(`panel-${tabName}`).classList.add('active');
+
+  // Update sidebar
+  document.querySelectorAll('.sidebar nav a').forEach((a, i) => {
+    const tabs = ['overview','membership','family','payments','shares'];
+    a.classList.toggle('active', tabs[i] === tabName);
+  });
+}
+
+// Panel system
+function openPanel(type) {
+  const title = document.getElementById('panelTitle');
+  const body = document.getElementById('panelBody');
+
+  if (type === 'buy-shares') {
+    title.textContent = 'Buy Shares';
+    body.innerHTML = `
+      <p style="font-size:14px; color:rgba(74,55,41,0.6); margin-bottom:20px;">
+        Add names to be remembered in weekly services. Each share is <strong style="color:#2c1810;">$50</strong>.
+      </p>
+      <div class="form-group">
+        <label class="form-label">Person's Name</label>
+        <div style="display:flex; gap:8px;">
+          <input type="text" class="form-input" id="shareName" placeholder="e.g. Thomas Kurian" onkeydown="if(event.key==='Enter'){addShare()}" />
+          <button class="btn btn-outline" onclick="addShare()" style="white-space:nowrap;">Add</button>
+        </div>
+        <div class="form-hint">Press Enter or click Add for each name</div>
+      </div>
+      <div id="shareList" class="share-names"></div>
+      <div id="shareTotal" class="share-total" style="display:none;">
+        <span class="share-total-label"><span id="shareCount">0</span> shares</span>
+        <span class="share-total-amount">$<span id="shareTotalAmt">0</span></span>
+      </div>
+      <div style="margin-top:24px; padding-top:20px; border-top:1px solid rgba(74,55,41,0.1); display:flex; gap:8px; justify-content:flex-end;">
+        <button class="btn btn-outline" onclick="closePanel()">Cancel</button>
+        <button class="btn btn-gold" id="submitShares" style="opacity:0.4; pointer-events:none;">Submit Shares</button>
+      </div>
+    `;
+    window._shares = [];
+  }
+
+  else if (type === 'donate') {
+    title.textContent = 'Record a Donation';
+    body.innerHTML = `
+      <p style="font-size:14px; color:rgba(74,55,41,0.6); margin-bottom:20px;">
+        Record a donation you've made to the church.
+      </p>
+      <div class="form-group">
+        <label class="form-label">Donation Type</label>
+        <select class="form-input form-select">
+          <option value="">Select type...</option>
+          <option>General Donation</option>
+          <option>Car Blessing</option>
+          <option>Christmas Caroling</option>
+          <option>Event Specific</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Amount</label>
+        <div style="position:relative;">
+          <span style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:rgba(74,55,41,0.4); font-size:14px;">$</span>
+          <input type="number" class="form-input" style="padding-left:28px;" placeholder="0.00" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Note <span style="font-weight:400; color:rgba(74,55,41,0.4);">(optional)</span></label>
+        <input type="text" class="form-input" placeholder="e.g. In memory of..." />
+      </div>
+      <div style="margin-top:24px; padding-top:20px; border-top:1px solid rgba(74,55,41,0.1); display:flex; gap:8px; justify-content:flex-end;">
+        <button class="btn btn-outline" onclick="closePanel()">Cancel</button>
+        <button class="btn btn-primary">Submit Donation</button>
+      </div>
+    `;
+  }
+
+  else if (type === 'add-member') {
+    title.textContent = 'Add Family Member';
+    body.innerHTML = `
+      <div class="form-group">
+        <label class="form-label">Full Name</label>
+        <input type="text" class="form-input" placeholder="e.g. David Nijo" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Relationship</label>
+        <select class="form-input form-select">
+          <option value="">Select...</option>
+          <option>Spouse</option>
+          <option>Child</option>
+          <option>Parent</option>
+          <option>Sibling</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div style="margin-top:24px; padding-top:20px; border-top:1px solid rgba(74,55,41,0.1); display:flex; gap:8px; justify-content:flex-end;">
+        <button class="btn btn-outline" onclick="closePanel()">Cancel</button>
+        <button class="btn btn-primary">Add Member</button>
+      </div>
+    `;
+  }
+
+  else if (type === 'edit-family') {
+    title.textContent = 'Edit Family Details';
+    body.innerHTML = `
+      <div class="form-group">
+        <label class="form-label">Family Name</label>
+        <input type="text" class="form-input" value="Nijo" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Phone</label>
+        <input type="tel" class="form-input" value="(617) 555-0142" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Address</label>
+        <input type="text" class="form-input" value="45 Maple St, Newton, MA 02464" />
+      </div>
+      <div style="margin-top:24px; padding-top:20px; border-top:1px solid rgba(74,55,41,0.1); display:flex; gap:8px; justify-content:flex-end;">
+        <button class="btn btn-outline" onclick="closePanel()">Cancel</button>
+        <button class="btn btn-primary">Save Changes</button>
+      </div>
+    `;
+  }
+
+  document.getElementById('panelBackdrop').classList.add('open');
+  document.getElementById('slidePanel').classList.add('open');
+}
+
+function closePanel() {
+  document.getElementById('panelBackdrop').classList.remove('open');
+  document.getElementById('slidePanel').classList.remove('open');
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closePanel(); });
+
+// Share adding logic
+window._shares = [];
+function addShare() {
+  const input = document.getElementById('shareName');
+  const name = input.value.trim();
+  if (!name) return;
+  window._shares.push(name);
+  input.value = '';
+  input.focus();
+  renderShares();
+}
+
+function removeShare(idx) {
+  window._shares.splice(idx, 1);
+  renderShares();
+}
+
+function renderShares() {
+  const list = document.getElementById('shareList');
+  const total = document.getElementById('shareTotal');
+  const count = document.getElementById('shareCount');
+  const amt = document.getElementById('shareTotalAmt');
+  const submit = document.getElementById('submitShares');
+
+  list.innerHTML = window._shares.map((s, i) =>
+    `<span class="share-pill">${s} <span class="share-pill-remove" onclick="removeShare(${i})">&times;</span></span>`
+  ).join('');
+
+  if (window._shares.length > 0) {
+    total.style.display = 'flex';
+    count.textContent = window._shares.length;
+    amt.textContent = (window._shares.length * 50).toLocaleString();
+    submit.style.opacity = '1';
+    submit.style.pointerEvents = 'auto';
+  } else {
+    total.style.display = 'none';
+    submit.style.opacity = '0.4';
+    submit.style.pointerEvents = 'none';
+  }
+}
+</script>
+
+</body>
+</html>

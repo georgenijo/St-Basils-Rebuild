@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Member Portal — User Flow</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Roboto', system-ui, sans-serif; background: #1a1a2e; color: #e0e0e0; padding: 40px; overflow-x: auto; }
+  h1 { font-family: 'Raleway', system-ui, sans-serif; text-align: center; font-size: 28px; color: #fff; margin-bottom: 8px; }
+  .subtitle { text-align: center; font-size: 14px; color: rgba(255,255,255,0.5); margin-bottom: 48px; }
+
+  /* Flow container */
+  .flow { display: flex; flex-direction: column; align-items: center; gap: 0; max-width: 1100px; margin: 0 auto; }
+
+  /* Node types */
+  .node { position: relative; border-radius: 12px; padding: 16px 24px; text-align: center; font-size: 14px; min-width: 200px; }
+  .node .label { font-weight: 600; font-size: 15px; }
+  .node .desc { font-size: 12px; margin-top: 4px; opacity: 0.7; }
+
+  .node-start { background: #9b1b3d; color: white; border-radius: 24px; }
+  .node-decision { background: #d4a017; color: #1a1a2e; transform: rotate(0deg); border-radius: 8px; border: 2px solid #d4a017; }
+  .node-page { background: #253341; color: #fffdf8; border: 1px solid rgba(255,255,255,0.15); }
+  .node-action { background: #1e3a5f; color: #93c5fd; border: 1px solid #3b82f6; }
+  .node-admin { background: #3b1a1a; color: #fca5a5; border: 1px solid rgba(239,68,68,0.3); }
+  .node-future { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.4); border: 1px dashed rgba(255,255,255,0.2); }
+
+  /* Arrows */
+  .arrow { display: flex; flex-direction: column; align-items: center; padding: 4px 0; }
+  .arrow-line { width: 2px; height: 24px; background: rgba(255,255,255,0.2); }
+  .arrow-head { width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-top: 8px solid rgba(255,255,255,0.2); }
+  .arrow-label { font-size: 11px; color: rgba(255,255,255,0.4); margin-bottom: 4px; font-weight: 500; }
+
+  /* Branch layout */
+  .branch { display: flex; gap: 24px; align-items: flex-start; justify-content: center; width: 100%; }
+  .branch-col { display: flex; flex-direction: column; align-items: center; gap: 0; flex: 1; max-width: 320px; }
+
+  /* Section headers */
+  .section { width: 100%; max-width: 900px; margin: 32px 0 16px; }
+  .section-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; color: rgba(255,255,255,0.3); padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+
+  /* Legend */
+  .legend { display: flex; gap: 24px; justify-content: center; margin-bottom: 40px; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: rgba(255,255,255,0.5); }
+  .legend-dot { width: 12px; height: 12px; border-radius: 3px; }
+
+  /* Horizontal connector */
+  .h-connector { display: flex; align-items: center; justify-content: center; width: 100%; position: relative; margin: 0; }
+  .h-line { height: 2px; background: rgba(255,255,255,0.2); flex: 1; max-width: 200px; }
+
+  /* Detail boxes */
+  .detail-box { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 16px; margin-top: 8px; text-align: left; width: 100%; max-width: 280px; }
+  .detail-box ul { list-style: none; padding: 0; }
+  .detail-box li { font-size: 12px; padding: 4px 0; color: rgba(255,255,255,0.6); display: flex; align-items: flex-start; gap: 8px; }
+  .detail-box li::before { content: ""; width: 4px; height: 4px; border-radius: 50%; background: rgba(255,255,255,0.3); margin-top: 6px; flex-shrink: 0; }
+  .detail-box .box-title { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+
+  /* Wide node */
+  .node-wide { min-width: 300px; }
+
+  /* Tabs mockup */
+  .tabs-preview { display: flex; gap: 2px; margin-top: 12px; justify-content: center; }
+  .tab { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 500; }
+  .tab-active { background: rgba(255,255,255,0.15); color: #fffdf8; }
+  .tab-inactive { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.4); }
+
+  /* Gate badge */
+  .gate { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+  .gate-auth { background: rgba(59,130,246,0.2); color: #93c5fd; }
+  .gate-role { background: rgba(212,160,23,0.2); color: #fbbf24; }
+  .gate-admin { background: rgba(239,68,68,0.2); color: #fca5a5; }
+  .gate-future { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.4); }
+</style>
+</head>
+<body>
+
+<h1>Member Portal — User Flow</h1>
+<p class="subtitle">Gates shown as badges. Dashed boxes = future features (not in v1).</p>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background: #9b1b3d;"></div> Entry point</div>
+  <div class="legend-item"><div class="legend-dot" style="background: #d4a017;"></div> Decision / Gate</div>
+  <div class="legend-item"><div class="legend-dot" style="background: #253341; border: 1px solid rgba(255,255,255,0.15);"></div> Page</div>
+  <div class="legend-item"><div class="legend-dot" style="background: #1e3a5f; border: 1px solid #3b82f6;"></div> Member action</div>
+  <div class="legend-item"><div class="legend-dot" style="background: #3b1a1a; border: 1px solid rgba(239,68,68,0.3);"></div> Admin action</div>
+  <div class="legend-item"><div class="legend-dot" style="background: transparent; border: 1px dashed rgba(255,255,255,0.2);"></div> Future (v2+)</div>
+</div>
+
+<div class="flow">
+
+  <!-- ===== LOGIN ===== -->
+  <div class="node node-start">
+    <div class="label">User visits /login</div>
+  </div>
+  <div class="arrow"><div class="arrow-line"></div><div class="arrow-head"></div></div>
+
+  <div class="node node-decision">
+    <span class="gate gate-auth">AUTH GATE</span>
+    <div class="label" style="margin-top:6px;">Authenticated?</div>
+  </div>
+
+  <div class="arrow">
+    <div class="arrow-label">No → stays on /login</div>
+    <div class="arrow-line"></div>
+    <div class="arrow-label">Yes ↓</div>
+    <div class="arrow-head"></div>
+  </div>
+
+  <div class="node node-decision">
+    <span class="gate gate-role">ROLE GATE</span>
+    <div class="label" style="margin-top:6px;">What role?</div>
+  </div>
+
+  <!-- Branch: Admin vs Member -->
+  <div class="arrow"><div class="arrow-line" style="height:12px;"></div></div>
+
+  <div class="branch">
+    <div class="branch-col">
+      <div class="arrow"><div class="arrow-label">role = admin</div><div class="arrow-line"></div><div class="arrow-head"></div></div>
+      <div class="node node-page">
+        <div class="label">/admin/dashboard</div>
+        <div class="desc">Admin panel (existing)</div>
+      </div>
+    </div>
+    <div class="branch-col">
+      <div class="arrow"><div class="arrow-label">role = member</div><div class="arrow-line"></div><div class="arrow-head"></div></div>
+      <div class="node node-page" style="border-color: #10b981;">
+        <div class="label">/member/dashboard</div>
+        <div class="desc">Member home — family overview</div>
+        <div class="tabs-preview">
+          <span class="tab tab-active">Overview</span>
+          <span class="tab tab-inactive">Membership</span>
+          <span class="tab tab-inactive">Family</span>
+          <span class="tab tab-inactive">Payments</span>
+          <span class="tab tab-inactive">Shares</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MEMBER DASHBOARD DETAIL ===== -->
+  <div class="section"><div class="section-label">Member Dashboard — What they see</div></div>
+
+  <div class="branch" style="align-items: flex-start;">
+
+    <!-- Col 1: Overview -->
+    <div class="branch-col">
+      <div class="node node-page" style="width:100%;">
+        <div class="label">Overview Tab</div>
+        <div class="desc">At-a-glance family status</div>
+      </div>
+      <div class="detail-box">
+        <div class="box-title">Shows</div>
+        <ul>
+          <li>Next due date + amount</li>
+          <li>Family members count</li>
+          <li>Active shares count for this year</li>
+          <li>Outstanding balance</li>
+          <li>Recent activity feed (all types)</li>
+        </ul>
+      </div>
+
+      <div class="arrow"><div class="arrow-line"></div><div class="arrow-head"></div></div>
+
+      <div class="node node-page" style="width:100%;">
+        <div class="label">Membership Tab</div>
+        <div class="desc">Plan status + dues history</div>
+      </div>
+      <div class="detail-box">
+        <div class="box-title">Shows</div>
+        <ul>
+          <li>Plan status (active / expired / pending)</li>
+          <li>Plan type (monthly $100 / annual $1,000)</li>
+          <li>Next payment + paid-through date</li>
+          <li>Year progress bar</li>
+          <li>Dues payment history (membership only)</li>
+          <li>Annual summary (paid vs remaining)</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Col 2: Family + Payments -->
+    <div class="branch-col">
+      <div class="node node-page" style="width:100%;">
+        <div class="label">Family Tab</div>
+        <div class="desc">Manage household members</div>
+      </div>
+      <div class="detail-box">
+        <div class="box-title">Actions <span class="gate gate-auth">MEMBER</span></div>
+        <ul>
+          <li>View family members (name, relationship)</li>
+          <li>Add / remove family members</li>
+          <li>Edit family details (phone, address)</li>
+          <li>Head of household is the account owner</li>
+        </ul>
+      </div>
+
+      <div class="arrow"><div class="arrow-line"></div><div class="arrow-head"></div></div>
+
+      <div class="node node-page" style="width:100%;">
+        <div class="label">Payments Tab</div>
+        <div class="desc">Events, donations, shares — not dues</div>
+      </div>
+      <div class="detail-box">
+        <div class="box-title">Shows (excludes membership dues)</div>
+        <ul>
+          <li>Event costs assigned to your family</li>
+          <li>Donations (general, car blessing, caroling, etc.)</li>
+          <li>Share purchases</li>
+          <li>Payment history with dates + amounts</li>
+          <li>Outstanding balance (non-membership)</li>
+        </ul>
+      </div>
+
+      <div class="arrow"><div class="arrow-line"></div><div class="arrow-head"></div></div>
+
+      <div class="node node-action" style="width:100%;">
+        <div class="label">Record a Donation</div>
+        <div class="desc">Type, amount, optional note</div>
+      </div>
+      <div class="detail-box">
+        <div class="box-title">Donation types</div>
+        <ul>
+          <li>General donation (any amount)</li>
+          <li>Car blessing donation</li>
+          <li>Christmas caroling donation</li>
+          <li>Event-specific donation</li>
+          <li>Other (free text)</li>
+        </ul>
+      </div>
+
+      <div class="arrow"><div class="arrow-line"></div><div class="arrow-head"></div></div>
+
+      <div class="node node-future" style="width:100%;">
+        <div class="label">Pay Online</div>
+        <div class="desc">v2 — Stripe / payment processor</div>
+        <span class="gate gate-future" style="margin-top:6px;">FUTURE</span>
+      </div>
+    </div>
+
+    <!-- Col 3: Shares -->
+    <div class="branch-col">
+      <div class="node node-page" style="width:100%;">
+        <div class="label">Shares Tab</div>
+        <div class="desc">Names remembered in services</div>
+      </div>
+      <div class="detail-box">
+        <div class="box-title">Shows</div>
+        <ul>
+          <li>Shares purchased this year</li>
+          <li>Each share: person's name + $50</li>
+          <li>Total spent on shares</li>
+          <li>Previous years' shares (history)</li>
+        </ul>
+      </div>
+
+      <div class="arrow"><div class="arrow-line"></div><div class="arrow-head"></div></div>
+
+      <div class="node node-action" style="width:100%;">
+        <div class="label">Buy Shares</div>
+        <div class="desc">Add names, $50 each</div>
+      </div>
+      <div class="detail-box">
+        <div class="box-title">Flow</div>
+        <ul>
+          <li>Enter person's name</li>
+          <li>Add multiple names at once</li>
+          <li>Shows running total ($50 x count)</li>
+          <li>Submit → admin sees in their dashboard</li>
+          <li>v1: payment tracked, not processed online</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== ADMIN SIDE ===== -->
+  <div class="section"><div class="section-label">Admin Side — Managing member data</div></div>
+
+  <div class="branch" style="align-items: flex-start;">
+
+    <div class="branch-col">
+      <div class="node node-admin" style="width:100%;">
+        <span class="gate gate-admin">ADMIN ONLY</span>
+        <div class="label" style="margin-top:6px;">Assign Event Costs</div>
+        <div class="desc">After an event, assign split to families</div>
+      </div>
+      <div class="detail-box">
+        <div class="box-title">Flow</div>
+        <ul>
+          <li>Select event from list</li>
+          <li>Enter total cost</li>
+          <li>Select which families attended</li>
+          <li>Auto-splits or manual amounts</li>
+          <li>Shows up in member's Payments tab</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="branch-col">
+      <div class="node node-admin" style="width:100%;">
+        <span class="gate gate-admin">ADMIN ONLY</span>
+        <div class="label" style="margin-top:6px;">Record Payments Received</div>
+        <div class="desc">Mark dues, donations, shares as paid</div>
+      </div>
+      <div class="detail-box">
+        <div class="box-title">Flow</div>
+        <ul>
+          <li>Select family / member</li>
+          <li>Select payment type (dues, share, event, donation)</li>
+          <li>Enter amount + method (cash, check, Zelle)</li>
+          <li>Updates member's balance + history</li>
+          <li>Audit logged</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="branch-col">
+      <div class="node node-admin" style="width:100%;">
+        <span class="gate gate-admin">ADMIN ONLY</span>
+        <div class="label" style="margin-top:6px;">Manage Shares List</div>
+        <div class="desc">View all shares for services</div>
+      </div>
+      <div class="detail-box">
+        <div class="box-title">Shows</div>
+        <ul>
+          <li>All names to remember this year</li>
+          <li>Which member bought each share</li>
+          <li>Payment status per share</li>
+          <li>Export list for service use</li>
+          <li>Year filter</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== DATA MODEL ===== -->
+  <div class="section"><div class="section-label">Data Model — New tables needed</div></div>
+
+  <div class="branch" style="align-items: flex-start; gap: 16px;">
+
+    <div class="branch-col">
+      <div class="node node-page" style="width:100%; text-align:left; padding: 16px 20px;">
+        <div class="label" style="text-align:center; margin-bottom:12px;">families</div>
+        <div style="font-size:12px; color:rgba(255,253,248,0.6); line-height:1.8; font-family:monospace;">
+          id UUID PK<br>
+          head_of_household UUID → profiles<br>
+          family_name TEXT<br>
+          phone TEXT<br>
+          address TEXT<br>
+          membership_status TEXT<br>
+          <span style="opacity:0.4">  (active / expired / pending)</span><br>
+          membership_type TEXT<br>
+          <span style="opacity:0.4">  (monthly / annual)</span><br>
+          membership_expires_at DATE<br>
+          created_at TIMESTAMPTZ<br>
+          updated_at TIMESTAMPTZ
+        </div>
+      </div>
+    </div>
+
+    <div class="branch-col">
+      <div class="node node-page" style="width:100%; text-align:left; padding: 16px 20px;">
+        <div class="label" style="text-align:center; margin-bottom:12px;">family_members</div>
+        <div style="font-size:12px; color:rgba(255,253,248,0.6); line-height:1.8; font-family:monospace;">
+          id UUID PK<br>
+          family_id UUID → families<br>
+          profile_id UUID → profiles (nullable)<br>
+          full_name TEXT<br>
+          relationship TEXT<br>
+          <span style="opacity:0.4">  (self / spouse / child / other)</span><br>
+          created_at TIMESTAMPTZ
+        </div>
+      </div>
+    </div>
+
+    <div class="branch-col">
+      <div class="node node-page" style="width:100%; text-align:left; padding: 16px 20px;">
+        <div class="label" style="text-align:center; margin-bottom:12px;">shares</div>
+        <div style="font-size:12px; color:rgba(255,253,248,0.6); line-height:1.8; font-family:monospace;">
+          id UUID PK<br>
+          family_id UUID → families<br>
+          person_name TEXT<br>
+          year INT<br>
+          amount NUMERIC (default 50)<br>
+          paid BOOLEAN<br>
+          created_at TIMESTAMPTZ
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="branch" style="align-items: flex-start; gap: 16px; margin-top: 16px;">
+
+    <div class="branch-col">
+      <div class="node node-page" style="width:100%; text-align:left; padding: 16px 20px;">
+        <div class="label" style="text-align:center; margin-bottom:12px;">payments</div>
+        <div style="font-size:12px; color:rgba(255,253,248,0.6); line-height:1.8; font-family:monospace;">
+          id UUID PK<br>
+          family_id UUID → families<br>
+          type TEXT<br>
+          <span style="opacity:0.4">  (membership / share / event / donation)</span><br>
+          amount NUMERIC<br>
+          method TEXT<br>
+          <span style="opacity:0.4">  (cash / check / zelle / online)</span><br>
+          note TEXT<br>
+          recorded_by UUID → profiles<br>
+          <span style="opacity:0.4">  (admin who recorded it)</span><br>
+          related_event_id UUID → events<br>
+          related_share_id UUID → shares<br>
+          created_at TIMESTAMPTZ
+        </div>
+      </div>
+    </div>
+
+    <div class="branch-col">
+      <div class="node node-page" style="width:100%; text-align:left; padding: 16px 20px;">
+        <div class="label" style="text-align:center; margin-bottom:12px;">event_charges</div>
+        <div style="font-size:12px; color:rgba(255,253,248,0.6); line-height:1.8; font-family:monospace;">
+          id UUID PK<br>
+          event_id UUID → events<br>
+          family_id UUID → families<br>
+          amount NUMERIC<br>
+          paid BOOLEAN<br>
+          created_at TIMESTAMPTZ
+        </div>
+      </div>
+    </div>
+
+    <div class="branch-col">
+      <div class="node node-page" style="width:100%; text-align:left; padding: 16px 20px;">
+        <div class="label" style="text-align:center; margin-bottom:12px;">profiles (updated)</div>
+        <div style="font-size:12px; color:rgba(255,253,248,0.6); line-height:1.8; font-family:monospace;">
+          <span style="opacity:0.4">— existing columns —</span><br>
+          + family_id UUID → families<br>
+          <span style="opacity:0.4">  (links profile to their family)</span><br>
+          + phone TEXT<br>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>
