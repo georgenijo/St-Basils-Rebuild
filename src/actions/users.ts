@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache'
 
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
-import { inviteUserSchema, updateRoleSchema } from '@/lib/validators/user'
+import { inviteUserSchema, updateRoleSchema, userActionSchema } from '@/lib/validators/user'
 
 type ActionState = {
   success: boolean
@@ -177,4 +177,206 @@ export async function updateUserRole(
   // 8. Revalidate and return
   revalidatePath('/admin/users')
   return { success: true, message: 'Role updated successfully' }
+}
+
+export async function deactivateUser(
+  prevState: ActionState,
+  formData: FormData
+): Promise<ActionState> {
+  // 1. Validate with Zod
+  const parsed = userActionSchema.safeParse({
+    user_id: formData.get('user_id'),
+  })
+
+  if (!parsed.success) {
+    return {
+      success: false,
+      message: 'Validation failed',
+      errors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
+    }
+  }
+
+  // 2. Auth check
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return { success: false, message: 'Unauthorized' }
+
+  // 3. Self-protection: cannot deactivate yourself
+  if (user.id === parsed.data.user_id) {
+    return { success: false, message: 'You cannot deactivate your own account' }
+  }
+
+  const adminClient = createAdminClient()
+
+  // 4. Set is_active = false on the profile
+  const { error: profileError } = await adminClient
+    .from('profiles')
+    .update({ is_active: false })
+    .eq('id', parsed.data.user_id)
+
+  if (profileError) {
+    return { success: false, message: 'Failed to deactivate user profile' }
+  }
+
+  // 5. Ban in Supabase auth (invalidates sessions)
+  const { error: banError } = await adminClient.auth.admin.updateUserById(
+    parsed.data.user_id,
+    { ban_duration: '876000h' }
+  )
+
+  if (banError) {
+    // Rollback profile change
+    await adminClient
+      .from('profiles')
+      .update({ is_active: true })
+      .eq('id', parsed.data.user_id)
+    return { success: false, message: 'Failed to ban user in auth' }
+  }
+
+  // 6. Audit log (non-fatal)
+  const { error: auditError } = await supabase.from('admin_audit_log').insert({
+    actor_id: user.id,
+    action: 'user.deactivate',
+    target_user_id: parsed.data.user_id,
+  })
+
+  if (auditError) {
+    console.error('Failed to write audit log for user.deactivate:', auditError)
+  }
+
+  // 7. Revalidate and return
+  revalidatePath('/admin/users')
+  return { success: true, message: 'User deactivated successfully' }
+}
+
+export async function reactivateUser(
+  prevState: ActionState,
+  formData: FormData
+): Promise<ActionState> {
+  // 1. Validate with Zod
+  const parsed = userActionSchema.safeParse({
+    user_id: formData.get('user_id'),
+  })
+
+  if (!parsed.success) {
+    return {
+      success: false,
+      message: 'Validation failed',
+      errors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
+    }
+  }
+
+  // 2. Auth check
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return { success: false, message: 'Unauthorized' }
+
+  const adminClient = createAdminClient()
+
+  // 3. Set is_active = true on the profile
+  const { error: profileError } = await adminClient
+    .from('profiles')
+    .update({ is_active: true })
+    .eq('id', parsed.data.user_id)
+
+  if (profileError) {
+    return { success: false, message: 'Failed to reactivate user profile' }
+  }
+
+  // 4. Unban in Supabase auth
+  const { error: unbanError } = await adminClient.auth.admin.updateUserById(
+    parsed.data.user_id,
+    { ban_duration: 'none' }
+  )
+
+  if (unbanError) {
+    // Rollback profile change
+    await adminClient
+      .from('profiles')
+      .update({ is_active: false })
+      .eq('id', parsed.data.user_id)
+    return { success: false, message: 'Failed to unban user in auth' }
+  }
+
+  // 5. Audit log (non-fatal)
+  const { error: auditError } = await supabase.from('admin_audit_log').insert({
+    actor_id: user.id,
+    action: 'user.reactivate',
+    target_user_id: parsed.data.user_id,
+  })
+
+  if (auditError) {
+    console.error('Failed to write audit log for user.reactivate:', auditError)
+  }
+
+  // 6. Revalidate and return
+  revalidatePath('/admin/users')
+  return { success: true, message: 'User reactivated successfully' }
+}
+
+export async function sendPasswordReset(
+  prevState: ActionState,
+  formData: FormData
+): Promise<ActionState> {
+  // 1. Validate with Zod
+  const parsed = userActionSchema.safeParse({
+    user_id: formData.get('user_id'),
+  })
+
+  if (!parsed.success) {
+    return {
+      success: false,
+      message: 'Validation failed',
+      errors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
+    }
+  }
+
+  // 2. Auth check
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return { success: false, message: 'Unauthorized' }
+
+  // 3. Look up the target user's email from their profile
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('email')
+    .eq('id', parsed.data.user_id)
+    .single()
+
+  if (profileError || !profile?.email) {
+    return { success: false, message: 'Could not find email for this user' }
+  }
+
+  // 4. Generate recovery link (sends Supabase's built-in password reset email)
+  const adminClient = createAdminClient()
+  const { error: resetError } = await adminClient.auth.admin.generateLink({
+    type: 'recovery',
+    email: profile.email,
+  })
+
+  if (resetError) {
+    return { success: false, message: 'Failed to send password reset email' }
+  }
+
+  // 5. Audit log (non-fatal)
+  const { error: auditError } = await supabase.from('admin_audit_log').insert({
+    actor_id: user.id,
+    action: 'user.password_reset',
+    target_user_id: parsed.data.user_id,
+    metadata: { email: profile.email },
+  })
+
+  if (auditError) {
+    console.error('Failed to write audit log for user.password_reset:', auditError)
+  }
+
+  // 6. Revalidate and return
+  revalidatePath('/admin/users')
+  return { success: true, message: 'Password reset email sent successfully' }
 }
