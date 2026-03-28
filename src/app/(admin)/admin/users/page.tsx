@@ -15,10 +15,14 @@ export default async function UsersPage() {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const { data: profiles } = await supabase
+  const { data: profiles, error } = await supabase
     .from('profiles')
     .select('id, email, full_name, role, is_active, created_at, updated_at')
     .order('created_at', { ascending: false })
+
+  if (error) {
+    console.error('Failed to fetch profiles:', error)
+  }
 
   const all = profiles ?? []
   const adminCount = all.filter((p) => p.role === 'admin').length

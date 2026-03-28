@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useActionState } from 'react'
+import { useState, useMemo, useEffect, useActionState } from 'react'
 
 import { cn } from '@/lib/utils'
 import { updateUserRole, deactivateUser, reactivateUser } from '@/actions/users'
@@ -124,10 +124,17 @@ function ActionButton({
   disabled?: boolean
   title?: string
 }) {
-  const [, formAction, isPending] = useActionState(action, {
+  const [state, formAction, isPending] = useActionState(action, {
     success: false,
     message: '',
   })
+
+  useEffect(() => {
+    if (state.message && !state.success) {
+      // Surface error to user via window alert (lightweight, no toast library needed)
+      window.alert(state.message)
+    }
+  }, [state])
 
   return (
     <form action={formAction}>
@@ -215,6 +222,24 @@ export function UsersTable({ users, currentUserId, onRowClick }: UsersTableProps
   const thClass =
     'px-4 py-3 text-left font-body text-xs font-medium uppercase tracking-wider text-wood-800/60 cursor-pointer select-none hover:text-wood-900 transition-colors'
 
+  function sortableThProps(key: SortKey) {
+    return {
+      onClick: () => toggleSort(key),
+      onKeyDown: (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          toggleSort(key)
+        }
+      },
+      tabIndex: 0 as const,
+      role: 'button' as const,
+      'aria-sort': (sortKey === key ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none') as
+        | 'ascending'
+        | 'descending'
+        | 'none',
+    }
+  }
+
   return (
     <div>
       {/* Toolbar */}
@@ -262,27 +287,21 @@ export function UsersTable({ users, currentUserId, onRowClick }: UsersTableProps
         <table className="w-full">
           <thead className="border-b border-wood-800/10 bg-cream-100/50">
             <tr>
-              <th className={thClass} onClick={() => toggleSort('name')}>
+              <th className={thClass} {...sortableThProps('name')}>
                 User
                 <SortIcon active={sortKey === 'name'} dir={sortDir} />
               </th>
-              <th
-                className={cn(thClass, 'hidden sm:table-cell')}
-                onClick={() => toggleSort('role')}
-              >
+              <th className={cn(thClass, 'hidden sm:table-cell')} {...sortableThProps('role')}>
                 Role
                 <SortIcon active={sortKey === 'role'} dir={sortDir} />
               </th>
-              <th
-                className={cn(thClass, 'hidden sm:table-cell')}
-                onClick={() => toggleSort('status')}
-              >
+              <th className={cn(thClass, 'hidden sm:table-cell')} {...sortableThProps('status')}>
                 Status
                 <SortIcon active={sortKey === 'status'} dir={sortDir} />
               </th>
               <th
                 className={cn(thClass, 'hidden sm:table-cell')}
-                onClick={() => toggleSort('created_at')}
+                {...sortableThProps('created_at')}
               >
                 Joined
                 <SortIcon active={sortKey === 'created_at'} dir={sortDir} />
