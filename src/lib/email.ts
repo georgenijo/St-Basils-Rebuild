@@ -35,6 +35,7 @@ export async function sendEmail(payload: SendEmailPayload): Promise<SendEmailRes
     return { data: record, error: null }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { metadata: _metadata, ...message } = payload
   const result = await resend.emails.send(message as Parameters<typeof resend.emails.send>[0])
   return { data: result.data, error: result.error }
