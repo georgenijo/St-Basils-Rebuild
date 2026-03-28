@@ -37,6 +37,11 @@ const navigation: NavItem[] = [
     href: '/admin/subscribers',
     icon: <UsersIcon />,
   },
+  {
+    label: 'Users',
+    href: '/admin/users',
+    icon: <ShieldUserIcon />,
+  },
 ]
 
 // ─── Component ───────────────────────────────────────────────────────
@@ -255,6 +260,26 @@ function UsersIcon() {
       <circle cx="9" cy="7" r="4" />
       <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
       <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+    </svg>
+  )
+}
+
+function ShieldUserIcon() {
+  return (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+      <circle cx="12" cy="10" r="3" />
+      <path d="M7 20.662V18a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v.662" />
     </svg>
   )
 }
