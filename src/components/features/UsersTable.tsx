@@ -113,7 +113,10 @@ function ActionButton({
   disabled,
   title,
 }: {
-  action: (state: { success: boolean; message: string }, formData: FormData) => Promise<{ success: boolean; message: string }>
+  action: (
+    state: { success: boolean; message: string },
+    formData: FormData
+  ) => Promise<{ success: boolean; message: string }>
   userId: string
   hiddenFields?: Record<string, string>
   label: string
@@ -356,10 +359,7 @@ export function UsersTable({ users, currentUserId, onRowClick }: UsersTableProps
                     </td>
 
                     {/* Actions */}
-                    <td
-                      className="px-4 py-3"
-                      onClick={(e) => e.stopPropagation()}
-                    >
+                    <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-end gap-1.5">
                         {user.is_active ? (
                           <>
@@ -372,9 +372,7 @@ export function UsersTable({ users, currentUserId, onRowClick }: UsersTableProps
                               label="Change Role"
                               className="border-wood-800/15 bg-white text-wood-800 hover:bg-cream-100"
                               disabled={isSelf}
-                              title={
-                                isSelf ? 'You cannot change your own role' : undefined
-                              }
+                              title={isSelf ? 'You cannot change your own role' : undefined}
                             />
                             <ActionButton
                               action={deactivateUser}
@@ -382,11 +380,7 @@ export function UsersTable({ users, currentUserId, onRowClick }: UsersTableProps
                               label="Deactivate"
                               className="border-red-200 bg-white text-red-600 hover:bg-red-50"
                               disabled={isSelf}
-                              title={
-                                isSelf
-                                  ? 'You cannot deactivate yourself'
-                                  : undefined
-                              }
+                              title={isSelf ? 'You cannot deactivate yourself' : undefined}
                             />
                           </>
                         ) : (
