@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Users — Mockup</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Roboto', system-ui, sans-serif; background: #fffdf8; color: #4a3729; overflow-x: hidden; }
+  h1, h2, h3 { font-family: 'Raleway', system-ui, sans-serif; }
+
+  .layout { display: flex; min-height: 100vh; }
+
+  /* Sidebar */
+  .sidebar { width: 256px; background: #253341; color: #fffdf8; flex-shrink: 0; display: flex; flex-direction: column; }
+  .sidebar-header { padding: 16px 24px; font-size: 18px; font-weight: 600; }
+  .sidebar-divider { height: 1px; margin: 0 16px; background: linear-gradient(to right, transparent, #d4a017, transparent); }
+  .sidebar nav { padding: 16px 12px; flex: 1; }
+  .sidebar nav ul { list-style: none; }
+  .sidebar nav li a { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; color: rgba(255,253,248,0.6); text-decoration: none; font-size: 14px; font-weight: 500; transition: all 0.15s; }
+  .sidebar nav li a:hover { background: rgba(255,253,248,0.05); color: #fffdf8; }
+  .sidebar nav li a.active { background: rgba(255,253,248,0.1); color: #fffdf8; }
+  .sidebar-bottom { padding: 12px; border-top: 1px solid rgba(255,253,248,0.1); }
+  .sidebar-bottom a { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; color: rgba(255,253,248,0.6); text-decoration: none; font-size: 14px; font-weight: 500; }
+
+  /* Main */
+  .main { flex: 1; display: flex; flex-direction: column; position: relative; }
+  .topbar { padding: 12px 32px; border-bottom: 1px solid rgba(74,55,41,0.1); display: flex; justify-content: flex-end; align-items: center; gap: 16px; font-size: 14px; color: rgba(74,55,41,0.6); }
+  .topbar button { background: none; border: 1px solid rgba(74,55,41,0.2); border-radius: 8px; padding: 6px 16px; font-size: 13px; cursor: pointer; color: #4a3729; }
+  .content { padding: 32px; flex: 1; }
+
+  /* Page header */
+  .page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; }
+  .page-header h1 { font-size: 30px; font-weight: 600; color: #2c1810; }
+  .page-header p { margin-top: 4px; font-size: 14px; color: rgba(74,55,41,0.6); }
+  .btn-primary { display: inline-flex; align-items: center; gap: 8px; background: #9b1b3d; color: white; border: none; border-radius: 8px; padding: 8px 16px; font-size: 14px; font-weight: 500; cursor: pointer; text-decoration: none; }
+  .btn-primary:hover { background: #7a1530; }
+
+  /* Summary cards */
+  .summary-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px; }
+  .summary-card { background: #fffdf8; border: 1px solid rgba(74,55,41,0.1); border-radius: 16px; padding: 20px; }
+  .summary-card .label { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 500; color: rgba(74,55,41,0.6); }
+  .summary-card .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .summary-card .count { margin-top: 8px; font-size: 30px; font-weight: 600; color: #2c1810; font-family: 'Raleway', system-ui, sans-serif; }
+  .dot-burgundy { background: #9b1b3d; }
+  .dot-blue { background: #3b82f6; }
+  .dot-green { background: #10b981; }
+  .dot-red { background: #ef4444; }
+
+  /* Table toolbar */
+  .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; gap: 16px; }
+  .search-box { position: relative; }
+  .search-box input { padding: 8px 12px 8px 36px; border: 1px solid rgba(74,55,41,0.2); border-radius: 8px; font-size: 14px; width: 280px; background: white; }
+  .search-box svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: rgba(74,55,41,0.4); }
+  .filter-pills { display: flex; gap: 4px; }
+  .pill { padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 500; border: 1px solid rgba(74,55,41,0.15); background: white; cursor: pointer; color: rgba(74,55,41,0.6); }
+  .pill.active { background: #253341; color: white; border-color: #253341; }
+
+  /* Table */
+  .table-wrapper { background: white; border: 1px solid rgba(74,55,41,0.1); border-radius: 12px; overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  thead th { text-align: left; padding: 12px 16px; font-weight: 600; font-size: 13px; color: rgba(74,55,41,0.6); border-bottom: 1px solid rgba(74,55,41,0.1); background: #fafaf7; }
+  tbody td { padding: 14px 16px; border-bottom: 1px solid rgba(74,55,41,0.06); }
+  tbody tr { cursor: pointer; transition: background 0.1s; }
+  tbody tr:hover { background: rgba(74,55,41,0.03); }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr.selected { background: rgba(155,27,61,0.04); }
+  .user-cell { display: flex; flex-direction: column; }
+  .user-name { font-weight: 500; color: #9b1b3d; }
+  .user-email { font-size: 13px; color: rgba(74,55,41,0.5); }
+
+  /* Badges */
+  .badge { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 500; }
+  .badge-admin { background: #fef3c7; color: #92400e; }
+  .badge-member { background: #e0e7ff; color: #3730a3; }
+  .badge-active { background: #d1fae5; color: #065f46; }
+  .badge-deactivated { background: #fee2e2; color: #991b1b; }
+
+  /* Row actions */
+  .actions { display: flex; gap: 6px; }
+  .action-btn { padding: 5px 10px; border-radius: 6px; font-size: 12px; font-weight: 500; border: 1px solid rgba(74,55,41,0.15); background: white; cursor: pointer; color: #4a3729; white-space: nowrap; }
+  .action-btn:hover { background: #f5f5f2; }
+  .action-btn.danger { color: #dc2626; border-color: rgba(220,38,38,0.2); }
+  .action-btn.danger:hover { background: #fef2f2; }
+  .action-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  /* Pagination */
+  .pagination { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; font-size: 13px; color: rgba(74,55,41,0.6); }
+  .pagination-btns { display: flex; gap: 4px; }
+  .pagination-btns button { padding: 6px 12px; border: 1px solid rgba(74,55,41,0.15); border-radius: 6px; background: white; font-size: 13px; cursor: pointer; }
+
+  /* ======= SLIDE-OUT PANEL ======= */
+  .panel-backdrop {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.3);
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.3s ease;
+    z-index: 40;
+  }
+  .panel-backdrop.open { opacity: 1; pointer-events: auto; }
+
+  .slide-panel {
+    position: fixed; top: 0; right: 0; bottom: 0;
+    width: 520px; max-width: 90vw;
+    background: #fffdf8;
+    box-shadow: -8px 0 30px rgba(0,0,0,0.12);
+    transform: translateX(100%);
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 50;
+    display: flex; flex-direction: column;
+    overflow-y: auto;
+  }
+  .slide-panel.open { transform: translateX(0); }
+
+  .panel-header {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    padding: 24px 24px 0;
+    position: sticky; top: 0; background: #fffdf8; z-index: 1;
+  }
+  .panel-close {
+    width: 36px; height: 36px; border-radius: 8px; border: 1px solid rgba(74,55,41,0.15);
+    background: white; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    color: rgba(74,55,41,0.6); flex-shrink: 0;
+  }
+  .panel-close:hover { background: #f5f5f2; color: #4a3729; }
+
+  .panel-body { padding: 24px; flex: 1; }
+
+  /* User detail inside panel */
+  .panel-user-info { display: flex; gap: 16px; align-items: flex-start; }
+  .avatar { width: 56px; height: 56px; border-radius: 50%; background: #e0e7ff; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 600; color: #3730a3; flex-shrink: 0; }
+  .avatar.admin-avatar { background: #fef3c7; color: #92400e; }
+  .panel-user-meta h2 { font-size: 20px; font-weight: 600; color: #2c1810; }
+  .panel-user-meta .email { font-size: 14px; color: rgba(74,55,41,0.6); margin-top: 2px; }
+  .panel-user-meta .badges { display: flex; gap: 8px; margin-top: 8px; }
+
+  .panel-actions { display: flex; gap: 8px; margin-top: 20px; padding-bottom: 20px; border-bottom: 1px solid rgba(74,55,41,0.1); }
+  .btn-outline { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border: 1px solid rgba(74,55,41,0.2); border-radius: 8px; font-size: 13px; font-weight: 500; background: white; cursor: pointer; color: #4a3729; }
+  .btn-outline:hover { background: #f5f5f2; }
+  .btn-outline.danger { color: #dc2626; border-color: rgba(220,38,38,0.2); }
+  .btn-outline.danger:hover { background: #fef2f2; }
+
+  /* Detail cards in panel */
+  .panel-section { margin-top: 20px; }
+  .panel-section h3 { font-size: 13px; font-weight: 600; color: rgba(74,55,41,0.5); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
+  .detail-card { background: white; border: 1px solid rgba(74,55,41,0.1); border-radius: 10px; overflow: hidden; }
+  .detail-row { display: flex; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid rgba(74,55,41,0.06); font-size: 14px; }
+  .detail-row:last-child { border-bottom: none; }
+  .detail-label { color: rgba(74,55,41,0.6); }
+  .detail-value { font-weight: 500; color: #2c1810; }
+
+  /* Audit log in panel */
+  .audit-list { background: white; border: 1px solid rgba(74,55,41,0.1); border-radius: 10px; overflow: hidden; }
+  .audit-entry { display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; border-bottom: 1px solid rgba(74,55,41,0.06); font-size: 13px; }
+  .audit-entry:last-child { border-bottom: none; }
+  .audit-dot { width: 7px; height: 7px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+  .audit-dot.invite { background: #3b82f6; }
+  .audit-dot.role { background: #d4a017; }
+  .audit-dot.deactivate { background: #ef4444; }
+  .audit-dot.reactivate { background: #10b981; }
+  .audit-dot.password { background: #8b5cf6; }
+  .audit-text { flex: 1; color: #4a3729; line-height: 1.4; }
+  .audit-text strong { font-weight: 600; }
+  .audit-time { font-size: 12px; color: rgba(74,55,41,0.4); white-space: nowrap; }
+
+  /* Instruction banner */
+  .try-it { text-align: center; padding: 12px; background: #fef3c7; border-bottom: 1px solid #fde68a; font-size: 14px; color: #92400e; }
+  .try-it strong { font-weight: 600; }
+</style>
+</head>
+<body>
+
+<div class="try-it"><strong>Interactive mockup:</strong> Click any user row to open the slide-out panel. Click the backdrop or X to close.</div>
+
+<div class="layout">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-header">Admin</div>
+    <div class="sidebar-divider"></div>
+    <nav>
+      <ul>
+        <li><a href="#">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+          Dashboard</a></li>
+        <li><a href="#">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+          Events</a></li>
+        <li><a href="#">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          Announcements</a></li>
+        <li><a href="#">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Subscribers</a></li>
+        <li><a href="#" class="active">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><circle cx="12" cy="10" r="3"/><path d="M12 13v2"/></svg>
+          Users</a></li>
+      </ul>
+    </nav>
+    <div class="sidebar-bottom">
+      <a href="#">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        Back to site
+      </a>
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <div class="main">
+    <div class="topbar">
+      <span>george@stbasilsboston.org</span>
+      <button>Log out</button>
+    </div>
+
+    <div class="content">
+      <div class="page-header">
+        <div>
+          <h1>Users</h1>
+          <p>Manage admin accounts and church members.</p>
+        </div>
+        <a href="#" class="btn-primary" onclick="return false;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Invite User
+        </a>
+      </div>
+
+      <!-- Summary cards -->
+      <div class="summary-cards">
+        <div class="summary-card">
+          <div class="label"><span class="dot dot-burgundy"></span> Total</div>
+          <div class="count">12</div>
+        </div>
+        <div class="summary-card">
+          <div class="label"><span class="dot dot-blue"></span> Admins</div>
+          <div class="count">3</div>
+        </div>
+        <div class="summary-card">
+          <div class="label"><span class="dot dot-green"></span> Members</div>
+          <div class="count">8</div>
+        </div>
+        <div class="summary-card">
+          <div class="label"><span class="dot dot-red"></span> Deactivated</div>
+          <div class="count">1</div>
+        </div>
+      </div>
+
+      <!-- Toolbar -->
+      <div class="toolbar">
+        <div class="search-box">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" placeholder="Search by name or email..." />
+        </div>
+        <div class="filter-pills">
+          <span class="pill active">All</span>
+          <span class="pill">Admins</span>
+          <span class="pill">Members</span>
+          <span class="pill">Deactivated</span>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Joined</th>
+              <th style="text-align: right;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr onclick="openPanel('george')" data-user="george">
+              <td>
+                <div class="user-cell">
+                  <span class="user-name">George Nijo</span>
+                  <span class="user-email">george@stbasilsboston.org</span>
+                </div>
+              </td>
+              <td><span class="badge badge-admin">Admin</span></td>
+              <td><span class="badge badge-active">Active</span></td>
+              <td>Mar 8, 2026</td>
+              <td style="text-align: right;" onclick="event.stopPropagation()">
+                <div class="actions" style="justify-content: flex-end;">
+                  <button class="action-btn" disabled title="You cannot change your own role">Change Role</button>
+                  <button class="action-btn" disabled title="You cannot deactivate yourself">Deactivate</button>
+                </div>
+              </td>
+            </tr>
+            <tr onclick="openPanel('thomas')" data-user="thomas">
+              <td>
+                <div class="user-cell">
+                  <span class="user-name">Fr. Thomas Mathew</span>
+                  <span class="user-email">fr.thomas@stbasilsboston.org</span>
+                </div>
+              </td>
+              <td><span class="badge badge-admin">Admin</span></td>
+              <td><span class="badge badge-active">Active</span></td>
+              <td>Mar 8, 2026</td>
+              <td style="text-align: right;" onclick="event.stopPropagation()">
+                <div class="actions" style="justify-content: flex-end;">
+                  <button class="action-btn">Change Role</button>
+                  <button class="action-btn danger">Deactivate</button>
+                </div>
+              </td>
+            </tr>
+            <tr onclick="openPanel('sarah')" data-user="sarah">
+              <td>
+                <div class="user-cell">
+                  <span class="user-name">Sarah Abraham</span>
+                  <span class="user-email">sarah.a@gmail.com</span>
+                </div>
+              </td>
+              <td><span class="badge badge-member">Member</span></td>
+              <td><span class="badge badge-active">Active</span></td>
+              <td>Mar 15, 2026</td>
+              <td style="text-align: right;" onclick="event.stopPropagation()">
+                <div class="actions" style="justify-content: flex-end;">
+                  <button class="action-btn">Change Role</button>
+                  <button class="action-btn danger">Deactivate</button>
+                </div>
+              </td>
+            </tr>
+            <tr onclick="openPanel('john')" data-user="john">
+              <td>
+                <div class="user-cell">
+                  <span class="user-name">John Philip</span>
+                  <span class="user-email">john.philip@outlook.com</span>
+                </div>
+              </td>
+              <td><span class="badge badge-member">Member</span></td>
+              <td><span class="badge badge-active">Active</span></td>
+              <td>Mar 18, 2026</td>
+              <td style="text-align: right;" onclick="event.stopPropagation()">
+                <div class="actions" style="justify-content: flex-end;">
+                  <button class="action-btn">Change Role</button>
+                  <button class="action-btn danger">Deactivate</button>
+                </div>
+              </td>
+            </tr>
+            <tr onclick="openPanel('david')" data-user="david" style="opacity: 0.6;">
+              <td>
+                <div class="user-cell">
+                  <span class="user-name">David Kurien</span>
+                  <span class="user-email">david.k@yahoo.com</span>
+                </div>
+              </td>
+              <td><span class="badge badge-member">Member</span></td>
+              <td><span class="badge badge-deactivated">Deactivated</span></td>
+              <td>Mar 10, 2026</td>
+              <td style="text-align: right;" onclick="event.stopPropagation()">
+                <div class="actions" style="justify-content: flex-end;">
+                  <button class="action-btn" style="color: #10b981; border-color: rgba(16,185,129,0.2);">Reactivate</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="pagination">
+          <span>Showing 1-5 of 12 users</span>
+          <div class="pagination-btns">
+            <button disabled>Previous</button>
+            <button>Next</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Slide-out panel backdrop -->
+<div class="panel-backdrop" id="panelBackdrop" onclick="closePanel()"></div>
+
+<!-- Slide-out panel -->
+<div class="slide-panel" id="slidePanel">
+  <div class="panel-header">
+    <div></div>
+    <button class="panel-close" onclick="closePanel()" aria-label="Close panel">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+  <div class="panel-body" id="panelContent">
+    <!-- Populated by JS -->
+  </div>
+</div>
+
+<script>
+const users = {
+  george: {
+    name: 'George Nijo', initials: 'GN', email: 'george@stbasilsboston.org',
+    role: 'admin', status: 'active', joined: 'Mar 8, 2026', updated: 'Mar 25, 2026',
+    invitedBy: 'First admin (manual)',
+    isSelf: true,
+    audit: [
+      { type: 'role', text: '<strong>System</strong> set role to admin via SQL', time: 'Mar 8, 2026' },
+    ]
+  },
+  thomas: {
+    name: 'Fr. Thomas Mathew', initials: 'FT', email: 'fr.thomas@stbasilsboston.org',
+    role: 'admin', status: 'active', joined: 'Mar 8, 2026', updated: 'Mar 20, 2026',
+    invitedBy: 'George Nijo',
+    isSelf: false,
+    audit: [
+      { type: 'role', text: '<strong>George Nijo</strong> changed role from member to admin', time: 'Mar 20, 2026' },
+      { type: 'password', text: '<strong>George Nijo</strong> sent a password reset email', time: 'Mar 12, 2026' },
+      { type: 'invite', text: '<strong>George Nijo</strong> invited this user as member', time: 'Mar 8, 2026' },
+    ]
+  },
+  sarah: {
+    name: 'Sarah Abraham', initials: 'SA', email: 'sarah.a@gmail.com',
+    role: 'member', status: 'active', joined: 'Mar 15, 2026', updated: 'Mar 15, 2026',
+    invitedBy: 'George Nijo',
+    isSelf: false,
+    audit: [
+      { type: 'invite', text: '<strong>George Nijo</strong> invited this user as member', time: 'Mar 15, 2026' },
+    ]
+  },
+  john: {
+    name: 'John Philip', initials: 'JP', email: 'john.philip@outlook.com',
+    role: 'member', status: 'active', joined: 'Mar 18, 2026', updated: 'Mar 18, 2026',
+    invitedBy: 'Fr. Thomas Mathew',
+    isSelf: false,
+    audit: [
+      { type: 'invite', text: '<strong>Fr. Thomas Mathew</strong> invited this user as member', time: 'Mar 18, 2026' },
+    ]
+  },
+  david: {
+    name: 'David Kurien', initials: 'DK', email: 'david.k@yahoo.com',
+    role: 'member', status: 'deactivated', joined: 'Mar 10, 2026', updated: 'Mar 22, 2026',
+    invitedBy: 'George Nijo',
+    isSelf: false,
+    audit: [
+      { type: 'deactivate', text: '<strong>George Nijo</strong> deactivated this account', time: 'Mar 22, 2026' },
+      { type: 'invite', text: '<strong>George Nijo</strong> invited this user as member', time: 'Mar 10, 2026' },
+    ]
+  },
+};
+
+function openPanel(userId) {
+  const u = users[userId];
+  if (!u) return;
+
+  // Highlight selected row
+  document.querySelectorAll('tbody tr').forEach(tr => tr.classList.remove('selected'));
+  const row = document.querySelector(`tr[data-user="${userId}"]`);
+  if (row) row.classList.add('selected');
+
+  const roleBadge = u.role === 'admin'
+    ? '<span class="badge badge-admin">Admin</span>'
+    : '<span class="badge badge-member">Member</span>';
+  const statusBadge = u.status === 'active'
+    ? '<span class="badge badge-active">Active</span>'
+    : '<span class="badge badge-deactivated">Deactivated</span>';
+  const avatarClass = u.role === 'admin' ? 'avatar admin-avatar' : 'avatar';
+
+  const selfNote = u.isSelf ? ' (you)' : '';
+
+  let actionsHtml = '';
+  if (u.isSelf) {
+    actionsHtml = '<div style="font-size:13px; color:rgba(74,55,41,0.5); padding: 8px 0;">Actions are disabled for your own account.</div>';
+  } else if (u.status === 'deactivated') {
+    actionsHtml = `
+      <button class="btn-outline" style="color: #10b981; border-color: rgba(16,185,129,0.2);">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+        Reactivate
+      </button>
+    `;
+  } else {
+    actionsHtml = `
+      <button class="btn-outline">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Password Reset
+      </button>
+      <button class="btn-outline">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>
+        Change Role
+      </button>
+      <button class="btn-outline danger">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+        Deactivate
+      </button>
+    `;
+  }
+
+  const auditHtml = u.audit.map(a => `
+    <div class="audit-entry">
+      <span class="audit-dot ${a.type}"></span>
+      <div class="audit-text">${a.text}</div>
+      <span class="audit-time">${a.time}</span>
+    </div>
+  `).join('');
+
+  document.getElementById('panelContent').innerHTML = `
+    <div class="panel-user-info">
+      <div class="${avatarClass}">${u.initials}</div>
+      <div class="panel-user-meta">
+        <h2>${u.name}${selfNote}</h2>
+        <div class="email">${u.email}</div>
+        <div class="badges">${roleBadge} ${statusBadge}</div>
+      </div>
+    </div>
+
+    <div class="panel-actions">${actionsHtml}</div>
+
+    <div class="panel-section">
+      <h3>Account Details</h3>
+      <div class="detail-card">
+        <div class="detail-row">
+          <span class="detail-label">Email</span>
+          <span class="detail-value">${u.email}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Role</span>
+          <span class="detail-value">${roleBadge}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Status</span>
+          <span class="detail-value">${statusBadge}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Joined</span>
+          <span class="detail-value">${u.joined}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Last Updated</span>
+          <span class="detail-value">${u.updated}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Invited By</span>
+          <span class="detail-value">${u.invitedBy}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <h3>Activity</h3>
+      <div class="audit-list">${auditHtml}</div>
+    </div>
+  `;
+
+  document.getElementById('panelBackdrop').classList.add('open');
+  document.getElementById('slidePanel').classList.add('open');
+}
+
+function closePanel() {
+  document.getElementById('panelBackdrop').classList.remove('open');
+  document.getElementById('slidePanel').classList.remove('open');
+  document.querySelectorAll('tbody tr').forEach(tr => tr.classList.remove('selected'));
+}
+
+// Close on Escape
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closePanel();
+});
+</script>
+
+</body>
+</html>
