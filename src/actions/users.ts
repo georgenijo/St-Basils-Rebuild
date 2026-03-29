@@ -153,8 +153,9 @@ export async function updateUserRole(
     return { success: false, message: `User already has the "${parsed.data.role}" role` }
   }
 
-  // 6. Update role
-  const { error: updateError } = await supabase
+  // 6. Update role (use admin client to bypass recursive RLS on profiles self-update policy)
+  const adminClient = createAdminClient()
+  const { error: updateError } = await adminClient
     .from('profiles')
     .update({ role: parsed.data.role })
     .eq('id', parsed.data.user_id)
@@ -364,15 +365,13 @@ export async function sendPasswordReset(
     .single()
 
   if (profileError || !profile?.email) {
+    console.error('sendPasswordReset profile lookup failed:', { profileError, profile, user_id: parsed.data.user_id })
     return { success: false, message: 'Could not find email for this user' }
   }
 
-  // 4. Generate recovery link (sends Supabase's built-in password reset email)
+  // 4. Send password reset email via Supabase auth mailer
   const adminClient = createAdminClient()
-  const { error: resetError } = await adminClient.auth.admin.generateLink({
-    type: 'recovery',
-    email: profile.email,
-  })
+  const { error: resetError } = await adminClient.auth.resetPasswordForEmail(profile.email)
 
   if (resetError) {
     return { success: false, message: 'Failed to send password reset email' }
@@ -393,4 +392,50 @@ export async function sendPasswordReset(
   // 6. Revalidate and return
   revalidatePath('/admin/users')
   return { success: true, message: 'Password reset email sent successfully' }
+}
+
+// ─── Audit Log Query ─────────────────────────────────────────────────
+
+export type AuditLogEntry = {
+  id: string
+  action: string
+  actor_name: string
+  metadata: Record<string, string>
+  created_at: string
+}
+
+export async function fetchUserAuditLog(userId: string): Promise<AuditLogEntry[]> {
+  const supabase = await createClient()
+
+  // Auth check
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return []
+
+  // Fetch audit entries for the target user
+  const { data: entries, error } = await supabase
+    .from('admin_audit_log')
+    .select('id, action, actor_id, metadata, created_at')
+    .eq('target_user_id', userId)
+    .order('created_at', { ascending: false })
+
+  if (error || !entries) return []
+
+  // Collect unique actor IDs to resolve names
+  const actorIds = [...new Set(entries.map((e) => e.actor_id))]
+  const { data: actors } = await supabase
+    .from('profiles')
+    .select('id, full_name')
+    .in('id', actorIds)
+
+  const actorMap = new Map(actors?.map((a) => [a.id, a.full_name ?? 'Unknown']) ?? [])
+
+  return entries.map((e) => ({
+    id: e.id,
+    action: e.action,
+    actor_name: actorMap.get(e.actor_id) ?? 'Unknown',
+    metadata: (e.metadata ?? {}) as Record<string, string>,
+    created_at: e.created_at,
+  }))
 }

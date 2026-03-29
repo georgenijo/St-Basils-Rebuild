@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 import { createClient } from '@/lib/supabase/server'
-import { UsersTable } from '@/components/features/UsersTable'
+import { UsersPageClient } from './UsersPageClient'
 
 export const metadata: Metadata = {
   title: 'Users',
@@ -76,7 +76,7 @@ export default async function UsersPage() {
         <SummaryCard label="Deactivated" count={deactivatedCount} accent="red" />
       </div>
 
-      <UsersTable users={all} currentUserId={user?.id ?? ''} />
+      <UsersPageClient users={all} currentUserId={user?.id ?? ''} />
     </main>
   )
 }
