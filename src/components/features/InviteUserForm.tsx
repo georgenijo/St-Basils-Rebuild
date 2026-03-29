@@ -20,10 +20,10 @@ const initialState = {
   errors: undefined as Record<string, string[]> | undefined,
 }
 
-function FieldError({ errors }: { errors?: string[] }) {
+function FieldError({ id, errors }: { id: string; errors?: string[] }) {
   if (!errors?.length) return null
   return (
-    <p className="mt-1.5 font-body text-sm text-red-600" role="alert">
+    <p id={id} className="mt-1.5 font-body text-sm text-red-600" role="alert">
       {errors[0]}
     </p>
   )
@@ -59,9 +59,11 @@ export function InviteUserForm() {
           name="email"
           required
           placeholder="e.g. john@example.com"
+          aria-invalid={Boolean(state.errors?.email)}
+          aria-describedby={state.errors?.email ? 'email-error' : undefined}
           className={cn(inputBase, state.errors?.email && 'border-red-400')}
         />
-        <FieldError errors={state.errors?.email} />
+        <FieldError id="email-error" errors={state.errors?.email} />
       </div>
 
       {/* Full Name */}
@@ -79,9 +81,11 @@ export function InviteUserForm() {
           required
           maxLength={200}
           placeholder="e.g. John Thomas"
+          aria-invalid={Boolean(state.errors?.full_name)}
+          aria-describedby={state.errors?.full_name ? 'full-name-error' : undefined}
           className={cn(inputBase, state.errors?.full_name && 'border-red-400')}
         />
-        <FieldError errors={state.errors?.full_name} />
+        <FieldError id="full-name-error" errors={state.errors?.full_name} />
       </div>
 
       {/* Role */}
@@ -93,6 +97,8 @@ export function InviteUserForm() {
           id="role"
           name="role"
           defaultValue="member"
+          aria-invalid={Boolean(state.errors?.role)}
+          aria-describedby={state.errors?.role ? 'role-error' : undefined}
           className={cn(inputBase, state.errors?.role && 'border-red-400')}
         >
           {ROLES.map((r) => (
@@ -101,7 +107,7 @@ export function InviteUserForm() {
             </option>
           ))}
         </select>
-        <FieldError errors={state.errors?.role} />
+        <FieldError id="role-error" errors={state.errors?.role} />
       </div>
 
       {/* Submit / Cancel */}
@@ -130,7 +136,7 @@ export function InviteUserForm() {
             'Send Invite'
           )}
         </Button>
-        <Button type="button" variant="ghost" href="/admin/users">
+        <Button variant="ghost" href="/admin/users">
           Cancel
         </Button>
       </div>
