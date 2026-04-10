@@ -3,7 +3,7 @@
 
 CREATE TABLE public.payments (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  family_id UUID NOT NULL REFERENCES public.families(id) ON DELETE CASCADE,
+  family_id UUID NOT NULL REFERENCES public.families(id) ON DELETE RESTRICT,
   type TEXT NOT NULL CHECK (type IN ('membership', 'share', 'event', 'donation')),
   amount NUMERIC(10,2) NOT NULL,
   method TEXT CHECK (method IN ('cash', 'check', 'zelle', 'online')),
@@ -14,7 +14,9 @@ CREATE TABLE public.payments (
   -- this payment. Requires uq_shares_id_family on shares(id, family_id).
   -- MATCH SIMPLE (default): skipped when related_share_id IS NULL.
   related_share_id UUID,
-  FOREIGN KEY (related_share_id, family_id) REFERENCES public.shares(id, family_id) ON DELETE SET NULL,
+  FOREIGN KEY (related_share_id, family_id)
+    REFERENCES public.shares(id, family_id)
+    ON DELETE SET NULL (related_share_id),
   created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
   updated_at TIMESTAMPTZ DEFAULT now() NOT NULL,
 
