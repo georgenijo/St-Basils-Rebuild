@@ -10,6 +10,7 @@ CREATE TABLE public.family_members (
   full_name TEXT NOT NULL,
   relationship TEXT NOT NULL CHECK (relationship IN ('self', 'spouse', 'child', 'parent', 'sibling', 'other')),
   created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT now() NOT NULL,
   -- Composite FK: ensures the linked profile belongs to the same family.
   -- MATCH SIMPLE (default): skipped when profile_id IS NULL, so optional members work fine.
   -- ON DELETE SET NULL (profile_id): when a profile is deleted, profile_id is nulled
@@ -22,6 +23,11 @@ CREATE TABLE public.family_members (
 -- Indexes
 CREATE INDEX idx_family_members_family_id ON public.family_members(family_id);
 CREATE INDEX idx_family_members_profile_id ON public.family_members(profile_id);
+
+-- Auto-update updated_at
+CREATE TRIGGER set_family_members_updated_at
+  BEFORE UPDATE ON public.family_members
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
 -- Enable RLS
 ALTER TABLE public.family_members ENABLE ROW LEVEL SECURITY;

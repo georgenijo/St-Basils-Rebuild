@@ -7,9 +7,12 @@ CREATE TABLE public.shares (
   person_name TEXT NOT NULL,
   year INT NOT NULL,
   -- amount must be non-negative; paid status is always false on insert (see trigger)
-  amount NUMERIC NOT NULL DEFAULT 50 CHECK (amount >= 0),
+  amount NUMERIC(10,2) NOT NULL DEFAULT 50 CHECK (amount >= 0),
   paid BOOLEAN NOT NULL DEFAULT false,
-  created_at TIMESTAMPTZ DEFAULT now() NOT NULL
+  created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT now() NOT NULL,
+  -- Prevent duplicate remembrance shares for the same person in the same year
+  CONSTRAINT uq_shares_family_person_year UNIQUE (family_id, person_name, year)
 );
 
 -- Unique key on (id, family_id) to support composite FK from payments,
@@ -20,6 +23,11 @@ ALTER TABLE public.shares ADD CONSTRAINT uq_shares_id_family UNIQUE (id, family_
 CREATE INDEX idx_shares_family_id ON public.shares(family_id);
 CREATE INDEX idx_shares_year ON public.shares(year);
 CREATE INDEX idx_shares_year_paid ON public.shares(year, paid);
+
+-- Auto-update updated_at
+CREATE TRIGGER set_shares_updated_at
+  BEFORE UPDATE ON public.shares
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
 -- ─── Trigger: block paid=true on INSERT ──────────────────────────────────
 -- Members should not be able to mark a share as paid at insert time.

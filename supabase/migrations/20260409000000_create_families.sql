@@ -55,7 +55,7 @@ CREATE POLICY "Users can update own profile"
   WITH CHECK (
     id = (SELECT auth.uid())
     AND role = (SELECT p.role FROM public.profiles p WHERE p.id = (SELECT auth.uid()))
-    AND is_active IS NOT DISTINCT FROM (SELECT p.is_active FROM public.profiles p WHERE p.id = (SELECT auth.uid()))
+    AND is_active = (SELECT p.is_active FROM public.profiles p WHERE p.id = (SELECT auth.uid()))
     AND family_id IS NOT DISTINCT FROM (SELECT p.family_id FROM public.profiles p WHERE p.id = (SELECT auth.uid()))
   );
 

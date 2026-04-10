@@ -5,7 +5,7 @@ CREATE TABLE public.payments (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   family_id UUID NOT NULL REFERENCES public.families(id) ON DELETE CASCADE,
   type TEXT NOT NULL CHECK (type IN ('membership', 'share', 'event', 'donation')),
-  amount NUMERIC NOT NULL,
+  amount NUMERIC(10,2) NOT NULL,
   method TEXT CHECK (method IN ('cash', 'check', 'zelle', 'online')),
   note TEXT,
   recorded_by UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
@@ -16,6 +16,7 @@ CREATE TABLE public.payments (
   related_share_id UUID,
   FOREIGN KEY (related_share_id, family_id) REFERENCES public.shares(id, family_id) ON DELETE SET NULL,
   created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT now() NOT NULL,
 
   -- Enforce consistency between type and relation columns to prevent impossible combos
   CONSTRAINT chk_payments_share_relation
@@ -25,6 +26,11 @@ CREATE TABLE public.payments (
   CONSTRAINT chk_payments_no_relation
     CHECK (type NOT IN ('membership', 'donation') OR (related_share_id IS NULL AND related_event_id IS NULL))
 );
+
+-- Auto-update updated_at
+CREATE TRIGGER set_payments_updated_at
+  BEFORE UPDATE ON public.payments
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
 -- Indexes
 CREATE INDEX idx_payments_family_id ON public.payments(family_id);
