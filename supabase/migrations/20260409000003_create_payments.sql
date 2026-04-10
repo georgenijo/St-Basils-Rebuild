@@ -22,36 +22,31 @@ CREATE INDEX idx_payments_created_at ON public.payments(created_at DESC);
 -- Enable RLS
 ALTER TABLE public.payments ENABLE ROW LEVEL SECURITY;
 
--- RLS Policies
+-- ─── RLS Policies ──────────────────────────────────────────────────────
+-- Member + admin merged into single policies per action to avoid multiple
+-- permissive policy overhead. auth.uid() wrapped in (select ...) so it
+-- evaluates once per query, not per row.
 
--- SELECT: members can read their own family's payments
-CREATE POLICY "Members can read own family payments"
+-- SELECT: members see their own family's payments, admins see all
+CREATE POLICY "Select payments"
   ON public.payments FOR SELECT
   TO authenticated
   USING (
-    family_id = (SELECT family_id FROM public.profiles WHERE id = auth.uid())
+    public.is_admin()
+    OR family_id = (SELECT family_id FROM public.profiles WHERE id = (SELECT auth.uid()))
   );
 
--- SELECT: admins can read all payments
-CREATE POLICY "Admins can read all payments"
-  ON public.payments FOR SELECT
-  TO authenticated
-  USING (public.is_admin());
-
--- INSERT: members can record donations for their own family
-CREATE POLICY "Members can insert own family donations"
+-- INSERT: members can record donations for their own family; admins record any type
+CREATE POLICY "Insert payments"
   ON public.payments FOR INSERT
   TO authenticated
   WITH CHECK (
-    family_id = (SELECT family_id FROM public.profiles WHERE id = auth.uid())
-    AND type = 'donation'
+    public.is_admin()
+    OR (
+      type = 'donation'
+      AND family_id = (SELECT family_id FROM public.profiles WHERE id = (SELECT auth.uid()))
+    )
   );
-
--- INSERT: admins can record any payment type
-CREATE POLICY "Admins can insert payments"
-  ON public.payments FOR INSERT
-  TO authenticated
-  WITH CHECK (public.is_admin());
 
 -- UPDATE: admins only
 CREATE POLICY "Admins can update payments"

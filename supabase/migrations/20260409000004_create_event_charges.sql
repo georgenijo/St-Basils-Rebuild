@@ -18,23 +18,21 @@ CREATE INDEX idx_event_charges_family_paid ON public.event_charges(family_id, pa
 -- Enable RLS
 ALTER TABLE public.event_charges ENABLE ROW LEVEL SECURITY;
 
--- RLS Policies
+-- ─── RLS Policies ──────────────────────────────────────────────────────
+-- Member + admin merged into single policies per action to avoid multiple
+-- permissive policy overhead. auth.uid() wrapped in (select ...) so it
+-- evaluates once per query, not per row.
 
--- SELECT: members can read their own family's charges
-CREATE POLICY "Members can read own family event charges"
+-- SELECT: members see their own family's charges, admins see all
+CREATE POLICY "Select event charges"
   ON public.event_charges FOR SELECT
   TO authenticated
   USING (
-    family_id = (SELECT family_id FROM public.profiles WHERE id = auth.uid())
+    public.is_admin()
+    OR family_id = (SELECT family_id FROM public.profiles WHERE id = (SELECT auth.uid()))
   );
 
--- SELECT: admins can read all charges
-CREATE POLICY "Admins can read all event charges"
-  ON public.event_charges FOR SELECT
-  TO authenticated
-  USING (public.is_admin());
-
--- INSERT: admins only (admin assigns charges to families)
+-- INSERT: admins only (admin assigns charges to families after events)
 CREATE POLICY "Admins can insert event charges"
   ON public.event_charges FOR INSERT
   TO authenticated

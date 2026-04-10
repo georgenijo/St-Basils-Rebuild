@@ -19,35 +19,28 @@ CREATE INDEX idx_shares_year_paid ON public.shares(year, paid);
 -- Enable RLS
 ALTER TABLE public.shares ENABLE ROW LEVEL SECURITY;
 
--- RLS Policies
+-- ─── RLS Policies ──────────────────────────────────────────────────────
+-- Member + admin merged into single policies per action to avoid multiple
+-- permissive policy overhead. auth.uid() wrapped in (select ...) so it
+-- evaluates once per query, not per row.
 
--- SELECT: members can read their own family's shares
-CREATE POLICY "Members can read own family shares"
+-- SELECT: members see their own family's shares, admins see all
+CREATE POLICY "Select shares"
   ON public.shares FOR SELECT
   TO authenticated
   USING (
-    family_id = (SELECT family_id FROM public.profiles WHERE id = auth.uid())
+    public.is_admin()
+    OR family_id = (SELECT family_id FROM public.profiles WHERE id = (SELECT auth.uid()))
   );
 
--- SELECT: admins can read all shares
-CREATE POLICY "Admins can read all shares"
-  ON public.shares FOR SELECT
-  TO authenticated
-  USING (public.is_admin());
-
--- INSERT: members can buy shares for their own family
-CREATE POLICY "Members can insert own family shares"
+-- INSERT: members buy shares for their own family, admins insert any
+CREATE POLICY "Insert shares"
   ON public.shares FOR INSERT
   TO authenticated
   WITH CHECK (
-    family_id = (SELECT family_id FROM public.profiles WHERE id = auth.uid())
+    public.is_admin()
+    OR family_id = (SELECT family_id FROM public.profiles WHERE id = (SELECT auth.uid()))
   );
-
--- INSERT: admins can insert any shares
-CREATE POLICY "Admins can insert shares"
-  ON public.shares FOR INSERT
-  TO authenticated
-  WITH CHECK (public.is_admin());
 
 -- UPDATE: admins only (paid status, corrections)
 CREATE POLICY "Admins can update shares"

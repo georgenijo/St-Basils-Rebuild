@@ -17,64 +17,47 @@ CREATE INDEX idx_family_members_profile_id ON public.family_members(profile_id);
 -- Enable RLS
 ALTER TABLE public.family_members ENABLE ROW LEVEL SECURITY;
 
--- RLS Policies
+-- ─── RLS Policies ──────────────────────────────────────────────────────
+-- Member + admin merged into single policies per action to avoid multiple
+-- permissive policy overhead. auth.uid() wrapped in (select ...) so it
+-- evaluates once per query, not per row.
 
--- SELECT: members can read their own family's members
-CREATE POLICY "Members can read own family members"
+-- SELECT: members see their own family's members, admins see all
+CREATE POLICY "Select family members"
   ON public.family_members FOR SELECT
   TO authenticated
   USING (
-    family_id = (SELECT family_id FROM public.profiles WHERE id = auth.uid())
+    public.is_admin()
+    OR family_id = (SELECT family_id FROM public.profiles WHERE id = (SELECT auth.uid()))
   );
 
--- SELECT: admins can read all
-CREATE POLICY "Admins can read all family members"
-  ON public.family_members FOR SELECT
-  TO authenticated
-  USING (public.is_admin());
-
--- INSERT: members can add to their own family
-CREATE POLICY "Members can insert own family members"
+-- INSERT: members add to their own family, admins add to any
+CREATE POLICY "Insert family members"
   ON public.family_members FOR INSERT
   TO authenticated
   WITH CHECK (
-    family_id = (SELECT family_id FROM public.profiles WHERE id = auth.uid())
+    public.is_admin()
+    OR family_id = (SELECT family_id FROM public.profiles WHERE id = (SELECT auth.uid()))
   );
 
--- INSERT: admins can insert any
-CREATE POLICY "Admins can insert family members"
-  ON public.family_members FOR INSERT
-  TO authenticated
-  WITH CHECK (public.is_admin());
-
--- UPDATE: members can update their own family's members
-CREATE POLICY "Members can update own family members"
+-- UPDATE: members update their own family's members, admins update all
+CREATE POLICY "Update family members"
   ON public.family_members FOR UPDATE
   TO authenticated
   USING (
-    family_id = (SELECT family_id FROM public.profiles WHERE id = auth.uid())
+    public.is_admin()
+    OR family_id = (SELECT family_id FROM public.profiles WHERE id = (SELECT auth.uid()))
   )
   WITH CHECK (
-    family_id = (SELECT family_id FROM public.profiles WHERE id = auth.uid())
+    public.is_admin()
+    OR family_id = (SELECT family_id FROM public.profiles WHERE id = (SELECT auth.uid()))
   );
 
--- UPDATE: admins can update all
-CREATE POLICY "Admins can update all family members"
-  ON public.family_members FOR UPDATE
-  TO authenticated
-  USING (public.is_admin())
-  WITH CHECK (public.is_admin());
-
--- DELETE: members can remove from their own family
-CREATE POLICY "Members can delete own family members"
+-- DELETE: members remove from their own family, admins remove any
+CREATE POLICY "Delete family members"
   ON public.family_members FOR DELETE
   TO authenticated
   USING (
-    family_id = (SELECT family_id FROM public.profiles WHERE id = auth.uid())
+    public.is_admin()
+    OR family_id = (SELECT family_id FROM public.profiles WHERE id = (SELECT auth.uid()))
   );
-
--- DELETE: admins can delete all
-CREATE POLICY "Admins can delete all family members"
-  ON public.family_members FOR DELETE
-  TO authenticated
-  USING (public.is_admin());
