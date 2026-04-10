@@ -25,12 +25,13 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           max_timeout: 300
           check_interval: 10
+          vercel_password: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
 
       - name: Run Lighthouse CI
         id: lighthouse
         uses: treosh/lighthouse-ci-action@v12
         with:
-          urls: ${{ steps.vercel.outputs.url }}
+          urls: ${{ steps.vercel.outputs.url }}?x-vercel-protection-bypass=${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
           configPath: .github/lighthouse/lighthouserc.json
           uploadArtifacts: true
           temporaryPublicStorage: true
