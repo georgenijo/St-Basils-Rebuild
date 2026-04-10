@@ -50,6 +50,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      checks: read
       deployments: read
       statuses: read
 
@@ -70,6 +71,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           max_timeout: 300
           check_interval: 10
+          vercel_password: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
 
       - name: Install Playwright Chromium
         run: npx playwright install chromium --with-deps
@@ -77,7 +79,7 @@ jobs:
       - name: Run Smoke Tests
         run: npm run test:smoke:prod
         env:
-          BASE_URL: ${{ steps.vercel.outputs.url }}
+          BASE_URL: ${{ steps.vercel.outputs.url }}?x-vercel-protection-bypass=${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
 
       - name: Upload Report
         if: failure()
