@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { UsersTable } from '@/components/features/UsersTable'
 
 export const metadata: Metadata = {
@@ -15,10 +16,17 @@ export default async function UsersPage() {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const { data: profiles, error } = await supabase
-    .from('profiles')
-    .select('id, email, full_name, role, is_active, created_at, updated_at')
-    .order('created_at', { ascending: false })
+  // perPage: 1000 — single-page fetch is fine for a parish-sized user base.
+  // If the church ever exceeds 1000 users, paginate with the page param.
+  const [profilesResult, authUsersResult] = await Promise.all([
+    supabase
+      .from('profiles')
+      .select('id, email, full_name, role, is_active, created_at, updated_at')
+      .order('created_at', { ascending: false }),
+    createAdminClient().auth.admin.listUsers({ perPage: 1000 }),
+  ])
+
+  const { data: profiles, error } = profilesResult
 
   if (error) {
     console.error('Failed to fetch profiles:', error)
@@ -32,10 +40,26 @@ export default async function UsersPage() {
     )
   }
 
-  const all = profiles ?? []
+  // Build a map of user ID → email_confirmed_at from auth.users.
+  // If listUsers failed, the map stays empty and we fall back to showing
+  // all users as "Pending" rather than breaking the page entirely.
+  const confirmedMap = new Map<string, string | null>()
+  if (authUsersResult.error) {
+    console.error('Failed to fetch auth users:', authUsersResult.error)
+  } else if (authUsersResult.data?.users) {
+    for (const authUser of authUsersResult.data.users) {
+      confirmedMap.set(authUser.id, authUser.email_confirmed_at ?? null)
+    }
+  }
+
+  const all = (profiles ?? []).map((p) => ({
+    ...p,
+    email_confirmed_at: confirmedMap.get(p.id) ?? null,
+  }))
   const adminCount = all.filter((p) => p.role === 'admin').length
   const memberCount = all.filter((p) => p.role === 'member' && p.is_active).length
   const deactivatedCount = all.filter((p) => !p.is_active).length
+  const pendingCount = all.filter((p) => p.is_active && !p.email_confirmed_at).length
 
   return (
     <main className="px-4 py-8 sm:px-6 lg:px-8">
@@ -69,10 +93,11 @@ export default async function UsersPage() {
       </div>
 
       {/* Summary cards */}
-      <div className="mb-8 grid gap-4 sm:grid-cols-4">
+      <div className="mb-8 grid gap-4 sm:grid-cols-5">
         <SummaryCard label="Total" count={all.length} />
         <SummaryCard label="Admins" count={adminCount} accent="blue" />
         <SummaryCard label="Members" count={memberCount} accent="green" />
+        <SummaryCard label="Pending" count={pendingCount} accent="amber" />
         <SummaryCard label="Deactivated" count={deactivatedCount} accent="red" />
       </div>
 
@@ -90,16 +115,18 @@ function SummaryCard({
 }: {
   label: string
   count: number
-  accent?: 'blue' | 'green' | 'red'
+  accent?: 'blue' | 'green' | 'amber' | 'red'
 }) {
   const dotColor =
     accent === 'blue'
       ? 'bg-blue-500'
       : accent === 'green'
         ? 'bg-emerald-500'
-        : accent === 'red'
-          ? 'bg-red-500'
-          : 'bg-burgundy-700'
+        : accent === 'amber'
+          ? 'bg-amber-500'
+          : accent === 'red'
+            ? 'bg-red-500'
+            : 'bg-burgundy-700'
 
   return (
     <div className="rounded-2xl border border-wood-800/10 bg-cream-50 p-5">
