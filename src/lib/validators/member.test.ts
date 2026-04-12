@@ -148,8 +148,9 @@ describe('buySharesSchema', () => {
 })
 
 describe('recordDonationSchema', () => {
-  it('passes with amount and note', () => {
+  it('passes with donation_type, amount, and note', () => {
     const result = recordDonationSchema.safeParse({
+      donation_type: 'general',
       amount: 100,
       note: 'Sunday offering',
     })
@@ -158,6 +159,7 @@ describe('recordDonationSchema', () => {
 
   it('passes with note omitted', () => {
     const result = recordDonationSchema.safeParse({
+      donation_type: 'car_blessing',
       amount: 50,
     })
     expect(result.success).toBe(true)
@@ -165,11 +167,13 @@ describe('recordDonationSchema', () => {
 
   it('fails when amount is zero or negative', () => {
     const result = recordDonationSchema.safeParse({
+      donation_type: 'general',
       amount: 0,
     })
     expect(result.success).toBe(false)
 
     const result2 = recordDonationSchema.safeParse({
+      donation_type: 'general',
       amount: -10,
     })
     expect(result2.success).toBe(false)
@@ -177,7 +181,23 @@ describe('recordDonationSchema', () => {
 
   it('fails when amount has more than 2 decimal places', () => {
     const result = recordDonationSchema.safeParse({
+      donation_type: 'general',
       amount: 10.999,
+    })
+    expect(result.success).toBe(false)
+  })
+
+  it('fails when donation_type is missing', () => {
+    const result = recordDonationSchema.safeParse({
+      amount: 50,
+    })
+    expect(result.success).toBe(false)
+  })
+
+  it('fails when donation_type is invalid', () => {
+    const result = recordDonationSchema.safeParse({
+      donation_type: 'tithe',
+      amount: 50,
     })
     expect(result.success).toBe(false)
   })
