@@ -36,8 +36,11 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Protect /admin routes — redirect unauthenticated users to login
-  if (request.nextUrl.pathname.startsWith('/admin') && !user) {
+  // Protect /admin and /member routes — redirect unauthenticated users to login
+  const isProtectedRoute =
+    request.nextUrl.pathname.startsWith('/admin') || request.nextUrl.pathname.startsWith('/member')
+
+  if (isProtectedRoute && !user) {
     const loginUrl = request.nextUrl.clone()
     loginUrl.pathname = '/login'
     loginUrl.searchParams.set('redirectTo', request.nextUrl.pathname)
