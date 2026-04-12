@@ -1,6 +1,6 @@
 'use client'
 
-import { useActionState, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { forwardRef, useActionState, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { markSharesPaid } from '@/actions/shares'
 import { SharesTable } from '@/components/features/SharesTable'
@@ -31,7 +31,7 @@ const PAYMENT_METHODS = [
   { value: 'online', label: 'Online' },
 ] as const
 
-// ─── Component ────────────────���──────────────────────────────────────
+// ─── Component ──────────────────────────────────────────────────────
 
 export function SharesPageClient({ shares, years, defaultYear }: SharesPageClientProps) {
   const [year, setYear] = useState(defaultYear)
@@ -188,9 +188,7 @@ export function SharesPageClient({ shares, years, defaultYear }: SharesPageClien
   )
 }
 
-// ─── Mark Paid Dialog ───────────────────��────────────────────────────
-
-import { forwardRef } from 'react'
+// ─── Mark Paid Dialog ────────────────────────────────────────────────
 
 interface MarkPaidDialogProps {
   open: boolean
@@ -294,7 +292,7 @@ const MarkPaidDialog = forwardRef<HTMLDialogElement, MarkPaidDialogProps>(
   }
 )
 
-// ─── Icons ─��──────────────────────────────���──────────────────────────
+// ─── Icons ──────────────────────────────────────────────────────────
 
 function DownloadIcon() {
   return (
