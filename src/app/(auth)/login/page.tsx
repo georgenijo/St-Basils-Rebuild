@@ -23,9 +23,24 @@ export default async function LoginPage({
   } = await supabase.auth.getUser()
 
   const { redirectTo } = await searchParams
-  const destination = redirectTo && isValidRedirectUrl(redirectTo) ? redirectTo : '/admin/dashboard'
 
   if (user) {
+    let destination: string
+    if (redirectTo && isValidRedirectUrl(redirectTo)) {
+      destination = redirectTo
+    } else {
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single()
+
+      if (profileError || !profile) {
+        destination = '/'
+      } else {
+        destination = profile.role === 'admin' ? '/admin/dashboard' : '/member'
+      }
+    }
     redirect(destination)
   }
 
@@ -36,7 +51,8 @@ export default async function LoginPage({
     process.env.DEV_ADMIN_EMAIL &&
     process.env.DEV_ADMIN_PASSWORD
   ) {
-    const bypassUrl = `/api/auth/dev-bypass?redirectTo=${encodeURIComponent(destination)}`
+    const bypassDestination = redirectTo && isValidRedirectUrl(redirectTo) ? redirectTo : '/admin/dashboard'
+    const bypassUrl = `/api/auth/dev-bypass?redirectTo=${encodeURIComponent(bypassDestination)}`
     redirect(bypassUrl)
   }
 

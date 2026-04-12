@@ -35,7 +35,7 @@ export async function login(prevState: LoginState, formData: FormData): Promise<
 
   const supabase = await createClient()
 
-  const { error } = await supabase.auth.signInWithPassword({
+  const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
   })
@@ -46,7 +46,22 @@ export async function login(prevState: LoginState, formData: FormData): Promise<
 
   revalidatePath('/', 'layout')
 
-  const destination = redirectTo && isValidRedirectUrl(redirectTo) ? redirectTo : '/admin/dashboard'
+  let destination: string
+  if (redirectTo && isValidRedirectUrl(redirectTo)) {
+    destination = redirectTo
+  } else {
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', data.user.id)
+      .single()
+
+    if (profileError || !profile) {
+      destination = '/'
+    } else {
+      destination = profile.role === 'admin' ? '/admin/dashboard' : '/member'
+    }
+  }
 
   redirect(destination)
 }
