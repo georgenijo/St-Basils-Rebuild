@@ -189,7 +189,10 @@ function EditView({
         <input type="hidden" name="original_date" value={event.startAt} />
 
         <div>
-          <label htmlFor="occ-start" className="mb-1.5 block font-body text-sm font-medium text-wood-900">
+          <label
+            htmlFor="occ-start"
+            className="mb-1.5 block font-body text-sm font-medium text-wood-900"
+          >
             Start Time
           </label>
           <input
@@ -207,7 +210,10 @@ function EditView({
         </div>
 
         <div>
-          <label htmlFor="occ-end" className="mb-1.5 block font-body text-sm font-medium text-wood-900">
+          <label
+            htmlFor="occ-end"
+            className="mb-1.5 block font-body text-sm font-medium text-wood-900"
+          >
             End Time
           </label>
           <input
@@ -220,7 +226,10 @@ function EditView({
         </div>
 
         <div>
-          <label htmlFor="occ-location" className="mb-1.5 block font-body text-sm font-medium text-wood-900">
+          <label
+            htmlFor="occ-location"
+            className="mb-1.5 block font-body text-sm font-medium text-wood-900"
+          >
             Location
           </label>
           <input
@@ -231,15 +240,18 @@ function EditView({
             placeholder={event.location ?? ''}
             className={inputBase}
           />
-          {event.location && instance?.locationOverride && instance.locationOverride !== event.location && (
-            <p className="mt-1 font-body text-xs text-wood-800/40">
-              Original: {event.location}
-            </p>
-          )}
+          {event.location &&
+            instance?.locationOverride &&
+            instance.locationOverride !== event.location && (
+              <p className="mt-1 font-body text-xs text-wood-800/40">Original: {event.location}</p>
+            )}
         </div>
 
         <div>
-          <label htmlFor="occ-note" className="mb-1.5 block font-body text-sm font-medium text-wood-900">
+          <label
+            htmlFor="occ-note"
+            className="mb-1.5 block font-body text-sm font-medium text-wood-900"
+          >
             Note
           </label>
           <textarea
@@ -253,7 +265,13 @@ function EditView({
         </div>
 
         <div className="flex justify-end gap-3 border-t border-wood-800/10 pt-4">
-          <Button type="button" variant="ghost" size="sm" onClick={() => onModeChange('action')} disabled={isPending}>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => onModeChange('action')}
+            disabled={isPending}
+          >
             Back
           </Button>
           <Button type="submit" size="sm" disabled={isPending}>
@@ -301,7 +319,10 @@ function CancelView({
         <input type="hidden" name="original_date" value={event.startAt} />
 
         <div>
-          <label htmlFor="cancel-note" className="mb-1.5 block font-body text-sm font-medium text-wood-900">
+          <label
+            htmlFor="cancel-note"
+            className="mb-1.5 block font-body text-sm font-medium text-wood-900"
+          >
             Reason (optional)
           </label>
           <textarea
@@ -314,7 +335,13 @@ function CancelView({
         </div>
 
         <div className="flex justify-end gap-3 border-t border-wood-800/10 pt-4">
-          <Button type="button" variant="ghost" size="sm" onClick={() => onModeChange('action')} disabled={isPending}>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => onModeChange('action')}
+            disabled={isPending}
+          >
             Back
           </Button>
           <button
@@ -367,8 +394,7 @@ function ModifiedView({
         )}
         {instance.locationOverride && instance.locationOverride !== event.location && (
           <p className="font-body text-sm text-wood-800">
-            Location:{' '}
-            <span className="text-wood-800/40 line-through">{event.location}</span>{' '}
+            Location: <span className="text-wood-800/40 line-through">{event.location}</span>{' '}
             <span aria-hidden="true">&rarr;</span>{' '}
             <span className="font-medium">{instance.locationOverride}</span>
           </p>
@@ -521,13 +547,23 @@ export function OccurrenceModal({
           <ActionView event={event} onModeChange={onModeChange} onClose={onClose} />
         )}
         {mode === 'edit' && (
-          <EditView event={event} instance={instance} onModeChange={onModeChange} onClose={onClose} />
+          <EditView
+            event={event}
+            instance={instance}
+            onModeChange={onModeChange}
+            onClose={onClose}
+          />
         )}
         {mode === 'cancel' && (
           <CancelView event={event} onModeChange={onModeChange} onClose={onClose} />
         )}
         {mode === 'modified' && instance && (
-          <ModifiedView event={event} instance={instance} onModeChange={onModeChange} onClose={onClose} />
+          <ModifiedView
+            event={event}
+            instance={instance}
+            onModeChange={onModeChange}
+            onClose={onClose}
+          />
         )}
         {mode === 'cancelled' && instance && (
           <CancelledView event={event} instance={instance} onClose={onClose} />

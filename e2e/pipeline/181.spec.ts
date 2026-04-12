@@ -166,7 +166,7 @@ test.describe('Issue #181: Admin edit/cancel individual occurrences of recurring
     expect(response.ok()).toBeTruthy()
 
     const body = await response.text()
-    expect(body).toContain("St. Basil")
+    expect(body).toContain('St. Basil')
     expect(body).toContain('BEGIN:VCALENDAR')
     expect(body).toContain('END:VCALENDAR')
   })

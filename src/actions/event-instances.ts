@@ -53,10 +53,10 @@ export async function upsertEventInstance(
   const originalDate = parsed.data.original_date
 
   // start_at/end_at are in church timezone (datetime-local format) — convert to UTC
-  const startAtOverride =
-    parsed.data.start_at ? parseDatetimeLocalInTimeZone(parsed.data.start_at) : null
-  const endAtOverride =
-    parsed.data.end_at ? parseDatetimeLocalInTimeZone(parsed.data.end_at) : null
+  const startAtOverride = parsed.data.start_at
+    ? parseDatetimeLocalInTimeZone(parsed.data.start_at)
+    : null
+  const endAtOverride = parsed.data.end_at ? parseDatetimeLocalInTimeZone(parsed.data.end_at) : null
 
   if (parsed.data.start_at && !startAtOverride) {
     return {

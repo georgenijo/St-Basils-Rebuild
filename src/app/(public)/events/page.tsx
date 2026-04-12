@@ -130,9 +130,7 @@ function transformEvents(events: EventRow[]): CalendarEvent[] {
           id: `${event.id}-mod-${inst.original_date}`,
           title: event.title,
           start,
-          end:
-            inst.end_at_override ||
-            computeEndForDate(start, event.start_at, event.end_at),
+          end: inst.end_at_override || computeEndForDate(start, event.start_at, event.end_at),
           extendedProps: {
             ...baseProps,
             location: inst.location_override || event.location,

@@ -1,0 +1,9 @@
+{
+  "number": 151,
+  "title": "Server actions: family management",
+  "labels": [{ "name": "enhancement", "color": "a2eeef" }],
+  "assignees": [],
+  "milestone": null,
+  "body": "## Context\nMembers manage their own family details and household members. Follows the server action pattern from `src/actions/announcements.ts`.\n\n## What to do\n\n### Create `src/actions/family.ts`\n\n**`updateFamilyDetails(prevState, formData)`**\n- Validate with Zod, auth check\n- Member can only update their own family (check `profile.family_id`)\n- Updates family_name, phone, address\n- `revalidatePath('/member')`\n\n**`addFamilyMember(prevState, formData)`**\n- Validate, auth check\n- Inserts into `family_members` for the member's own family\n- `revalidatePath('/member')`\n\n**`removeFamilyMember(prevState, formData)`**\n- Validate, auth check\n- Can only remove from own family\n- Cannot remove the head of household (self)\n- `revalidatePath('/member')`\n\n## Acceptance criteria\n- [ ] Members can edit their own family details\n- [ ] Members can add/remove family members\n- [ ] Members cannot modify other families\n- [ ] Head of household cannot be removed\n\n## Dependencies\n- #145 (families table)\n- #146 (family_members table)\n- #150 (validators)",
+  "comments": []
+}

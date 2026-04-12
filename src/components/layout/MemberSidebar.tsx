@@ -81,7 +81,9 @@ export function MemberSidebar({ familyName, memberSince, className }: MemberSide
   }, [mobileOpen])
 
   const isActive = (href: string) =>
-    href === '/member' ? pathname === '/member' : pathname === href || pathname.startsWith(href + '/')
+    href === '/member'
+      ? pathname === '/member'
+      : pathname === href || pathname.startsWith(href + '/')
 
   const sidebarContent = (
     <>

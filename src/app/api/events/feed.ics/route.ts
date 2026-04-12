@@ -63,9 +63,7 @@ export async function GET() {
 
     // Exclusion dates: all instance dates (both cancelled and modified)
     const exclusionDates =
-      instances.length > 0
-        ? instances.map((inst) => toUtcDateArray(inst.original_date))
-        : undefined
+      instances.length > 0 ? instances.map((inst) => toUtcDateArray(inst.original_date)) : undefined
 
     const base: EventAttributes = {
       uid: `${event.id}@stbasilsboston.org`,
