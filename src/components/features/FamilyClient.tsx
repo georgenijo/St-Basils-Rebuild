@@ -236,10 +236,6 @@ function DirectoryVisibilityToggle({ visible }: { visible: boolean }) {
     message: '',
   })
 
-  const currentVisible = state.success
-    ? !visible // optimistic: if action succeeded, we toggled
-    : visible
-
   return (
     <Card variant="outlined" className="mb-6">
       <div className="flex items-center justify-between px-5 py-4">
@@ -252,22 +248,22 @@ function DirectoryVisibilityToggle({ visible }: { visible: boolean }) {
           </p>
         </div>
         <form action={formAction}>
-          <input type="hidden" name="directory_visible" value={String(!currentVisible)} />
+          <input type="hidden" name="directory_visible" value={String(!visible)} />
           <button
             type="submit"
             role="switch"
-            aria-checked={currentVisible}
+            aria-checked={visible}
             aria-label="Show our family in the member directory"
             disabled={isPending}
             className={cn(
               'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-burgundy-700 focus:ring-offset-2 disabled:opacity-50',
-              currentVisible ? 'bg-burgundy-700' : 'bg-wood-800/20'
+              visible ? 'bg-burgundy-700' : 'bg-wood-800/20'
             )}
           >
             <span
               className={cn(
                 'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
-                currentVisible ? 'translate-x-5' : 'translate-x-0'
+                visible ? 'translate-x-5' : 'translate-x-0'
               )}
               aria-hidden="true"
             />
