@@ -50,13 +50,17 @@ export async function login(prevState: LoginState, formData: FormData): Promise<
   if (redirectTo && isValidRedirectUrl(redirectTo)) {
     destination = redirectTo
   } else {
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('role')
       .eq('id', data.user.id)
       .single()
 
-    destination = profile?.role === 'admin' ? '/admin/dashboard' : '/member'
+    if (profileError || !profile) {
+      destination = '/'
+    } else {
+      destination = profile.role === 'admin' ? '/admin/dashboard' : '/member'
+    }
   }
 
   redirect(destination)

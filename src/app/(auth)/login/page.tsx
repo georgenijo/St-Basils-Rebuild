@@ -29,13 +29,17 @@ export default async function LoginPage({
     if (redirectTo && isValidRedirectUrl(redirectTo)) {
       destination = redirectTo
     } else {
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('role')
         .eq('id', user.id)
         .single()
 
-      destination = profile?.role === 'admin' ? '/admin/dashboard' : '/member'
+      if (profileError || !profile) {
+        destination = '/'
+      } else {
+        destination = profile.role === 'admin' ? '/admin/dashboard' : '/member'
+      }
     }
     redirect(destination)
   }
