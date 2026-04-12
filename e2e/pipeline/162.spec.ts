@@ -66,7 +66,9 @@ test.describe('Issue #162: Regression @pipeline', () => {
     // Verify the route is recognized by Next.js (not a genuine 404 page)
     // A genuine unknown route shows "This page could not be found"
     // An auth-guarded route shows different behavior
-    const unknownResponse = await page.goto('/admin/definitely-not-a-route', { waitUntil: 'domcontentloaded' })
+    const unknownResponse = await page.goto('/admin/definitely-not-a-route', {
+      waitUntil: 'domcontentloaded',
+    })
     const paymentsResponse = await page.goto('/admin/payments', { waitUntil: 'domcontentloaded' })
 
     // If both are 404, at minimum the payments page should exist as a compiled route

@@ -3,6 +3,7 @@
 ## Scenarios
 
 ### S1: Payments route compiles and responds
+
 - **Type:** happy-path
 - **Preconditions:** App is deployed/running
 - **Steps:**
@@ -11,6 +12,7 @@
 - **Method:** playwright-cli
 
 ### S2: Auth guard protects payments page
+
 - **Type:** error-state
 - **Preconditions:** User is NOT authenticated
 - **Steps:**
@@ -19,6 +21,7 @@
 - **Method:** playwright-cli
 
 ### S3: Payments sidebar link exists
+
 - **Type:** happy-path
 - **Preconditions:** Authenticated as admin
 - **Steps:**
@@ -28,6 +31,7 @@
 - **Method:** agent-browser
 
 ### S4: Payments page renders summary cards
+
 - **Type:** happy-path
 - **Preconditions:** Authenticated as admin
 - **Steps:**
@@ -36,6 +40,7 @@
 - **Method:** agent-browser
 
 ### S5: Payments table renders
+
 - **Type:** happy-path
 - **Preconditions:** Authenticated as admin
 - **Steps:**
@@ -44,6 +49,7 @@
 - **Method:** agent-browser
 
 ### S6: Record Payment button opens panel
+
 - **Type:** happy-path
 - **Preconditions:** Authenticated as admin on payments page
 - **Steps:**
@@ -52,6 +58,7 @@
 - **Method:** agent-browser
 
 ### S7: Record Payment form has all required fields
+
 - **Type:** happy-path
 - **Preconditions:** Record Payment panel is open
 - **Steps:**
@@ -60,6 +67,7 @@
 - **Method:** agent-browser
 
 ### S8: Payment type conditionally shows event/share selectors
+
 - **Type:** happy-path
 - **Preconditions:** Record Payment panel is open
 - **Steps:**
@@ -71,6 +79,7 @@
 - **Method:** agent-browser
 
 ### S9: Panel closes on Escape key
+
 - **Type:** edge-case
 - **Preconditions:** Record Payment panel is open
 - **Steps:**
@@ -79,6 +88,7 @@
 - **Method:** agent-browser
 
 ### S10: Panel closes on backdrop click
+
 - **Type:** edge-case
 - **Preconditions:** Record Payment panel is open
 - **Steps:**
@@ -87,6 +97,7 @@
 - **Method:** agent-browser
 
 ### S11: Filter buttons work on payments table
+
 - **Type:** happy-path
 - **Preconditions:** Authenticated as admin on payments page
 - **Steps:**
@@ -95,6 +106,7 @@
 - **Method:** agent-browser
 
 ### S12: Search input filters payments
+
 - **Type:** happy-path
 - **Preconditions:** Authenticated as admin on payments page with existing payments
 - **Steps:**
@@ -103,6 +115,7 @@
 - **Method:** agent-browser
 
 ### S13: Regression — public pages still work
+
 - **Type:** regression
 - **Preconditions:** App is deployed/running
 - **Steps:**
@@ -111,6 +124,7 @@
 - **Method:** playwright-cli
 
 ### S14: Regression — homepage has no JS errors
+
 - **Type:** regression
 - **Preconditions:** App is deployed/running
 - **Steps:**
@@ -119,6 +133,7 @@
 - **Method:** playwright-cli
 
 ### S15: Mobile responsive — payments page accessible
+
 - **Type:** responsive
 - **Preconditions:** Authenticated as admin, mobile viewport
 - **Steps:**

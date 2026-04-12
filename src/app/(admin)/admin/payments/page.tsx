@@ -26,14 +26,8 @@ export default async function PaymentsPage() {
       `
       )
       .order('created_at', { ascending: false }),
-    supabase
-      .from('families')
-      .select('id, family_name')
-      .order('family_name', { ascending: true }),
-    supabase
-      .from('events')
-      .select('id, title')
-      .order('start_at', { ascending: false }),
+    supabase.from('families').select('id, family_name').order('family_name', { ascending: true }),
+    supabase.from('events').select('id, title').order('start_at', { ascending: false }),
     supabase
       .from('shares')
       .select('id, family_id, person_name, year')

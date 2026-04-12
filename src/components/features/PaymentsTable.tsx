@@ -174,23 +174,57 @@ export function PaymentsTable({ payments }: PaymentsTableProps) {
           <table className="w-full">
             <thead>
               <tr className="border-b border-wood-800/10 bg-cream-50/50">
-                <SortHeader label="Family" sortKey="family" current={sortKey} dir={sortDir} onSort={toggleSort} />
-                <SortHeader label="Type" sortKey="type" current={sortKey} dir={sortDir} onSort={toggleSort} />
-                <SortHeader label="Amount" sortKey="amount" current={sortKey} dir={sortDir} onSort={toggleSort} className="text-right" />
-                <SortHeader label="Method" sortKey="method" current={sortKey} dir={sortDir} onSort={toggleSort} />
+                <SortHeader
+                  label="Family"
+                  sortKey="family"
+                  current={sortKey}
+                  dir={sortDir}
+                  onSort={toggleSort}
+                />
+                <SortHeader
+                  label="Type"
+                  sortKey="type"
+                  current={sortKey}
+                  dir={sortDir}
+                  onSort={toggleSort}
+                />
+                <SortHeader
+                  label="Amount"
+                  sortKey="amount"
+                  current={sortKey}
+                  dir={sortDir}
+                  onSort={toggleSort}
+                  className="text-right"
+                />
+                <SortHeader
+                  label="Method"
+                  sortKey="method"
+                  current={sortKey}
+                  dir={sortDir}
+                  onSort={toggleSort}
+                />
                 <th className="px-4 py-3 text-left font-body text-xs font-semibold uppercase tracking-wider text-wood-800/50">
                   Detail
                 </th>
                 <th className="hidden px-4 py-3 text-left font-body text-xs font-semibold uppercase tracking-wider text-wood-800/50 lg:table-cell">
                   Recorded By
                 </th>
-                <SortHeader label="Date" sortKey="date" current={sortKey} dir={sortDir} onSort={toggleSort} />
+                <SortHeader
+                  label="Date"
+                  sortKey="date"
+                  current={sortKey}
+                  dir={sortDir}
+                  onSort={toggleSort}
+                />
               </tr>
             </thead>
             <tbody>
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-12 text-center font-body text-sm text-wood-800/50">
+                  <td
+                    colSpan={7}
+                    className="px-4 py-12 text-center font-body text-sm text-wood-800/50"
+                  >
                     {payments.length === 0
                       ? 'No payments recorded yet.'
                       : 'No payments match the current filter.'}
@@ -272,7 +306,12 @@ function SortHeader({
   const isActive = current === sortKey
 
   return (
-    <th className={cn('px-4 py-3 font-body text-xs font-semibold uppercase tracking-wider', className)}>
+    <th
+      className={cn(
+        'px-4 py-3 font-body text-xs font-semibold uppercase tracking-wider',
+        className
+      )}
+    >
       <button
         type="button"
         onClick={() => onSort(sortKey)}

@@ -189,10 +189,7 @@ export function RecordPaymentPanel({
             <form ref={formRef} action={formAction} className="space-y-5">
               {/* General error */}
               {state.message && !state.errors && (
-                <div
-                  className="rounded-lg border border-red-200 bg-red-50 px-4 py-3"
-                  role="alert"
-                >
+                <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3" role="alert">
                   <p className="font-body text-sm text-red-600">{state.message}</p>
                 </div>
               )}
@@ -212,10 +209,7 @@ export function RecordPaymentPanel({
                     required
                     value={selectedFamilyId}
                     onChange={(e) => setSelectedFamilyId(e.target.value)}
-                    className={cn(
-                      selectBase,
-                      state.errors?.family_id && 'border-red-400'
-                    )}
+                    className={cn(selectBase, state.errors?.family_id && 'border-red-400')}
                     aria-invalid={Boolean(state.errors?.family_id)}
                     aria-describedby={state.errors?.family_id ? 'family_id-error' : undefined}
                   >
@@ -284,10 +278,7 @@ export function RecordPaymentPanel({
                       id="related_event_id"
                       name="related_event_id"
                       required
-                      className={cn(
-                        selectBase,
-                        state.errors?.related_event_id && 'border-red-400'
-                      )}
+                      className={cn(selectBase, state.errors?.related_event_id && 'border-red-400')}
                       aria-invalid={Boolean(state.errors?.related_event_id)}
                       aria-describedby={
                         state.errors?.related_event_id ? 'related_event_id-error' : undefined
@@ -302,10 +293,7 @@ export function RecordPaymentPanel({
                     </select>
                     <ChevronDown />
                   </div>
-                  <FieldError
-                    id="related_event_id-error"
-                    errors={state.errors?.related_event_id}
-                  />
+                  <FieldError id="related_event_id-error" errors={state.errors?.related_event_id} />
                 </div>
               )}
 
@@ -351,10 +339,7 @@ export function RecordPaymentPanel({
                       <ChevronDown />
                     </div>
                   )}
-                  <FieldError
-                    id="related_share_id-error"
-                    errors={state.errors?.related_share_id}
-                  />
+                  <FieldError id="related_share_id-error" errors={state.errors?.related_share_id} />
                 </div>
               )}
 
