@@ -1,9 +1,11 @@
 # Implementation Plan — Issue #158: Member portal: Family tab
 
 ## Approach Summary
+
 Create the Family tab as a server component page at `/member/family` that fetches family details and members from Supabase, rendering two cards (Family Details, Family Members). Interactive editing uses two `'use client'` slide-out panel components that follow the existing `UserDetailPanel` pattern with `useActionState` for form submissions. The server actions and validators already exist — this is purely a UI feature.
 
 ## Prerequisites
+
 - Families table migration exists (`20260409000000_create_families.sql`) ✓
 - Family members table migration exists (`20260409000001_create_family_members.sql`) ✓
 - Family server actions exist (`src/actions/family.ts`) ✓
@@ -14,11 +16,14 @@ Create the Family tab as a server component page at `/member/family` that fetche
 ## Steps
 
 ### Step 1: Create the Family page (server component)
+
 **Files:**
+
 - `src/app/(member)/member/family/page.tsx` — create
 
 **What to do:**
 Create a server component page that:
+
 1. Gets auth user via `createClient()` + `getUser()`
 2. Fetches profile for `family_id` (same pattern as `membership/page.tsx` lines 20-31)
 3. If no `family_id`, show fallback card ("Your family hasn't been set up yet")
@@ -31,24 +36,30 @@ Create a server component page that:
 8. Wraps the interactive parts in a client component `FamilyClient` that manages panel state.
 
 **Pattern to follow:**
+
 - Page structure: `src/app/(member)/member/membership/page.tsx` (auth, data fetch, no-family fallback)
 - Card layout: `src/app/(member)/member/page.tsx` (Card variant="outlined")
 
 **Verify:**
+
 ```bash
 npx tsc --noEmit --pretty 2>&1 | grep -i "family/page" || echo "No type errors"
 ```
 
 **Done when:**
+
 - Page renders at `/member/family` with family details and members list
 - TypeScript compiles without errors
 
 ### Step 2: Create the FamilyClient wrapper component
+
 **Files:**
+
 - `src/components/features/FamilyClient.tsx` — create
 
 **What to do:**
 Create a `'use client'` component that:
+
 1. Accepts props: `family` (details object), `members` (array), `currentUserId` (string), `headOfHousehold` (string | null)
 2. Manages state for which panel is open: `null | 'edit-family' | 'add-member'`
 3. Renders the Family Details card with an "Edit" button that opens the edit panel
@@ -62,26 +73,32 @@ Create a `'use client'` component that:
 6. Renders `EditFamilyPanel` and `AddMemberPanel` conditionally based on state
 
 **Pattern to follow:**
+
 - Panel state management: similar to `UserDetailPanel.tsx` `activeDialog` state pattern
 - Remove action: form with hidden field + `useActionState`, similar to `UserActionDialog` pattern
 
 **Verify:**
+
 ```bash
 npx tsc --noEmit --pretty 2>&1 | grep -i "FamilyClient" || echo "No type errors"
 ```
 
 **Done when:**
+
 - Component manages panel open/close state
 - Family details card renders with Edit button
 - Members list renders with avatars, badges, and remove buttons
 - Head of household has no remove button
 
 ### Step 3: Create the EditFamilyPanel slide-out component
+
 **Files:**
+
 - `src/components/features/EditFamilyPanel.tsx` — create
 
 **What to do:**
 Create a `'use client'` slide-out panel that:
+
 1. Props: `open` (boolean), `onClose` (callback), `family` (object with family_name, phone, address)
 2. Uses the same slide-out pattern as `UserDetailPanel.tsx`:
    - Fixed right panel, 520px wide (`w-[520px] max-w-[90vw]`)
@@ -100,16 +117,19 @@ Create a `'use client'` slide-out panel that:
 8. Close button (X) in header matching `UserDetailPanel.tsx` pattern
 
 **Pattern to follow:**
+
 - Panel UI: `UserDetailPanel.tsx` lines 170-215 (backdrop, panel container, header, close button)
 - Form pattern: `useActionState` with `updateFamilyDetails` from `src/actions/family.ts`
 - Form styling: match mockup — `form-group`, `form-label`, `form-input` styles translated to Tailwind
 
 **Verify:**
+
 ```bash
 npx tsc --noEmit --pretty 2>&1 | grep -i "EditFamilyPanel" || echo "No type errors"
 ```
 
 **Done when:**
+
 - Panel slides in from right when opened
 - Form is pre-filled with current family details
 - Submitting updates family details via server action
@@ -117,11 +137,14 @@ npx tsc --noEmit --pretty 2>&1 | grep -i "EditFamilyPanel" || echo "No type erro
 - Validation errors display inline
 
 ### Step 4: Create the AddMemberPanel slide-out component
+
 **Files:**
+
 - `src/components/features/AddMemberPanel.tsx` — create
 
 **What to do:**
 Create a `'use client'` slide-out panel that:
+
 1. Props: `open` (boolean), `onClose` (callback)
 2. Same slide-out UI pattern as `EditFamilyPanel`
 3. Contains a form with two fields:
@@ -133,21 +156,25 @@ Create a `'use client'` slide-out panel that:
 7. Footer: Cancel button + Add Member button (primary)
 
 **Pattern to follow:**
+
 - Same panel pattern as EditFamilyPanel (Step 3)
 - Mockup reference: lines 733-755 of `mockup-member-portal.html`
 
 **Verify:**
+
 ```bash
 npx tsc --noEmit --pretty 2>&1 | grep -i "AddMemberPanel" || echo "No type errors"
 ```
 
 **Done when:**
+
 - Panel slides in with add member form
 - Submitting adds a family member via server action
 - Panel closes and form resets on success
 - Validation errors display inline
 
 ## Acceptance Criteria (Full)
+
 - [x] Family details card shows family_name, head of household, phone, address, member since
 - [x] Family details are editable via slide-out panel (Edit button → EditFamilyPanel)
 - [x] Family members list shows all household members with avatars, names, and relationship badges
@@ -158,28 +185,32 @@ npx tsc --noEmit --pretty 2>&1 | grep -i "AddMemberPanel" || echo "No type error
 - [x] No-family fallback state when user has no family_id
 
 ## RLS Policy Plan
-| Table | Policy | Rule |
-|-------|--------|------|
-| `families` | Select families | Members see own family (exists) |
-| `families` | Update families | Members update own family, blocked from admin columns (exists) |
-| `family_members` | Select family members | Members see own family's members (exists) |
-| `family_members` | Insert family members | Members add to own family (exists) |
-| `family_members` | Delete family members | Members remove from own family (exists) |
+
+| Table            | Policy                | Rule                                                           |
+| ---------------- | --------------------- | -------------------------------------------------------------- |
+| `families`       | Select families       | Members see own family (exists)                                |
+| `families`       | Update families       | Members update own family, blocked from admin columns (exists) |
+| `family_members` | Select family members | Members see own family's members (exists)                      |
+| `family_members` | Insert family members | Members add to own family (exists)                             |
+| `family_members` | Delete family members | Members remove from own family (exists)                        |
 
 No new RLS policies needed — all exist from #145 and #146 migrations.
 
 ## Risk Mitigation
-| Risk | Mitigation |
-|------|-----------|
-| Client components bloating the page | Only FamilyClient + two panels are client components; page.tsx stays server component |
-| Head removal bypass | Server action has head-of-household protection; UI also hides remove button for head |
-| Missing relationship display for head | Look up head's name from family_members array where profile_id === head_of_household |
-| Panel focus trap | Follow UserDetailPanel pattern (escape key, backdrop click, body scroll lock) |
+
+| Risk                                  | Mitigation                                                                            |
+| ------------------------------------- | ------------------------------------------------------------------------------------- |
+| Client components bloating the page   | Only FamilyClient + two panels are client components; page.tsx stays server component |
+| Head removal bypass                   | Server action has head-of-household protection; UI also hides remove button for head  |
+| Missing relationship display for head | Look up head's name from family_members array where profile_id === head_of_household  |
+| Panel focus trap                      | Follow UserDetailPanel pattern (escape key, backdrop click, body scroll lock)         |
 
 ## Out of Scope
+
 - Editing individual family members (issue doesn't specify, mockup only has "Edit" but no edit-member panel defined)
 - Family member profile linking (assigning auth accounts to family members)
 - Responsive mobile panel behavior beyond max-width constraint
 
 ## Estimated Complexity
+
 medium — Three new files (page + 2 panels + 1 client wrapper), no migrations, no new server actions. The slide-out panel pattern is well-established in the codebase.

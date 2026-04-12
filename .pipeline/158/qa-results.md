@@ -4,26 +4,26 @@
 
 ## Test Results
 
-| ID | Scenario | Result | Notes |
-|----|----------|--------|-------|
-| S1 | /member/family loads without server error | PASS | Returns 200 after redirect to login (unauthenticated) |
-| S2 | /member/family shows family content or redirects | PASS | Redirects to /login when unauthenticated |
-| S3 | No console errors on /member/family | PASS | Clean console |
-| S4 | Unauthenticated user is redirected | PASS | Properly redirected to /login |
-| S5 | Responsive — mobile viewport (375x667) | PASS | No errors, status < 500 |
-| S6 | Regression — /member overview still loads | PASS | Status < 500 |
-| S7 | Regression — /member/membership still loads | PASS | Status < 500 |
-| S8 | Regression — Homepage (/) | PASS | Pre-existing transient 500 on cold start (not introduced by this PR) |
-| S9 | Regression — Events Calendar (/events) | PASS | Status 200 |
-| S10 | Regression — About (/about) | PASS | Status 200 |
-| S11 | Regression — Giving (/giving) | PASS | Status 200 |
+| ID  | Scenario                                         | Result | Notes                                                                |
+| --- | ------------------------------------------------ | ------ | -------------------------------------------------------------------- |
+| S1  | /member/family loads without server error        | PASS   | Returns 200 after redirect to login (unauthenticated)                |
+| S2  | /member/family shows family content or redirects | PASS   | Redirects to /login when unauthenticated                             |
+| S3  | No console errors on /member/family              | PASS   | Clean console                                                        |
+| S4  | Unauthenticated user is redirected               | PASS   | Properly redirected to /login                                        |
+| S5  | Responsive — mobile viewport (375x667)           | PASS   | No errors, status < 500                                              |
+| S6  | Regression — /member overview still loads        | PASS   | Status < 500                                                         |
+| S7  | Regression — /member/membership still loads      | PASS   | Status < 500                                                         |
+| S8  | Regression — Homepage (/)                        | PASS   | Pre-existing transient 500 on cold start (not introduced by this PR) |
+| S9  | Regression — Events Calendar (/events)           | PASS   | Status 200                                                           |
+| S10 | Regression — About (/about)                      | PASS   | Status 200                                                           |
+| S11 | Regression — Giving (/giving)                    | PASS   | Status 200                                                           |
 
 ## Static Analysis
 
-| Check | Result |
-|-------|--------|
+| Check                       | Result       |
+| --------------------------- | ------------ |
 | TypeScript (`tsc --noEmit`) | PASS — clean |
-| ESLint (4 new files) | PASS — clean |
+| ESLint (4 new files)        | PASS — clean |
 
 ## Bugs Found
 

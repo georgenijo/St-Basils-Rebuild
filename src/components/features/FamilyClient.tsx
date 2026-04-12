@@ -37,8 +37,10 @@ type PanelType = 'edit-family' | 'add-member' | null
 // ─── Helpers ─────────────────────────────────────────────────────────
 
 function getInitials(name: string): string {
+  if (!name.trim()) return '?'
   return name
     .split(' ')
+    .filter(Boolean)
     .map((w) => w[0])
     .join('')
     .toUpperCase()
@@ -91,11 +93,7 @@ export function FamilyClient({ family, members, currentUserId }: FamilyClientPro
       <Card variant="outlined" className="mb-6">
         <div className="flex items-center justify-between border-b border-wood-800/5 px-5 py-4">
           <h2 className="font-heading text-base font-semibold text-wood-900">Family Details</h2>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => setOpenPanel('edit-family')}
-          >
+          <Button variant="secondary" size="sm" onClick={() => setOpenPanel('edit-family')}>
             Edit
           </Button>
         </div>
@@ -112,11 +110,7 @@ export function FamilyClient({ family, members, currentUserId }: FamilyClientPro
       <Card variant="outlined">
         <div className="flex items-center justify-between border-b border-wood-800/5 px-5 py-4">
           <h2 className="font-heading text-base font-semibold text-wood-900">Family Members</h2>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => setOpenPanel('add-member')}
-          >
+          <Button variant="secondary" size="sm" onClick={() => setOpenPanel('add-member')}>
             <PlusIcon />
             Add Member
           </Button>
@@ -132,10 +126,7 @@ export function FamilyClient({ family, members, currentUserId }: FamilyClientPro
               const isHead = member.profile_id === family.head_of_household
 
               return (
-                <div
-                  key={member.id}
-                  className="flex items-center gap-4 px-5 py-3.5"
-                >
+                <div key={member.id} className="flex items-center gap-4 px-5 py-3.5">
                   {/* Avatar */}
                   <div
                     className={cn(
@@ -180,10 +171,7 @@ export function FamilyClient({ family, members, currentUserId }: FamilyClientPro
         onClose={() => setOpenPanel(null)}
         family={family}
       />
-      <AddMemberPanel
-        open={openPanel === 'add-member'}
-        onClose={() => setOpenPanel(null)}
-      />
+      <AddMemberPanel open={openPanel === 'add-member'} onClose={() => setOpenPanel(null)} />
     </>
   )
 }
@@ -215,17 +203,24 @@ function RemoveMemberButton({ memberId, memberName }: { memberId: string; member
   return (
     <form action={formAction}>
       <input type="hidden" name="member_id" value={memberId} />
+      {state.message && !state.success && (
+        <span className="sr-only" role="alert">
+          {state.message}
+        </span>
+      )}
       <button
         type="submit"
         disabled={isPending}
-        className="flex h-8 w-8 items-center justify-center rounded-lg border border-wood-800/10 text-wood-800/40 transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
-        aria-label={`Remove ${memberName}`}
-      >
-        {isPending ? (
-          <LoadingSpinner />
-        ) : (
-          <TrashIcon />
+        className={cn(
+          'flex h-8 w-8 items-center justify-center rounded-lg border transition-colors disabled:opacity-50',
+          state.message && !state.success
+            ? 'border-red-300 bg-red-50 text-red-600'
+            : 'border-wood-800/10 text-wood-800/40 hover:border-red-200 hover:bg-red-50 hover:text-red-600'
         )}
+        aria-label={`Remove ${memberName}`}
+        title={state.message && !state.success ? state.message : undefined}
+      >
+        {isPending ? <LoadingSpinner /> : <TrashIcon />}
       </button>
     </form>
   )

@@ -41,21 +41,20 @@ test.describe('Issue #158: Family tab route @pipeline', () => {
     const url = page.url()
 
     const isFamilyPage = url.includes('/member/family')
-    const isRedirected = url.includes('/login') || url.includes('/admin')
+    const isRedirected = url.includes('/login')
     expect(isFamilyPage || isRedirected).toBe(true)
   })
 
-  test('S4: Unauthenticated user is redirected from /member/family', async ({ page }) => {
+  test('S4: Unauthenticated user does not see family data', async ({ page }) => {
     const response = await page.goto('/member/family', {
       waitUntil: 'domcontentloaded',
     })
-    const url = page.url()
     const status = response?.status() ?? 0
 
-    // Either redirected to login or got a non-500 response
-    const isRedirected = url.includes('/login')
-    const isOk = status < 500
-    expect(isRedirected || isOk).toBe(true)
+    // Auth guard: page doesn't crash (< 500) and no family data is leaked
+    expect(status).toBeLessThan(500)
+    const familyDetailsVisible = await page.locator('text=Family Details').isVisible()
+    expect(familyDetailsVisible).toBe(false)
   })
 })
 
@@ -79,7 +78,7 @@ test.describe('Issue #158: Console errors @pipeline', () => {
 
 test.describe('Issue #158: Responsive @pipeline', () => {
   test('S5: Family route loads on mobile viewport', async ({ page }) => {
-    page.setViewportSize({ width: 375, height: 667 })
+    await page.setViewportSize({ width: 375, height: 667 })
     const consoleErrors: string[] = []
     page.on('console', (msg) => {
       if (msg.type() === 'error' && !isIgnoredError(msg.text())) {
@@ -134,14 +133,7 @@ test.describe('Issue #158: Public page regression @pipeline', () => {
       })
 
       const response = await page.goto(path, { waitUntil: 'domcontentloaded' })
-      const status = response?.status() ?? 0
-      // Allow 200 or 500 on homepage (pre-existing transient webpack error)
-      // For other pages, require 200
-      if (path === '/') {
-        expect(status).toBeLessThan(502)
-      } else {
-        expect(status).toBe(200)
-      }
+      expect(response?.status()).toBe(200)
       expect(consoleErrors).toEqual([])
     })
   }
