@@ -1,0 +1,14 @@
+{
+  "assignees": [],
+  "body": "## Context\nMembers manage their household — view/edit family details and add/remove family members.\n\n## What to do\n\n### Create `src/app/(member)/member/family/page.tsx`\n\n**Family Details card:**\n- Family name, head of household, phone, address, member since\n- \"Edit\" button opens slide-out panel with form (updateFamilyDetails action)\n\n**Family Members list:**\n- Avatar with initials, name, relationship badge\n- \"You\" badge on current user\n- \"Edit\" button per member\n- \"Add Member\" button opens slide-out panel (addFamilyMember action)\n\n### Slide-out panels\n- Edit Family Details — form with family_name, phone, address\n- Add Family Member — form with full_name, relationship (select)\n- Same slide-out pattern as admin users mockup\n\n## Design reference\nSee Family tab in `mockup-member-portal.html`.\n\n## Acceptance criteria\n- [ ] Family details are editable via slide-out panel\n- [ ] Family members list shows all household members\n- [ ] Add/remove family members works\n- [ ] Head of household cannot be removed\n\n## Dependencies\n- #155 (member layout)\n- #145, #146 (families + family_members tables)\n- #151 (family management server actions)",
+  "comments": [],
+  "labels": [
+    {
+      "id": "LA_kwDORwoC1M8AAAACcwlcXw",
+      "name": "enhancement",
+      "description": "New feature or request",
+      "color": "a2eeef"
+    }
+  ],
+  "title": "Member portal: Family tab"
+}
