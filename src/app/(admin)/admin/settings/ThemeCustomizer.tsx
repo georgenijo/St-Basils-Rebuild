@@ -275,6 +275,7 @@ function FontPicker({ label, description, value, onChange }: FontPickerProps) {
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search fonts..."
               className="w-full rounded-md border border-wood-800/10 px-2 py-1.5 text-sm focus:border-burgundy-700 focus:outline-none"
+              // eslint-disable-next-line jsx-a11y/no-autofocus -- intentional: dropdown search input should focus on open
               autoFocus
             />
           </div>
@@ -354,7 +355,7 @@ function SectionReorder({ sections, onChange }: SectionReorderProps) {
   }
 
   return (
-    <ul className="space-y-2" role="list">
+    <ul className="space-y-2">
       {sections.map((section, index) => (
         <li
           key={section}
