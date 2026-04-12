@@ -30,7 +30,7 @@
 
 | Criteria | Status | Notes |
 |----------|--------|-------|
-| /member routes protected — unauthenticated → login | PASS | Middleware + layout double-guard |
+| /member routes protected — unauthenticated → login | PASS | Redirect works; `redirectTo` param not preserved (pre-existing, same as admin) |
 | Non-members redirected away from /member | PASS (code review) | Layout checks `role !== 'member'` → redirect to `/` |
 | Admin → /admin/dashboard after login | PASS (code review) | Login action queries profile role |
 | Member → /member after login | PASS (code review) | Login action queries profile role |
