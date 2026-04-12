@@ -49,8 +49,8 @@ function CancelledContent({
   return (
     <>
       <Text style={bodyText}>
-        The occurrence scheduled for <strong>{eventDate}</strong> at <strong>{eventTime}</strong> has
-        been cancelled.
+        The occurrence scheduled for <strong>{eventDate}</strong> at <strong>{eventTime}</strong>{' '}
+        has been cancelled.
       </Text>
       {reason && (
         <Section style={reasonBox}>
@@ -134,7 +134,9 @@ export function EventChangeNotification({
   return (
     <Html>
       <Head />
-      <Preview>{previewText({ changeType, eventTitle, eventDate, eventTime, unsubscribeToken })}</Preview>
+      <Preview>
+        {previewText({ changeType, eventTitle, eventDate, eventTime, unsubscribeToken })}
+      </Preview>
       <Body style={body}>
         <Container style={container}>
           <Section style={header}>
