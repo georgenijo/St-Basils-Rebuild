@@ -136,6 +136,7 @@ export const eventInstanceSchema = z.object({
   end_at: z.string().optional().or(z.literal('')),
   location: z.string().max(500).optional().or(z.literal('')),
   note: z.string().max(1000).optional().or(z.literal('')),
+  notify_subscribers: z.string().optional(),
 })
 
 export type EventInstanceFormData = z.infer<typeof eventInstanceSchema>
@@ -145,6 +146,7 @@ export const cancelInstanceSchema = z.object({
   event_id: z.string().uuid(),
   original_date: z.string().min(1), // UTC ISO string
   note: z.string().max(1000).optional().or(z.literal('')),
+  notify_subscribers: z.string().optional(),
 })
 
 export type CancelInstanceFormData = z.infer<typeof cancelInstanceSchema>
@@ -153,6 +155,7 @@ export type CancelInstanceFormData = z.infer<typeof cancelInstanceSchema>
 export const restoreInstanceSchema = z.object({
   event_id: z.string().uuid(),
   original_date: z.string().min(1), // UTC ISO string
+  notify_subscribers: z.string().optional(),
 })
 
 export type RestoreInstanceFormData = z.infer<typeof restoreInstanceSchema>
