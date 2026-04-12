@@ -11,10 +11,7 @@ import {
   cancelInstanceSchema,
   restoreInstanceSchema,
 } from '@/lib/validators/event'
-import {
-  EventChangeNotification,
-  type EventChangeType,
-} from '@/emails/event-change-notification'
+import { EventChangeNotification, type EventChangeType } from '@/emails/event-change-notification'
 
 type ActionState = {
   success: boolean
@@ -75,10 +72,7 @@ async function sendOccurrenceNotification(
     if (!event || !subscribers || subscribers.length === 0) return
 
     const eventDate = formatInChurchTimeZone(originalDate, dateFormat)
-    const eventTime = formatInChurchTimeZone(
-      details.newStartAt || event.start_at,
-      timeFormat
-    )
+    const eventTime = formatInChurchTimeZone(details.newStartAt || event.start_at, timeFormat)
 
     // Build change list for modified occurrences
     const changes: string[] = []
@@ -105,9 +99,7 @@ async function sendOccurrenceNotification(
     // Compute next occurrence for cancellations
     let nextOccurrence: string | undefined
     if (changeType === 'cancelled') {
-      const rules = event.recurrence_rules as
-        | { rrule_string: string; dtstart: string }[]
-        | null
+      const rules = event.recurrence_rules as { rrule_string: string; dtstart: string }[] | null
       if (rules && rules.length > 0) {
         try {
           const rule = rules[0]
@@ -305,9 +297,15 @@ export async function cancelEventInstance(
   }
 
   if (parsed.data.notify_subscribers === 'on') {
-    await sendOccurrenceNotification(supabase, parsed.data.event_id, parsed.data.original_date, 'cancelled', {
-      reason: parsed.data.note || undefined,
-    })
+    await sendOccurrenceNotification(
+      supabase,
+      parsed.data.event_id,
+      parsed.data.original_date,
+      'cancelled',
+      {
+        reason: parsed.data.note || undefined,
+      }
+    )
   }
 
   revalidateEventPaths()
@@ -350,7 +348,13 @@ export async function restoreEventInstance(
   }
 
   if (parsed.data.notify_subscribers === 'on') {
-    await sendOccurrenceNotification(supabase, parsed.data.event_id, parsed.data.original_date, 'restored', {})
+    await sendOccurrenceNotification(
+      supabase,
+      parsed.data.event_id,
+      parsed.data.original_date,
+      'restored',
+      {}
+    )
   }
 
   revalidateEventPaths()

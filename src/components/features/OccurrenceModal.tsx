@@ -552,7 +552,10 @@ function CancelledView({
               name="notify_subscribers"
               className="h-4 w-4 rounded border-wood-800/20 text-burgundy-700 focus:ring-burgundy-700/20"
             />
-            <label htmlFor="cancelled-restore-notify" className="font-body text-sm text-wood-800/80">
+            <label
+              htmlFor="cancelled-restore-notify"
+              className="font-body text-sm text-wood-800/80"
+            >
               Send notification to subscribers
             </label>
           </div>
