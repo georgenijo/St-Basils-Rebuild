@@ -3,6 +3,7 @@
 ## Scenarios
 
 ### S1: Auth callback — missing code parameter redirects to /login
+
 - **Type:** error-state
 - **Preconditions:** None
 - **Steps:**
@@ -12,6 +13,7 @@
 - **Method:** playwright-cli
 
 ### S2: Auth callback — missing code with type parameter still redirects to /login
+
 - **Type:** edge-case
 - **Preconditions:** None
 - **Steps:**
@@ -21,6 +23,7 @@
 - **Method:** playwright-cli
 
 ### S3: Auth callback — invalid code redirects to /login with auth error
+
 - **Type:** error-state
 - **Preconditions:** None
 - **Steps:**
@@ -30,6 +33,7 @@
 - **Method:** playwright-cli
 
 ### S4: Set-password page — unauthenticated user redirects to /login
+
 - **Type:** error-state
 - **Preconditions:** No active session
 - **Steps:**
@@ -39,6 +43,7 @@
 - **Method:** playwright-cli
 
 ### S5: Set-password page — renders form when authenticated
+
 - **Type:** happy-path
 - **Preconditions:** Active Supabase session (cannot easily simulate in Playwright without real auth)
 - **Steps:**
@@ -49,6 +54,7 @@
 - **Method:** agent-browser (requires auth) — SKIPPED (no test credentials)
 
 ### S6: SetPasswordForm — client-side validation (min length)
+
 - **Type:** edge-case
 - **Preconditions:** Active session on set-password page
 - **Steps:**
@@ -59,6 +65,7 @@
 - **Method:** agent-browser — SKIPPED (no test credentials)
 
 ### S7: SetPasswordForm — password mismatch
+
 - **Type:** edge-case
 - **Preconditions:** Active session on set-password page
 - **Steps:**
@@ -69,6 +76,7 @@
 - **Method:** agent-browser — SKIPPED (no test credentials)
 
 ### S8: Login page — still renders correctly (regression)
+
 - **Type:** regression
 - **Preconditions:** None
 - **Steps:**
@@ -78,6 +86,7 @@
 - **Method:** playwright-cli
 
 ### S9: Admin auth guard — still redirects unauthenticated (regression)
+
 - **Type:** regression
 - **Preconditions:** No active session
 - **Steps:**
@@ -87,6 +96,7 @@
 - **Method:** playwright-cli
 
 ### S10: Zod schema validation — password boundaries
+
 - **Type:** edge-case
 - **Preconditions:** None — unit test level
 - **Steps:**
@@ -99,6 +109,7 @@
 - **Method:** playwright-cli (API-level via form action, but skipped — requires session)
 
 ### S11: Auth callback — type=recovery redirects to /set-password
+
 - **Type:** happy-path
 - **Preconditions:** Valid code (cannot provide in automated test)
 - **Steps:**
@@ -108,6 +119,7 @@
 - **Method:** manual (requires valid PKCE code)
 
 ### S12: Set-password page — responsive layout (mobile)
+
 - **Type:** responsive
 - **Preconditions:** Active session
 - **Steps:**

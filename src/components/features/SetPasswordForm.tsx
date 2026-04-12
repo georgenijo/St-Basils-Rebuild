@@ -13,9 +13,7 @@ export function SetPasswordForm() {
 
   return (
     <form action={formAction} className="space-y-5">
-      <p className="text-sm text-wood-800/70">
-        Create a password to complete your account setup.
-      </p>
+      <p className="text-sm text-wood-800/70">Create a password to complete your account setup.</p>
 
       {state.message && !state.errors && (
         <div

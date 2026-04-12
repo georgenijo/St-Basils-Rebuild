@@ -36,7 +36,10 @@ export async function setPassword(
   } = await supabase.auth.getUser()
 
   if (!user) {
-    return { success: false, message: 'Session expired. Please use the link from your email again.' }
+    return {
+      success: false,
+      message: 'Session expired. Please use the link from your email again.',
+    }
   }
 
   const { error } = await supabase.auth.updateUser({ password: parsed.data.password })
