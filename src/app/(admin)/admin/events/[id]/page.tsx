@@ -124,9 +124,14 @@ export default async function AdminEventDetailPage({ params }: PageProps) {
             )}
           </div>
         </div>
-        <Button href={`/admin/events/${id}/edit`} size="sm" variant="secondary">
-          Edit Event
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button href={`/admin/events/${id}/charges`} size="sm" variant="secondary">
+            Manage Charges
+          </Button>
+          <Button href={`/admin/events/${id}/edit`} size="sm" variant="secondary">
+            Edit Event
+          </Button>
+        </div>
       </div>
 
       {/* RSVP Section */}
