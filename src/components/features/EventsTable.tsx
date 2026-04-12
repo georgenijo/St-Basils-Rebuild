@@ -184,7 +184,7 @@ export function EventsTable({ events }: EventsTableProps) {
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <Link
-                        href={`/admin/events/${event.id}/edit`}
+                        href={`/admin/events/${event.id}`}
                         className="font-body text-sm font-medium text-wood-900 hover:text-burgundy-700"
                       >
                         {event.title}

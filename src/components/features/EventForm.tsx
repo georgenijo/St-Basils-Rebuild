@@ -38,6 +38,14 @@ function FieldError({ errors }: { errors?: string[] }) {
   )
 }
 
+interface RsvpSettings {
+  enabled: boolean
+  dietary?: boolean
+  children_count?: boolean
+  bringing?: boolean
+  notes?: boolean
+}
+
 interface EventData {
   id: string
   title: string
@@ -48,6 +56,7 @@ interface EventData {
   end_at: string | null
   is_recurring: boolean
   category: string
+  rsvp_settings?: RsvpSettings | null
   recurrence_rules?: Array<{
     rrule_string: string
   }>
@@ -71,6 +80,14 @@ export function EventForm({ event }: EventFormProps) {
     event?.description ? JSON.stringify(event.description) : ''
   )
   const [isRecurring, setIsRecurring] = useState(event?.is_recurring ?? false)
+
+  // RSVP settings state
+  const existingRsvp = event?.rsvp_settings
+  const [rsvpEnabled, setRsvpEnabled] = useState(existingRsvp?.enabled ?? false)
+  const [rsvpDietary, setRsvpDietary] = useState(existingRsvp?.dietary ?? false)
+  const [rsvpChildrenCount, setRsvpChildrenCount] = useState(existingRsvp?.children_count ?? false)
+  const [rsvpBringing, setRsvpBringing] = useState(existingRsvp?.bringing ?? false)
+  const [rsvpNotes, setRsvpNotes] = useState(existingRsvp?.notes ?? false)
 
   // RRULE state
   const existingRRule = event?.recurrence_rules?.[0]?.rrule_string
@@ -314,6 +331,64 @@ export function EventForm({ event }: EventFormProps) {
         />
       )}
 
+      {/* RSVP Settings */}
+      <div className="space-y-4 rounded-lg border border-wood-800/10 p-4">
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            role="switch"
+            aria-checked={rsvpEnabled}
+            aria-label="Enable RSVP"
+            onClick={() => setRsvpEnabled(!rsvpEnabled)}
+            className={cn(
+              'relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-burgundy-700 focus-visible:ring-offset-2',
+              rsvpEnabled ? 'bg-burgundy-700' : 'bg-wood-800/20'
+            )}
+          >
+            <span
+              className={cn(
+                'pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-sm transition-transform',
+                rsvpEnabled ? 'translate-x-5' : 'translate-x-0'
+              )}
+            />
+          </button>
+          <span className="font-body text-sm font-medium text-wood-900">Enable RSVP</span>
+        </div>
+
+        {rsvpEnabled && (
+          <div className="ml-14 space-y-3">
+            <ToggleField
+              label="Children count field"
+              checked={rsvpChildrenCount}
+              onChange={setRsvpChildrenCount}
+            />
+            <ToggleField
+              label="Dietary needs field"
+              checked={rsvpDietary}
+              onChange={setRsvpDietary}
+            />
+            <ToggleField
+              label="Bringing something field"
+              checked={rsvpBringing}
+              onChange={setRsvpBringing}
+            />
+            <ToggleField label="Notes field" checked={rsvpNotes} onChange={setRsvpNotes} />
+          </div>
+        )}
+
+        <input
+          type="hidden"
+          name="rsvp_settings"
+          value={JSON.stringify({
+            enabled: rsvpEnabled,
+            dietary: rsvpDietary,
+            children_count: rsvpChildrenCount,
+            bringing: rsvpBringing,
+            notes: rsvpNotes,
+          })}
+        />
+      </div>
+
       {/* Submit */}
       <div className="flex items-center gap-4 border-t border-wood-800/10 pt-6">
         <Button type="submit" disabled={isPending}>
@@ -347,5 +422,39 @@ export function EventForm({ event }: EventFormProps) {
         </Button>
       </div>
     </form>
+  )
+}
+
+function ToggleField({
+  label,
+  checked,
+  onChange,
+}: {
+  label: string
+  checked: boolean
+  onChange: (val: boolean) => void
+}) {
+  return (
+    <div className="flex items-center gap-3">
+      <button
+        type="button"
+        role="switch"
+        aria-checked={checked}
+        aria-label={label}
+        onClick={() => onChange(!checked)}
+        className={cn(
+          'relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-burgundy-700 focus-visible:ring-offset-2',
+          checked ? 'bg-burgundy-700' : 'bg-wood-800/20'
+        )}
+      >
+        <span
+          className={cn(
+            'pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform',
+            checked ? 'translate-x-4' : 'translate-x-0'
+          )}
+        />
+      </button>
+      <span className="font-body text-sm text-wood-800/80">{label}</span>
+    </div>
   )
 }

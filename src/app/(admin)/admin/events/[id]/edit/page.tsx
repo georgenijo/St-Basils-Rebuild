@@ -26,6 +26,7 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
       end_at,
       is_recurring,
       category,
+      rsvp_settings,
       recurrence_rules (rrule_string)
     `
     )

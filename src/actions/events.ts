@@ -53,6 +53,7 @@ export async function createEvent(
     rrule_by_day: formData.get('rrule_by_day') ?? '',
     rrule_until: formData.get('rrule_until') ?? '',
     rrule_count: formData.get('rrule_count') ?? '',
+    rsvp_settings: formData.get('rsvp_settings') ?? '',
   })
 
   if (!parsed.success) {
@@ -127,7 +128,17 @@ export async function createEvent(
     }
   }
 
-  // 4. Insert event
+  // 4. Parse RSVP settings
+  let rsvpSettings: Record<string, unknown> = { enabled: false }
+  if (parsed.data.rsvp_settings) {
+    try {
+      rsvpSettings = JSON.parse(parsed.data.rsvp_settings)
+    } catch {
+      // keep default
+    }
+  }
+
+  // 5. Insert event
   console.log('[createEvent] Inserting event...')
   const { data: event, error } = await supabase
     .from('events')
@@ -141,6 +152,7 @@ export async function createEvent(
       is_recurring: parsed.data.is_recurring,
       category: parsed.data.category,
       created_by: user.id,
+      rsvp_settings: rsvpSettings,
     })
     .select('id')
     .single()
@@ -207,6 +219,7 @@ export async function updateEvent(
     rrule_by_day: formData.get('rrule_by_day') ?? '',
     rrule_until: formData.get('rrule_until') ?? '',
     rrule_count: formData.get('rrule_count') ?? '',
+    rsvp_settings: formData.get('rsvp_settings') ?? '',
   })
 
   if (!parsed.success) {
@@ -262,7 +275,17 @@ export async function updateEvent(
     }
   }
 
-  // 4. Update event
+  // 4. Parse RSVP settings
+  let rsvpSettings: Record<string, unknown> = { enabled: false }
+  if (parsed.data.rsvp_settings) {
+    try {
+      rsvpSettings = JSON.parse(parsed.data.rsvp_settings)
+    } catch {
+      // keep default
+    }
+  }
+
+  // 5. Update event
   const { error } = await supabase
     .from('events')
     .update({
@@ -274,6 +297,7 @@ export async function updateEvent(
       end_at: endAt,
       is_recurring: parsed.data.is_recurring,
       category: parsed.data.category,
+      rsvp_settings: rsvpSettings,
     })
     .eq('id', eventId)
 
