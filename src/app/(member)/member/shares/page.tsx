@@ -69,10 +69,7 @@ export default async function SharesPage() {
       .eq('family_id', familyId)
       .eq('year', currentYear)
       .order('created_at', { ascending: false }),
-    supabase
-      .from('shares')
-      .select('id', { count: 'exact', head: true })
-      .eq('family_id', familyId),
+    supabase.from('shares').select('id', { count: 'exact', head: true }).eq('family_id', familyId),
     supabase
       .from('shares')
       .select('year, amount')
@@ -115,9 +112,7 @@ export default async function SharesPage() {
     <main className="p-6 lg:p-8">
       <div className="mb-6">
         <h1 className="font-heading text-2xl font-semibold text-wood-900">Shares</h1>
-        <p className="mt-1 text-sm text-wood-800/60">
-          Names remembered in weekly church services.
-        </p>
+        <p className="mt-1 text-sm text-wood-800/60">Names remembered in weekly church services.</p>
       </div>
 
       {/* ─── Summary Cards ──────────────────────────────────────── */}
@@ -147,9 +142,7 @@ export default async function SharesPage() {
           <div className="mt-1.5 font-heading text-[26px] font-semibold text-wood-900">
             ${totalSpentThisYear.toLocaleString('en-US')}
           </div>
-          <div className="mt-0.5 text-xs text-wood-800/45">
-            {sharesThisYear} x $50
-          </div>
+          <div className="mt-0.5 text-xs text-wood-800/45">{sharesThisYear} x $50</div>
         </Card>
 
         {/* All-Time */}
@@ -169,9 +162,7 @@ export default async function SharesPage() {
 
       {/* ─── Current Year Header + Buy Button ───────────────────── */}
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="font-heading text-base font-semibold text-wood-900">
-          {currentYear} Shares
-        </h2>
+        <h2 className="font-heading text-base font-semibold text-wood-900">{currentYear} Shares</h2>
         <BuySharesPanel />
       </div>
 

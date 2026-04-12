@@ -3,6 +3,7 @@
 ## Scenarios
 
 ### S1: Shares route exists and returns valid response
+
 - **Type:** happy-path
 - **Preconditions:** None (unauthenticated access is acceptable — should redirect)
 - **Steps:**
@@ -11,6 +12,7 @@
 - **Method:** playwright-cli
 
 ### S2: Shares route redirects unauthenticated users or renders page
+
 - **Type:** happy-path
 - **Preconditions:** None
 - **Steps:**
@@ -20,15 +22,17 @@
 - **Method:** playwright-cli
 
 ### S3: No console errors on shares route
+
 - **Type:** error-state
 - **Preconditions:** None
 - **Steps:**
   1. Collect console errors
   2. Navigate to /member/shares
-- **Expected:** No JS console errors (excluding known noise like Turnstile, NEXT_PUBLIC_)
+- **Expected:** No JS console errors (excluding known noise like Turnstile, NEXT*PUBLIC*)
 - **Method:** playwright-cli
 
 ### S4: Shares route loads on mobile viewport
+
 - **Type:** responsive
 - **Preconditions:** None
 - **Steps:**
@@ -38,6 +42,7 @@
 - **Method:** playwright-cli
 
 ### S5: Regression — member overview still loads
+
 - **Type:** regression
 - **Preconditions:** None
 - **Steps:**
@@ -46,6 +51,7 @@
 - **Method:** playwright-cli
 
 ### S6: Regression — membership tab still loads
+
 - **Type:** regression
 - **Preconditions:** None
 - **Steps:**
@@ -54,6 +60,7 @@
 - **Method:** playwright-cli
 
 ### S7: Regression — public pages still load
+
 - **Type:** regression
 - **Preconditions:** None
 - **Steps:**
@@ -62,6 +69,7 @@
 - **Method:** playwright-cli
 
 ### S8: Page content structure (if authed)
+
 - **Type:** happy-path
 - **Preconditions:** Authenticated as a member
 - **Steps:**
@@ -72,6 +80,7 @@
 - **Method:** agent-browser
 
 ### S9: Buy Shares panel opens and closes
+
 - **Type:** happy-path
 - **Preconditions:** Authenticated as a member
 - **Steps:**
@@ -84,6 +93,7 @@
 - **Method:** agent-browser
 
 ### S10: Buy Shares panel — add and remove name pills
+
 - **Type:** happy-path
 - **Preconditions:** Authenticated, panel open
 - **Steps:**
@@ -98,6 +108,7 @@
 - **Method:** agent-browser
 
 ### S11: Buy Shares panel — Escape key closes panel
+
 - **Type:** edge-case
 - **Preconditions:** Authenticated, panel open
 - **Steps:**
@@ -107,6 +118,7 @@
 - **Method:** agent-browser
 
 ### S12: Buy Shares panel — Submit disabled when no names
+
 - **Type:** edge-case
 - **Preconditions:** Authenticated, panel open, no names added
 - **Steps:**
@@ -116,6 +128,7 @@
 - **Method:** agent-browser
 
 ### S13: Buy Shares panel — empty name not added
+
 - **Type:** edge-case
 - **Preconditions:** Authenticated, panel open
 - **Steps:**
