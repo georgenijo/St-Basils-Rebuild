@@ -37,6 +37,7 @@ export const eventSchema = z
     rrule_by_day: z.string().optional().or(z.literal('')),
     rrule_until: z.string().optional().or(z.literal('')),
     rrule_count: z.string().optional().or(z.literal('')),
+    rsvp_settings: z.string().optional().or(z.literal('')),
   })
   .refine(
     (data) => {

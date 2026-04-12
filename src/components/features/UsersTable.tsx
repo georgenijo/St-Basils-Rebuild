@@ -106,7 +106,12 @@ function SortIcon({ active, dir }: { active: boolean; dir: SortDir }) {
 
 // ─── Component ───────────────────────────────────────────────────────
 
-export function UsersTable({ users, currentUserId: _currentUserId, selectedUserId, onRowClick }: UsersTableProps) {
+export function UsersTable({
+  users,
+  currentUserId: _currentUserId,
+  selectedUserId,
+  onRowClick,
+}: UsersTableProps) {
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<FilterValue>('')
   const [sortKey, setSortKey] = useState<SortKey>('created_at')
