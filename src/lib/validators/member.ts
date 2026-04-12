@@ -85,6 +85,16 @@ export const recordPaymentSchema = z.object({
   note: z.string().max(500, 'Note must be 500 characters or less').optional().or(z.literal('')),
 })
 
+export const markSharesPaidSchema = z.object({
+  share_ids: z
+    .array(z.string().uuid('Invalid share ID'))
+    .min(1, 'At least one share ID is required'),
+  method: z.enum(['cash', 'check', 'zelle', 'online'], {
+    message: 'Payment method must be one of: cash, check, zelle, online',
+  }),
+  note: z.string().max(500, 'Note must be 500 characters or less').optional().or(z.literal('')),
+})
+
 export type UpdateFamilyData = z.infer<typeof updateFamilySchema>
 export type AddFamilyMemberData = z.infer<typeof addFamilyMemberSchema>
 export type RemoveFamilyMemberData = z.infer<typeof removeFamilyMemberSchema>
@@ -92,3 +102,4 @@ export type BuySharesData = z.infer<typeof buySharesSchema>
 export type RecordDonationData = z.infer<typeof recordDonationSchema>
 export type AssignEventCostsData = z.infer<typeof assignEventCostsSchema>
 export type RecordPaymentData = z.infer<typeof recordPaymentSchema>
+export type MarkSharesPaidData = z.infer<typeof markSharesPaidSchema>
