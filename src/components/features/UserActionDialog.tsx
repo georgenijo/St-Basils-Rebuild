@@ -48,8 +48,11 @@ export function UserActionDialog({
     }
   }, [open])
 
+  const hasTriggeredSuccess = useRef(false)
+
   useEffect(() => {
-    if (state.success) {
+    if (state.success && !hasTriggeredSuccess.current) {
+      hasTriggeredSuccess.current = true
       onClose()
       onSuccess()
     }
