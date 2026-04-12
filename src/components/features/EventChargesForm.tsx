@@ -84,9 +84,7 @@ export function EventChargesForm({
   const charges = useMemo(() => {
     return Array.from(selectedFamilyIds).map((familyId) => ({
       family_id: familyId,
-      amount: useManualAmounts
-        ? Number(manualAmounts[familyId] || 0)
-        : splitAmount,
+      amount: useManualAmounts ? Number(manualAmounts[familyId] || 0) : splitAmount,
     }))
   }, [selectedFamilyIds, useManualAmounts, manualAmounts, splitAmount])
 
@@ -208,7 +206,9 @@ export function EventChargesForm({
         <div className="max-h-64 overflow-y-auto rounded-xl border border-wood-800/10 bg-cream-50">
           {filteredFamilies.length === 0 ? (
             <div className="px-4 py-8 text-center font-body text-sm text-wood-800/40">
-              {searchQuery ? 'No families match your search' : 'All families already have charges for this event'}
+              {searchQuery
+                ? 'No families match your search'
+                : 'All families already have charges for this event'}
             </div>
           ) : (
             <ul role="listbox" aria-labelledby="family-selector-label" aria-multiselectable="true">
@@ -229,9 +229,7 @@ export function EventChargesForm({
                     }}
                     className={cn(
                       'flex cursor-pointer items-center gap-3 border-b border-wood-800/5 px-4 py-2.5 transition-colors last:border-b-0',
-                      selected
-                        ? 'bg-burgundy-700/5'
-                        : 'hover:bg-cream-100'
+                      selected ? 'bg-burgundy-700/5' : 'hover:bg-cream-100'
                     )}
                   >
                     <span
@@ -244,7 +242,16 @@ export function EventChargesForm({
                       aria-hidden="true"
                     >
                       {selected && (
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                        <svg
+                          width="12"
+                          height="12"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="3"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
                           <path d="M20 6L9 17l-5-5" />
                         </svg>
                       )}
@@ -297,22 +304,15 @@ export function EventChargesForm({
           {/* ─── Summary / Manual Overrides ───────────────────────── */}
           <div className="rounded-xl border border-wood-800/10 bg-cream-50">
             <div className="border-b border-wood-800/5 px-4 py-3">
-              <h3 className="font-body text-sm font-medium text-wood-900">
-                Charge Breakdown
-              </h3>
+              <h3 className="font-body text-sm font-medium text-wood-900">Charge Breakdown</h3>
             </div>
             <div className="divide-y divide-wood-800/5">
               {Array.from(selectedFamilyIds).map((familyId) => {
                 const family = families.find((f) => f.id === familyId)
                 if (!family) return null
                 return (
-                  <div
-                    key={familyId}
-                    className="flex items-center justify-between px-4 py-2.5"
-                  >
-                    <span className="font-body text-sm text-wood-900">
-                      {family.family_name}
-                    </span>
+                  <div key={familyId} className="flex items-center justify-between px-4 py-2.5">
+                    <span className="font-body text-sm text-wood-900">{family.family_name}</span>
                     {useManualAmounts ? (
                       <div className="relative w-28">
                         <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs text-wood-800/50">
@@ -323,9 +323,7 @@ export function EventChargesForm({
                           step="0.01"
                           min="0.01"
                           value={manualAmounts[familyId] ?? ''}
-                          onChange={(e) =>
-                            handleManualAmountChange(familyId, e.target.value)
-                          }
+                          onChange={(e) => handleManualAmountChange(familyId, e.target.value)}
                           placeholder={splitAmount.toFixed(2)}
                           className="w-full rounded-lg border border-wood-800/10 bg-cream-50 py-1.5 pl-7 pr-2 text-right font-body text-sm text-wood-800 focus:border-burgundy-700 focus:outline-none focus:ring-2 focus:ring-burgundy-700/20"
                         />
@@ -347,8 +345,7 @@ export function EventChargesForm({
                 <span
                   className={cn(
                     'font-body text-sm font-semibold',
-                    useManualAmounts &&
-                      Math.abs(chargesTotal - Number(totalCost)) > 0.01
+                    useManualAmounts && Math.abs(chargesTotal - Number(totalCost)) > 0.01
                       ? 'text-amber-600'
                       : 'text-wood-900'
                   )}
@@ -356,12 +353,12 @@ export function EventChargesForm({
                   {usd.format(chargesTotal)}
                 </span>
               </div>
-              {useManualAmounts &&
-                Math.abs(chargesTotal - Number(totalCost)) > 0.01 && (
-                  <p className="mt-1 text-xs text-amber-600">
-                    Custom total ({usd.format(chargesTotal)}) differs from event cost ({usd.format(Number(totalCost))})
-                  </p>
-                )}
+              {useManualAmounts && Math.abs(chargesTotal - Number(totalCost)) > 0.01 && (
+                <p className="mt-1 text-xs text-amber-600">
+                  Custom total ({usd.format(chargesTotal)}) differs from event cost (
+                  {usd.format(Number(totalCost))})
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -370,9 +367,7 @@ export function EventChargesForm({
       {/* ─── Existing Charges ────────────────────────────────────── */}
       {existingCharges.length > 0 && (
         <div>
-          <h3 className="mb-2 font-body text-sm font-medium text-wood-900">
-            Existing Charges
-          </h3>
+          <h3 className="mb-2 font-body text-sm font-medium text-wood-900">Existing Charges</h3>
           <div className="rounded-xl border border-wood-800/10 bg-cream-50">
             <div className="divide-y divide-wood-800/5">
               {existingCharges.map((charge) => (
@@ -380,9 +375,7 @@ export function EventChargesForm({
                   key={charge.family_id}
                   className="flex items-center justify-between px-4 py-2.5"
                 >
-                  <span className="font-body text-sm text-wood-900">
-                    {charge.family_name}
-                  </span>
+                  <span className="font-body text-sm text-wood-900">{charge.family_name}</span>
                   <div className="flex items-center gap-2">
                     <span className="font-body text-sm font-medium text-wood-900">
                       {usd.format(charge.amount)}
@@ -407,10 +400,7 @@ export function EventChargesForm({
 
       {/* ─── Submit / Cancel ─────────────────────────────────────── */}
       <div className="flex items-center gap-4 border-t border-wood-800/10 pt-6">
-        <Button
-          type="submit"
-          disabled={isPending || selectedFamilyIds.size === 0 || !totalCost}
-        >
+        <Button type="submit" disabled={isPending || selectedFamilyIds.size === 0 || !totalCost}>
           {isPending ? (
             <span className="flex items-center gap-2">
               <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">

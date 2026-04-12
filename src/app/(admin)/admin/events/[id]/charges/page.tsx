@@ -19,15 +19,8 @@ export default async function EventChargesPage({ params }: PageProps) {
 
   // Fetch event, families, and existing charges in parallel
   const [eventResult, familiesResult, chargesResult] = await Promise.all([
-    supabase
-      .from('events')
-      .select('id, title, start_at')
-      .eq('id', id)
-      .single(),
-    supabase
-      .from('families')
-      .select('id, family_name')
-      .order('family_name'),
+    supabase.from('events').select('id, title, start_at').eq('id', id).single(),
+    supabase.from('families').select('id, family_name').order('family_name'),
     supabase
       .from('event_charges')
       .select('family_id, amount, paid, families!inner(family_name)')
