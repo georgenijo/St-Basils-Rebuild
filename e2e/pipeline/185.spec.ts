@@ -10,16 +10,14 @@ import { test, expect } from '@playwright/test'
 
 test.describe('Issue #185: Member Directory', () => {
   // ── S2: Unauthenticated access is blocked ────────────────────────────
-  test('S2: Directory page blocks unauthenticated users', async ({ page }) => {
+  test('S2: Directory page blocks non-member access', async ({ page }) => {
     const response = await page.goto('/member/directory', {
       waitUntil: 'domcontentloaded',
     })
-    const status = response?.status() ?? 0
     const url = page.url()
-    // Unauthenticated users should be redirected to login OR get a non-200
-    // (server-side auth guard may redirect or return an error)
-    const isBlocked = url.includes('/login') || status !== 200
-    expect(isBlocked).toBeTruthy()
+    // Non-members (unauthenticated or wrong role) should NOT remain on /member/directory
+    // They get redirected to /login (unauthenticated) or / (non-member role)
+    expect(url).not.toContain('/member/directory')
   })
 
   // ── S13: Directory nav item in sidebar ──────────────────────────────
@@ -195,7 +193,7 @@ test.describe('Issue #185: Member Directory', () => {
       // Label text
       await expect(page.locator('text=Member Directory')).toBeVisible()
       await expect(
-        page.locator('text=Other members can see your family name and phone number')
+        page.locator('text=Other members can see your family name, phone, address, and members')
       ).toBeVisible()
     }
   })

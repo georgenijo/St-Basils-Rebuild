@@ -242,7 +242,7 @@ function DirectoryVisibilityToggle({ visible }: { visible: boolean }) {
         <div className="flex-1 min-w-0">
           <h2 className="font-heading text-base font-semibold text-wood-900">Member Directory</h2>
           <p className="mt-0.5 text-xs text-wood-800/50">
-            Other members can see your family name and phone number
+            Other members can see your family name, phone, address, and members
           </p>
         </div>
         <form action={formAction}>

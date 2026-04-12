@@ -201,9 +201,14 @@ export async function updateDirectoryVisibility(
   prevState: ActionState,
   formData: FormData
 ): Promise<ActionState> {
-  // 1. Validate with Zod
+  // 1. Validate form value and parse with Zod
+  const rawValue = formData.get('directory_visible')
+  if (rawValue !== 'true' && rawValue !== 'false') {
+    return { success: false, message: 'Invalid visibility value' }
+  }
+
   const parsed = updateDirectoryVisibilitySchema.safeParse({
-    directory_visible: formData.get('directory_visible') === 'true',
+    directory_visible: rawValue === 'true',
   })
 
   if (!parsed.success) {

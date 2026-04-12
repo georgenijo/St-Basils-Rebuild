@@ -39,14 +39,27 @@ export default async function DirectoryPage() {
   const familyIds = (families ?? []).map((f) => f.id)
 
   // Fetch members for all visible families (skip if none to avoid empty .in())
-  const { data: members } =
+  const { data: members, error: membersError } =
     familyIds.length > 0
       ? await supabase
           .from('family_members')
           .select('id, family_id, full_name, relationship')
           .in('family_id', familyIds)
           .order('created_at', { ascending: true })
-      : { data: [] }
+      : { data: [], error: null }
+
+  if (membersError) {
+    return (
+      <main className="p-6 lg:p-8">
+        <h1 className="font-heading text-2xl font-semibold text-wood-900">Directory</h1>
+        <Card variant="outlined" className="mt-6 p-6">
+          <p className="text-sm text-wood-800/60">
+            We couldn&apos;t load the directory right now. Please try again.
+          </p>
+        </Card>
+      </main>
+    )
+  }
 
   return (
     <main className="p-6 lg:p-8">
