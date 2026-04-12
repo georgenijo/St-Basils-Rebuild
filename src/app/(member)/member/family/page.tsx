@@ -54,7 +54,7 @@ export default async function FamilyPage() {
     await Promise.all([
       supabase
         .from('families')
-        .select('id, family_name, head_of_household, phone, address, created_at')
+        .select('id, family_name, head_of_household, phone, address, created_at, directory_visible')
         .eq('id', profile.family_id)
         .single(),
       supabase
