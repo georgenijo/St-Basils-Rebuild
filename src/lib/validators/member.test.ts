@@ -7,6 +7,7 @@ import {
   recordDonationSchema,
   assignEventCostsSchema,
   recordPaymentSchema,
+  markSharesPaidSchema,
 } from '@/lib/validators/member'
 
 const validUuid = '550e8400-e29b-41d4-a716-446655440000'
@@ -278,6 +279,56 @@ describe('recordPaymentSchema', () => {
       type: 'donation',
       amount: -50,
       method: 'cash',
+    })
+    expect(result.success).toBe(false)
+  })
+})
+
+describe('markSharesPaidSchema', () => {
+  it('passes with one share_id and method', () => {
+    const result = markSharesPaidSchema.safeParse({
+      share_ids: [validUuid],
+      method: 'cash',
+    })
+    expect(result.success).toBe(true)
+  })
+
+  it('passes with multiple share_ids and optional note', () => {
+    const result = markSharesPaidSchema.safeParse({
+      share_ids: [validUuid, '550e8400-e29b-41d4-a716-446655440001'],
+      method: 'check',
+      note: 'Paid together',
+    })
+    expect(result.success).toBe(true)
+  })
+
+  it('fails with empty share_ids array', () => {
+    const result = markSharesPaidSchema.safeParse({
+      share_ids: [],
+      method: 'cash',
+    })
+    expect(result.success).toBe(false)
+  })
+
+  it('fails with invalid UUID in share_ids', () => {
+    const result = markSharesPaidSchema.safeParse({
+      share_ids: ['not-a-uuid'],
+      method: 'cash',
+    })
+    expect(result.success).toBe(false)
+  })
+
+  it('fails with invalid method', () => {
+    const result = markSharesPaidSchema.safeParse({
+      share_ids: [validUuid],
+      method: 'bitcoin',
+    })
+    expect(result.success).toBe(false)
+  })
+
+  it('fails without method', () => {
+    const result = markSharesPaidSchema.safeParse({
+      share_ids: [validUuid],
     })
     expect(result.success).toBe(false)
   })
