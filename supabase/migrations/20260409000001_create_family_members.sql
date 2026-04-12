@@ -23,6 +23,10 @@ CREATE TABLE public.family_members (
 -- Indexes
 CREATE INDEX idx_family_members_family_id ON public.family_members(family_id);
 CREATE INDEX idx_family_members_profile_id ON public.family_members(profile_id);
+-- One auth account can only be linked to one family_members row (partial: NULLs are unconstrained)
+CREATE UNIQUE INDEX uq_family_members_profile_id
+  ON public.family_members(profile_id)
+  WHERE profile_id IS NOT NULL;
 
 -- Auto-update updated_at
 CREATE TRIGGER set_family_members_updated_at
