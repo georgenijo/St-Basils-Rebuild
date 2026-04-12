@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useRef, useState } from 'react'
 
 import { cn } from '@/lib/utils'
-import { removeFamilyMember } from '@/actions/family'
+import { removeFamilyMember, updateDirectoryVisibility } from '@/actions/family'
 import { Card, Button } from '@/components/ui'
 import { EditFamilyPanel } from './EditFamilyPanel'
 import { AddMemberPanel } from './AddMemberPanel'
@@ -17,6 +17,7 @@ interface Family {
   phone: string | null
   address: string | null
   created_at: string
+  directory_visible: boolean
 }
 
 interface FamilyMember {
@@ -105,6 +106,9 @@ export function FamilyClient({ family, members, currentUserId }: FamilyClientPro
           <DetailRow label="Member Since" value={memberSince} />
         </div>
       </Card>
+
+      {/* ─── Directory Visibility Toggle ────────────────────────────── */}
+      <DirectoryVisibilityToggle visible={family.directory_visible} />
 
       {/* ─── Family Members Card ──────────────────────────────────── */}
       <Card variant="outlined">
@@ -223,6 +227,55 @@ function RemoveMemberButton({ memberId, memberName }: { memberId: string; member
         {isPending ? <LoadingSpinner /> : <TrashIcon />}
       </button>
     </form>
+  )
+}
+
+function DirectoryVisibilityToggle({ visible }: { visible: boolean }) {
+  const [state, formAction, isPending] = useActionState(updateDirectoryVisibility, {
+    success: false,
+    message: '',
+  })
+
+  return (
+    <Card variant="outlined" className="mb-6">
+      <div className="flex items-center justify-between px-5 py-4">
+        <div className="flex-1 min-w-0">
+          <h2 className="font-heading text-base font-semibold text-wood-900">Member Directory</h2>
+          <p className="mt-0.5 text-xs text-wood-800/50">
+            Other members can see your family name, phone, address, and members
+          </p>
+        </div>
+        <form action={formAction}>
+          <input type="hidden" name="directory_visible" value={String(!visible)} />
+          <button
+            type="submit"
+            role="switch"
+            aria-checked={visible}
+            aria-label="Show our family in the member directory"
+            disabled={isPending}
+            className={cn(
+              'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-burgundy-700 focus:ring-offset-2 disabled:opacity-50',
+              visible ? 'bg-burgundy-700' : 'bg-wood-800/20'
+            )}
+          >
+            <span
+              className={cn(
+                'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
+                visible ? 'translate-x-5' : 'translate-x-0'
+              )}
+              aria-hidden="true"
+            />
+          </button>
+        </form>
+      </div>
+      {state.message && !state.success && (
+        <div className="border-t border-wood-800/5 px-5 py-2">
+          <p className="text-xs text-red-600" role="alert">
+            {state.message}
+          </p>
+        </div>
+      )}
+    </Card>
   )
 }
 

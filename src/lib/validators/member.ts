@@ -27,6 +27,10 @@ export const removeFamilyMemberSchema = z.object({
   member_id: z.string().uuid('Invalid member ID'),
 })
 
+export const updateDirectoryVisibilitySchema = z.object({
+  directory_visible: z.boolean(),
+})
+
 export const buySharesSchema = z.object({
   names: z
     .array(
@@ -144,4 +148,5 @@ export type BuySharesData = z.infer<typeof buySharesSchema>
 export type RecordDonationData = z.infer<typeof recordDonationSchema>
 export type AssignEventCostsData = z.infer<typeof assignEventCostsSchema>
 export type RecordPaymentData = z.infer<typeof recordPaymentSchema>
+export type UpdateDirectoryVisibilityData = z.infer<typeof updateDirectoryVisibilitySchema>
 export type MarkSharesPaidData = z.infer<typeof markSharesPaidSchema>

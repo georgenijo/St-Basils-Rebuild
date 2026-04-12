@@ -1,0 +1,16 @@
+{
+  "assignees": [],
+  "body": "## Context\n\nParishioners want to contact each other — phone trees, carpooling, potlucks, checking in on someone. Currently this means asking around or scrolling WhatsApp contacts. A simple searchable directory solves this.\n\n## What to do\n\n### 1. Schema changes\n\nAdd to `families` table:\n```sql\nALTER TABLE families ADD COLUMN directory_visible BOOLEAN NOT NULL DEFAULT true;\n```\n\nFamilies can opt out. Default is visible.\n\n### 2. RLS policy\n\n```sql\nCREATE POLICY \"Members can read visible families\"\n  ON families FOR SELECT\n  USING (\n    directory_visible = true\n    AND EXISTS (\n      SELECT 1 FROM profiles\n      WHERE profiles.id = auth.uid()\n      AND profiles.is_active = true\n    )\n  );\n```\n\n- Only logged-in active users can see the directory\n- Only families with `directory_visible = true` appear\n- Admins see everyone regardless (existing admin policy covers this)\n- Members can still only *edit* their own family\n\n### 3. Member directory page: `/member/directory`\n\n**Search bar** — filters by family name or head of household name\n\n**Family cards or table rows:**\n- Family name\n- Head of household name\n- Phone number\n- City/neighborhood (parsed from address, or just show full address)\n- Member since year\n- Family member count\n\n**Click to expand (or card flip):**\n- List of family members (from `family_members` table)\n- Name + relationship badge (spouse, child, parent, etc.)\n\n**No email shown** — phone only. Reduces spam/privacy risk.\n\n**Empty state:** \"No families found\" with search suggestion\n\n### 4. Privacy toggle on Family tab (#158)\n\nAdd to the Family tab in member portal:\n- Toggle: \"Show our family in the member directory\"\n- Maps to `families.directory_visible`\n- Default: on\n- Tooltip: \"Other members can see your family name and phone number\"\n\n### 5. Add to member sidebar\n\nNew nav item in MemberSidebar (#155):\n- Label: \"Directory\"\n- Icon: address book / people icon\n- Position: after Shares\n\n## Acceptance criteria\n\n- [ ] Directory page loads at `/member/directory`\n- [ ] Only logged-in members can access (redirect to login if not authenticated)\n- [ ] Search filters by family name and head of household\n- [ ] Families with `directory_visible = false` do not appear\n- [ ] Click expands to show family members\n- [ ] Phone shown, email NOT shown\n- [ ] Privacy toggle works on Family tab\n- [ ] Admin can see all families in admin panel regardless of visibility\n\n## Resource impact\n\n- One boolean column on families table\n- One RLS policy\n- One new page, one query\n- Zero external services, zero cost\n\n## Dependencies\n\n- #145 (families table)\n- #146 (family_members table — for expanded view)\n- #155 (member portal layout — sidebar nav)\n- #158 (family tab — privacy toggle lives here)",
+  "labels": [
+    {
+      "id": "LA_kwDORwoC1M8AAAACcwlcXw",
+      "name": "enhancement",
+      "description": "New feature or request",
+      "color": "a2eeef"
+    }
+  ],
+  "milestone": null,
+  "number": 185,
+  "state": "OPEN",
+  "title": "Member directory: searchable family list for logged-in members"
+}

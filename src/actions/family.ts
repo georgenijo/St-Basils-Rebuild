@@ -7,6 +7,7 @@ import {
   updateFamilySchema,
   addFamilyMemberSchema,
   removeFamilyMemberSchema,
+  updateDirectoryVisibilitySchema,
 } from '@/lib/validators/member'
 
 type ActionState = {
@@ -194,4 +195,59 @@ export async function removeFamilyMember(
   // 7. Revalidate and return
   revalidatePath('/member')
   return { success: true, message: 'Family member removed successfully' }
+}
+
+export async function updateDirectoryVisibility(
+  prevState: ActionState,
+  formData: FormData
+): Promise<ActionState> {
+  // 1. Validate form value and parse with Zod
+  const rawValue = formData.get('directory_visible')
+  if (rawValue !== 'true' && rawValue !== 'false') {
+    return { success: false, message: 'Invalid visibility value' }
+  }
+
+  const parsed = updateDirectoryVisibilitySchema.safeParse({
+    directory_visible: rawValue === 'true',
+  })
+
+  if (!parsed.success) {
+    return {
+      success: false,
+      message: 'Validation failed',
+      errors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
+    }
+  }
+
+  // 2. Auth check
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return { success: false, message: 'Unauthorized' }
+
+  // 3. Fetch profile for family_id
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('family_id')
+    .eq('id', user.id)
+    .single()
+
+  if (!profile?.family_id) {
+    return { success: false, message: 'No family assigned to your account' }
+  }
+
+  // 4. Update directory visibility (RLS enforces own-family-only)
+  const { error } = await supabase
+    .from('families')
+    .update({ directory_visible: parsed.data.directory_visible })
+    .eq('id', profile.family_id)
+
+  if (error) {
+    return { success: false, message: 'Failed to update directory visibility' }
+  }
+
+  // 5. Revalidate and return
+  revalidatePath('/member')
+  return { success: true, message: 'Directory visibility updated successfully' }
 }
