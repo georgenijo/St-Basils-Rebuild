@@ -4,15 +4,15 @@
 
 ## Test Summary
 
-| Category | Result | Details |
-|----------|--------|---------|
-| TypeScript | PASS | `npx tsc --noEmit` — 0 errors |
-| Lint | PASS | `npx eslint src/actions/family.ts` — 0 errors |
-| Unit tests | PASS | 194/194 (vitest) |
-| Zod validators | PASS | 31/31 in `member.test.ts` |
-| Playwright (chromium) | PASS | 7/7 |
-| Playwright (mobile-chrome) | PASS | 7/7 |
-| Code review | PASS | Pattern matches `announcements.ts` exactly |
+| Category                   | Result | Details                                       |
+| -------------------------- | ------ | --------------------------------------------- |
+| TypeScript                 | PASS   | `npx tsc --noEmit` — 0 errors                 |
+| Lint                       | PASS   | `npx eslint src/actions/family.ts` — 0 errors |
+| Unit tests                 | PASS   | 194/194 (vitest)                              |
+| Zod validators             | PASS   | 31/31 in `member.test.ts`                     |
+| Playwright (chromium)      | PASS   | 7/7                                           |
+| Playwright (mobile-chrome) | PASS   | 7/7                                           |
+| Code review                | PASS   | Pattern matches `announcements.ts` exactly    |
 
 ## Playwright Test Results (14/14 pass)
 
@@ -33,4 +33,5 @@ No console errors on any page. No regressions detected.
 5. **No security issues**: Parameterized queries via Supabase client, no string interpolation
 
 ## Bugs Found
+
 None.

@@ -185,10 +185,7 @@ export async function removeFamilyMember(
   }
 
   // 6. Delete the family member (RLS also enforces own-family-only)
-  const { error } = await supabase
-    .from('family_members')
-    .delete()
-    .eq('id', parsed.data.member_id)
+  const { error } = await supabase.from('family_members').delete().eq('id', parsed.data.member_id)
 
   if (error) {
     return { success: false, message: 'Failed to remove family member' }
