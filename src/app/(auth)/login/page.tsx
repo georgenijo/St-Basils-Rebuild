@@ -51,7 +51,8 @@ export default async function LoginPage({
     process.env.DEV_ADMIN_EMAIL &&
     process.env.DEV_ADMIN_PASSWORD
   ) {
-    const bypassDestination = redirectTo && isValidRedirectUrl(redirectTo) ? redirectTo : '/admin/dashboard'
+    const bypassDestination =
+      redirectTo && isValidRedirectUrl(redirectTo) ? redirectTo : '/admin/dashboard'
     const bypassUrl = `/api/auth/dev-bypass?redirectTo=${encodeURIComponent(bypassDestination)}`
     redirect(bypassUrl)
   }

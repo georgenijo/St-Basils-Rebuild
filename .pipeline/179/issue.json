@@ -1,0 +1,7 @@
+{
+  "assignees": [],
+  "body": "## Problem\n\nWhen an admin invites a user via `inviteUserByEmail`, Supabase sends an invite email with a confirmation link. However, there is no auth callback route or set-password page to handle the invite token. In production, clicking the invite link would land on the site with a token in the URL but nowhere to complete the signup.\n\n## What's needed\n\n1. **Auth callback route** (`/api/auth/callback`) — exchanges the invite/recovery token from the URL into a session via `supabase.auth.exchangeCodeForSession()`\n2. **Set password page** (`/set-password` or similar) — allows the invited user to create their password via `supabase.auth.updateUser({ password })`\n3. Handle the `type=invite` and `type=recovery` flows (password reset uses the same mechanism)\n\n## Context\n\nDiscovered while testing #174 (invite status badges). The invite flow creates the user and the status badge works, but the invited user currently has no way to complete their account setup.\n\nThe `sendPasswordReset` server action in `src/actions/users.ts` also depends on this callback route to function correctly.",
+  "comments": [],
+  "labels": [],
+  "title": "Add auth callback route and set-password page for invited users"
+}

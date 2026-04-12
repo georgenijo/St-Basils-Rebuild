@@ -89,8 +89,8 @@ export function AdminCalendarView({ events }: AdminCalendarViewProps) {
     const { instanceType, category } = event.extendedProps
     const colors =
       instanceType === 'recurring'
-        ? CATEGORY_COLORS[category] ?? CATEGORY_COLORS.community
-        : INSTANCE_COLORS[instanceType] ?? CATEGORY_COLORS[category] ?? CATEGORY_COLORS.community
+        ? (CATEGORY_COLORS[category] ?? CATEGORY_COLORS.community)
+        : (INSTANCE_COLORS[instanceType] ?? CATEGORY_COLORS[category] ?? CATEGORY_COLORS.community)
 
     return {
       ...event,
