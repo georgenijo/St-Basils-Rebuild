@@ -3,6 +3,7 @@
 ## Changes Made
 
 ### Step 1: RecordDonationPanel slide-out component
+
 - `src/components/member/RecordDonationPanel.tsx` — created self-contained client component
   - Trigger button with heart icon (matches mockup)
   - Slide-out panel with backdrop, escape key close, body scroll lock
@@ -13,6 +14,7 @@
 - Verification: PASSED (zero type errors, zero lint errors)
 
 ### Step 2: Payments page server component
+
 - `src/app/(member)/member/payments/page.tsx` — created server component
   - Auth check + profile/family lookup (same pattern as membership page)
   - Parallel data fetching: payments (excluding membership type) + unpaid event charges
@@ -26,23 +28,27 @@
 - Verification: PASSED (zero type errors, zero lint errors)
 
 ## Commits
-| Hash | Message |
-|------|---------|
+
+| Hash    | Message                                           |
+| ------- | ------------------------------------------------- |
 | d60d6dd | feat: add RecordDonationPanel slide-out component |
-| 964d357 | feat: add member portal payments tab page |
+| 964d357 | feat: add member portal payments tab page         |
 
 ## Verification Results
+
 - Lint: PASS (0 errors, 3 pre-existing warnings in unrelated files)
 - TypeScript: PASS (0 errors in our files; pre-existing errors in e2e test files)
 - Unit tests: N/A (no unit tests for this feature)
 - Step verifications: all passed
 
 ## Files Changed
- src/app/(member)/member/payments/page.tsx     | 318 ++++++++++++++++++++++++++
- src/components/member/RecordDonationPanel.tsx | 235 +++++++++++++++++++
- 2 files changed, 553 insertions(+)
+
+src/app/(member)/member/payments/page.tsx | 318 ++++++++++++++++++++++++++
+src/components/member/RecordDonationPanel.tsx | 235 +++++++++++++++++++
+2 files changed, 553 insertions(+)
 
 ## Notes for Reviewer
+
 - The `recordDonation` action calls `revalidatePath('/member')` which covers `/member/payments` as a child route
 - Event charges from the `event_charges` table appear as "Due" rows in the table, distinct from "Paid" payment rows
 - No LIMIT applied to the per-family queries — data volume is bounded by family scope

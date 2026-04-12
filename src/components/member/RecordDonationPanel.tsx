@@ -141,7 +141,10 @@ export function RecordDonationPanel() {
           <form ref={formRef} action={formAction} className="space-y-4">
             {/* Donation Type */}
             <div>
-              <label htmlFor="donation_type" className="mb-1.5 block text-sm font-medium text-wood-900">
+              <label
+                htmlFor="donation_type"
+                className="mb-1.5 block text-sm font-medium text-wood-900"
+              >
                 Donation Type
               </label>
               <select
@@ -189,8 +192,7 @@ export function RecordDonationPanel() {
             {/* Note */}
             <div>
               <label htmlFor="note" className="mb-1.5 block text-sm font-medium text-wood-900">
-                Note{' '}
-                <span className="font-normal text-wood-800/40">(optional)</span>
+                Note <span className="font-normal text-wood-800/40">(optional)</span>
               </label>
               <input
                 type="text"
@@ -204,12 +206,7 @@ export function RecordDonationPanel() {
 
             {/* Footer */}
             <div className="flex justify-end gap-2 border-t border-wood-800/[0.06] pt-5">
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                onClick={() => setIsOpen(false)}
-              >
+              <Button type="button" variant="secondary" size="sm" onClick={() => setIsOpen(false)}>
                 Cancel
               </Button>
               <Button type="submit" variant="primary" size="sm" disabled={isPending}>

@@ -1,9 +1,11 @@
 # Implementation Plan — Issue #159: Member portal: Payments tab
 
 ## Approach Summary
+
 Create the Payments tab as a server component page at `/member/payments` with three summary cards and a payment history table (excluding membership payments). A client-side `RecordDonationPanel` slide-out handles donation recording using the existing `recordDonation` server action. The approach follows the established patterns from the Overview page (`member/page.tsx`) and Membership page (`member/membership/page.tsx`), with the slide-out panel following the `UserDetailPanel` pattern.
 
 ## Prerequisites
+
 - Member layout exists at `src/app/(member)/layout.tsx` (merged via #155)
 - `payments` table migration exists (`20260409000003_create_payments.sql`, #148)
 - `event_charges` table migration exists (`20260409000004_create_event_charges.sql`, #149)
@@ -14,7 +16,9 @@ Create the Payments tab as a server component page at `/member/payments` with th
 ## Steps
 
 ### Step 1: Create the RecordDonationPanel client component
+
 **Files:**
+
 - `src/components/member/RecordDonationPanel.tsx` — create
 
 **What to do:**
@@ -39,21 +43,26 @@ Create a `'use client'` slide-out panel component that:
 9. Style form elements consistently with the mockup: `rounded-lg border border-wood-800/15 bg-white px-3 py-2.5 text-sm` for inputs/selects
 
 **Pattern to follow:**
+
 - Panel structure: `src/components/features/UserDetailPanel.tsx` (backdrop, panel, escape key, body scroll lock)
 - Form submission: `src/components/features/ContactForm.tsx` or any form using `useActionState`
 
 **Verify:**
+
 ```bash
 npx tsc --noEmit --pretty 2>&1 | grep -i "RecordDonationPanel" || echo "No type errors"
 ```
 
 **Done when:**
+
 - Component file exists and compiles without type errors
 - Has proper `'use client'` directive
 - Handles open/close state, form submission, validation errors, and success
 
 ### Step 2: Create the Payments page server component
+
 **Files:**
+
 - `src/app/(member)/member/payments/page.tsx` — create
 
 **What to do:**
@@ -95,39 +104,47 @@ Create a server component page that:
 
 **Important detail on merging payments + charges:**
 Create a unified display array that combines:
+
 - Payments from `payments` table (status = 'Paid')
 - Unpaid event charges from `event_charges` table (status = 'Due', type = 'event')
-Sort the combined array by date descending.
+  Sort the combined array by date descending.
 
 **Since the page needs a client interactive element (the Record Donation button + panel), create a small client wrapper component `PaymentsClient` at the bottom of the file or inline it.**
 
 Actually, the cleaner approach: make the page a server component that passes data to a client component for the interactive parts. But since the table itself is static, the better approach is:
+
 - The page is a server component
 - Import and render `<PaymentsPageClient>` which is a thin `'use client'` wrapper at `src/components/member/PaymentsPageClient.tsx` that handles the "Record Donation" button state and renders the `RecordDonationPanel`
 - Pass all server-fetched data as props to this client component
 
 **Pattern to follow:**
+
 - Data fetching: `src/app/(member)/member/page.tsx` (Promise.all pattern, profile/family lookup)
 - Table rendering: `src/app/(member)/member/membership/page.tsx` (thead/tbody, date formatting, badges)
 - Mockup: `mockup-member-portal.html` lines 458-531
 
 **Verify:**
+
 ```bash
 npx tsc --noEmit --pretty 2>&1 | grep -i "payments" || echo "No type errors"
 ```
 
 **Done when:**
+
 - Page renders at `/member/payments` without errors
 - Three summary cards display with correct computed values
 - Payment history table shows non-membership payments + unpaid charges
 - "Record Donation" button is visible
 
 ### Step 3: Create the PaymentsPageClient wrapper component
+
 **Files:**
+
 - `src/components/member/PaymentsPageClient.tsx` — create
 
 **What to do:**
 Create a thin `'use client'` component that:
+
 1. Props: `children: React.ReactNode` (the table/cards from server component — actually, simpler approach)
 2. Actually, re-think: the simplest pattern is to have the page server component render all the static content, and only have a small client island for the button + panel. Create `RecordDonationButton.tsx` instead that just manages the open/close state of the panel.
 
@@ -135,43 +152,53 @@ Create a thin `'use client'` component that:
 Instead of a separate wrapper, modify the `RecordDonationPanel` from Step 1 to also export a `RecordDonationButton` component that manages its own open state internally. This is simpler and follows the principle of colocation.
 
 Actually, the cleanest approach: the `RecordDonationPanel` component manages its own trigger button. Export a single component that renders:
+
 - A trigger button (visible always)
 - The slide-out panel (visible when open)
 
 This way the server page just does `<RecordDonationPanel />` with no prop drilling.
 
 **Update to Step 1:** Revise `RecordDonationPanel` to be self-contained:
+
 - Internal `useState` for `isOpen`
 - Renders its own trigger button + the panel
 - No props needed except perhaps a className for the button
 
 **Verify:**
+
 ```bash
 npx tsc --noEmit --pretty
 ```
 
 **Done when:**
+
 - `RecordDonationPanel` is self-contained with its own trigger button
 - Can be dropped into the server page with a single `<RecordDonationPanel />`
 
 ### Step 4: Final lint and type check
+
 **Files:**
+
 - All files created in Steps 1-2
 
 **What to do:**
+
 1. Run `npm run lint` and fix any lint errors in files we created
 2. Run `npx tsc --noEmit` and fix any type errors in files we created
 
 **Verify:**
+
 ```bash
 npm run lint && npx tsc --noEmit
 ```
 
 **Done when:**
+
 - Zero lint errors from our files
 - Zero type errors from our files
 
 ## Acceptance Criteria (Full)
+
 - [ ] Page exists at `/member/payments` and renders for authenticated members with a family
 - [ ] Table excludes membership payments (filters `type != 'membership'`)
 - [ ] Summary cards show: Paid This Year, Outstanding, Donations — all computed accurately
@@ -184,26 +211,30 @@ npm run lint && npx tsc --noEmit
 - [ ] Null method values display as "—"
 
 ## RLS Policy Plan
-| Table | Policy | Rule |
-|-------|--------|------|
-| `payments` | `Select payments` (existing) | Members see own family's payments, admins see all |
-| `event_charges` | `Select event charges` (existing) | Members see own family's charges, admins see all |
-| `events` | Public read (existing) | All authenticated/public can read event titles |
+
+| Table           | Policy                            | Rule                                              |
+| --------------- | --------------------------------- | ------------------------------------------------- |
+| `payments`      | `Select payments` (existing)      | Members see own family's payments, admins see all |
+| `event_charges` | `Select event charges` (existing) | Members see own family's charges, admins see all  |
+| `events`        | Public read (existing)            | All authenticated/public can read event titles    |
 
 No new RLS policies needed — all existing policies are sufficient.
 
 ## Risk Mitigation
-| Risk | Mitigation |
-|------|-----------|
-| Null `method` column on payments | Display "—" when method is null |
-| Outstanding computed wrong | Use `event_charges` table with `paid = false`, not payments table |
-| revalidatePath scope | `recordDonation` calls `revalidatePath('/member')` which covers `/member/payments` |
-| Large payment history | No LIMIT on initial query since member portals have bounded data per family; add if needed later |
+
+| Risk                             | Mitigation                                                                                       |
+| -------------------------------- | ------------------------------------------------------------------------------------------------ |
+| Null `method` column on payments | Display "—" when method is null                                                                  |
+| Outstanding computed wrong       | Use `event_charges` table with `paid = false`, not payments table                                |
+| revalidatePath scope             | `recordDonation` calls `revalidatePath('/member')` which covers `/member/payments`               |
+| Large payment history            | No LIMIT on initial query since member portals have bounded data per family; add if needed later |
 
 ## Out of Scope
+
 - Pagination for payment history (low data volume per family)
 - Editing or deleting payments (admin-only feature, different issue)
 - Payment method recording on donations (the `recordDonation` action doesn't set method — by design, members record the donation, admins record the payment method)
 
 ## Estimated Complexity
+
 medium — One new page with server-side data fetching, one client component for the slide-out panel form. Follows well-established patterns from sibling pages.

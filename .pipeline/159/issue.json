@@ -1,1 +1,15 @@
-{"assignees":[],"body":"## Context\nShows all non-membership payments — event costs, donations, and share purchases. Membership dues are on the Membership tab.\n\n## What to do\n\n### Create `src/app/(member)/member/payments/page.tsx`\n\n**Summary cards (3):**\n- Paid This Year (non-membership total)\n- Outstanding (unpaid event charges)\n- Donations (total donated)\n\n**\"Record Donation\" button** — opens slide-out panel\n\n**Payment History table:**\n- Excludes type='membership'\n- Columns: Date, Type (badge), Description, Method, Amount, Status\n- Types shown: Event (amber), Donation (blue), Shares (purple)\n\n### Record Donation slide-out panel\n- Donation type select (General, Car Blessing, Christmas Caroling, Event Specific, Other)\n- Amount input\n- Note (optional)\n- Calls `recordDonation` server action\n\n## Design reference\nSee Payments tab in `mockup-member-portal.html`.\n\n## Acceptance criteria\n- [ ] Table excludes membership payments\n- [ ] Summary cards are accurate\n- [ ] Record Donation panel works and creates a payment record\n- [ ] New donations appear in the table after submission\n\n## Dependencies\n- #155 (member layout)\n- #148, #149 (payments + event_charges tables)\n- #153 (donations server action)","labels":[{"id":"LA_kwDORwoC1M8AAAACcwlcXw","name":"enhancement","description":"New feature or request","color":"a2eeef"}],"milestone":null,"state":"OPEN","title":"Member portal: Payments tab"}
+{
+  "assignees": [],
+  "body": "## Context\nShows all non-membership payments — event costs, donations, and share purchases. Membership dues are on the Membership tab.\n\n## What to do\n\n### Create `src/app/(member)/member/payments/page.tsx`\n\n**Summary cards (3):**\n- Paid This Year (non-membership total)\n- Outstanding (unpaid event charges)\n- Donations (total donated)\n\n**\"Record Donation\" button** — opens slide-out panel\n\n**Payment History table:**\n- Excludes type='membership'\n- Columns: Date, Type (badge), Description, Method, Amount, Status\n- Types shown: Event (amber), Donation (blue), Shares (purple)\n\n### Record Donation slide-out panel\n- Donation type select (General, Car Blessing, Christmas Caroling, Event Specific, Other)\n- Amount input\n- Note (optional)\n- Calls `recordDonation` server action\n\n## Design reference\nSee Payments tab in `mockup-member-portal.html`.\n\n## Acceptance criteria\n- [ ] Table excludes membership payments\n- [ ] Summary cards are accurate\n- [ ] Record Donation panel works and creates a payment record\n- [ ] New donations appear in the table after submission\n\n## Dependencies\n- #155 (member layout)\n- #148, #149 (payments + event_charges tables)\n- #153 (donations server action)",
+  "labels": [
+    {
+      "id": "LA_kwDORwoC1M8AAAACcwlcXw",
+      "name": "enhancement",
+      "description": "New feature or request",
+      "color": "a2eeef"
+    }
+  ],
+  "milestone": null,
+  "state": "OPEN",
+  "title": "Member portal: Payments tab"
+}

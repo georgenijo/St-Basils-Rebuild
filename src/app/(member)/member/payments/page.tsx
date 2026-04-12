@@ -112,10 +112,7 @@ export default async function PaymentsPage() {
 
   let eventTitles: Record<string, string> = {}
   if (allEventIds.length > 0) {
-    const { data: events } = await supabase
-      .from('events')
-      .select('id, title')
-      .in('id', allEventIds)
+    const { data: events } = await supabase.from('events').select('id, title').in('id', allEventIds)
     if (events) {
       eventTitles = Object.fromEntries(events.map((e) => [e.id, e.title]))
     }
