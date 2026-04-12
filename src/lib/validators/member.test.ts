@@ -302,6 +302,132 @@ describe('recordPaymentSchema', () => {
     })
     expect(result.success).toBe(false)
   })
+
+  // superRefine conditional validation tests
+  it('passes event payment with related_event_id', () => {
+    const result = recordPaymentSchema.safeParse({
+      family_id: validUuid,
+      type: 'event',
+      amount: 25,
+      method: 'cash',
+      related_event_id: validUuid,
+    })
+    expect(result.success).toBe(true)
+  })
+
+  it('fails event payment without related_event_id', () => {
+    const result = recordPaymentSchema.safeParse({
+      family_id: validUuid,
+      type: 'event',
+      amount: 25,
+      method: 'cash',
+    })
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      const fields = result.error.flatten().fieldErrors
+      expect(fields.related_event_id).toBeDefined()
+    }
+  })
+
+  it('fails event payment with empty string related_event_id', () => {
+    const result = recordPaymentSchema.safeParse({
+      family_id: validUuid,
+      type: 'event',
+      amount: 25,
+      method: 'cash',
+      related_event_id: '',
+    })
+    expect(result.success).toBe(false)
+  })
+
+  it('passes share payment with related_share_id', () => {
+    const result = recordPaymentSchema.safeParse({
+      family_id: validUuid,
+      type: 'share',
+      amount: 50,
+      method: 'check',
+      related_share_id: validUuid,
+    })
+    expect(result.success).toBe(true)
+  })
+
+  it('fails share payment without related_share_id', () => {
+    const result = recordPaymentSchema.safeParse({
+      family_id: validUuid,
+      type: 'share',
+      amount: 50,
+      method: 'check',
+    })
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      const fields = result.error.flatten().fieldErrors
+      expect(fields.related_share_id).toBeDefined()
+    }
+  })
+
+  it('fails membership payment with related_event_id set', () => {
+    const result = recordPaymentSchema.safeParse({
+      family_id: validUuid,
+      type: 'membership',
+      amount: 100,
+      method: 'cash',
+      related_event_id: validUuid,
+    })
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      const fields = result.error.flatten().fieldErrors
+      expect(fields.related_event_id).toBeDefined()
+    }
+  })
+
+  it('fails membership payment with related_share_id set', () => {
+    const result = recordPaymentSchema.safeParse({
+      family_id: validUuid,
+      type: 'membership',
+      amount: 100,
+      method: 'cash',
+      related_share_id: validUuid,
+    })
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      const fields = result.error.flatten().fieldErrors
+      expect(fields.related_share_id).toBeDefined()
+    }
+  })
+
+  it('passes donation payment with no relation IDs', () => {
+    const result = recordPaymentSchema.safeParse({
+      family_id: validUuid,
+      type: 'donation',
+      amount: 50,
+      method: 'zelle',
+    })
+    expect(result.success).toBe(true)
+  })
+
+  it('fails donation payment with related_event_id set', () => {
+    const result = recordPaymentSchema.safeParse({
+      family_id: validUuid,
+      type: 'donation',
+      amount: 50,
+      method: 'cash',
+      related_event_id: validUuid,
+    })
+    expect(result.success).toBe(false)
+  })
+
+  it('coerces string amount to number', () => {
+    const result = recordPaymentSchema.safeParse({
+      family_id: validUuid,
+      type: 'donation',
+      amount: '100',
+      method: 'online',
+    })
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.amount).toBe(100)
+    }
+  })
 })
 
 describe('markSharesPaidSchema', () => {

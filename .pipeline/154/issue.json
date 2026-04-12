@@ -1,0 +1,16 @@
+{
+  "assignees": [],
+  "body": "## Context\nAdmin-only operations: assigning event split costs to families and recording any payment as received (cash, check, Zelle).\n\n## What to do\n\n### Add to `src/actions/admin-payments.ts`\n\n**`assignEventCosts(prevState, formData)`**\n- Validate: event_id, array of { family_id, amount }\n- Auth check — admin only\n- Creates `event_charges` rows for each family\n- `revalidatePath('/admin')`\n\n**`recordPaymentReceived(prevState, formData)`**\n- Validate: family_id, type (membership/share/event/donation), amount, method (cash/check/zelle), note (optional)\n- Auth check — admin only\n- Creates a `payments` row with `recorded_by` set to current admin\n- If type is 'event', updates the matching `event_charges.paid` to true\n- If type is 'share', updates matching `shares.paid` to true\n- If type is 'membership', updates `families.membership_expires_at`\n- `revalidatePath('/admin')`\n\n## Acceptance criteria\n- [ ] Admin can assign split costs to multiple families for an event\n- [ ] Admin can record payment for any type\n- [ ] Related records (event_charges, shares, membership expiry) are updated\n- [ ] Members cannot access these actions\n\n## Dependencies\n- #148 (payments table)\n- #149 (event_charges table)\n- #150 (validators)",
+  "comments": [],
+  "labels": [
+    {
+      "id": "LA_kwDORwoC1M8AAAACcwlcXw",
+      "name": "enhancement",
+      "description": "New feature or request",
+      "color": "a2eeef"
+    }
+  ],
+  "milestone": null,
+  "state": "OPEN",
+  "title": "Server actions: admin event charges and payment recording"
+}

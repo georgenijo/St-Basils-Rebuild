@@ -76,21 +76,56 @@ export const assignEventCostsSchema = z.object({
     .min(1, 'At least one family charge is required'),
 })
 
-export const recordPaymentSchema = z.object({
-  family_id: z.string().uuid('Invalid family ID'),
-  type: z.enum(['membership', 'share', 'event', 'donation'], {
-    message: 'Payment type must be one of: membership, share, event, donation',
-  }),
-  amount: z.coerce
-    .number()
-    .positive('Amount must be greater than zero')
-    .max(9999999.99, 'Amount exceeds maximum')
-    .multipleOf(0.01, 'Amount cannot have more than 2 decimal places'),
-  method: z.enum(['cash', 'check', 'zelle', 'online'], {
-    message: 'Payment method must be one of: cash, check, zelle, online',
-  }),
-  note: z.string().max(500, 'Note must be 500 characters or less').optional().or(z.literal('')),
-})
+export const recordPaymentSchema = z
+  .object({
+    family_id: z.string().uuid('Invalid family ID'),
+    type: z.enum(['membership', 'share', 'event', 'donation'], {
+      message: 'Payment type must be one of: membership, share, event, donation',
+    }),
+    amount: z.coerce
+      .number()
+      .positive('Amount must be greater than zero')
+      .max(9999999.99, 'Amount exceeds maximum')
+      .multipleOf(0.01, 'Amount cannot have more than 2 decimal places'),
+    method: z.enum(['cash', 'check', 'zelle', 'online'], {
+      message: 'Payment method must be one of: cash, check, zelle, online',
+    }),
+    note: z.string().max(500, 'Note must be 500 characters or less').optional().or(z.literal('')),
+    related_event_id: z.string().uuid('Invalid event ID').optional().or(z.literal('')),
+    related_share_id: z.string().uuid('Invalid share ID').optional().or(z.literal('')),
+  })
+  .superRefine((data, ctx) => {
+    if (data.type === 'event' && !data.related_event_id) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Event ID is required for event payments',
+        path: ['related_event_id'],
+      })
+    }
+    if (data.type === 'share' && !data.related_share_id) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Share ID is required for share payments',
+        path: ['related_share_id'],
+      })
+    }
+    if (data.type === 'membership' || data.type === 'donation') {
+      if (data.related_event_id) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Event ID should not be set for this payment type',
+          path: ['related_event_id'],
+        })
+      }
+      if (data.related_share_id) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Share ID should not be set for this payment type',
+          path: ['related_share_id'],
+        })
+      }
+    }
+  })
 
 export const markSharesPaidSchema = z.object({
   share_ids: z
