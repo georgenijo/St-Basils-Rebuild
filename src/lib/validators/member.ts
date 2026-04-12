@@ -5,11 +5,7 @@ export const updateFamilySchema = z.object({
     .string()
     .min(1, 'Family name is required')
     .max(200, 'Family name must be 200 characters or less'),
-  phone: z
-    .string()
-    .max(30, 'Phone must be 30 characters or less')
-    .optional()
-    .or(z.literal('')),
+  phone: z.string().max(30, 'Phone must be 30 characters or less').optional().or(z.literal('')),
   address: z
     .string()
     .max(500, 'Address must be 500 characters or less')
@@ -33,7 +29,13 @@ export const removeFamilyMemberSchema = z.object({
 
 export const buySharesSchema = z.object({
   names: z
-    .array(z.string().trim().min(1, 'Person name is required').max(200, 'Person name must be 200 characters or less'))
+    .array(
+      z
+        .string()
+        .trim()
+        .min(1, 'Person name is required')
+        .max(200, 'Person name must be 200 characters or less')
+    )
     .min(1, 'At least one person name is required'),
   year: z.coerce
     .number()
@@ -48,11 +50,7 @@ export const recordDonationSchema = z.object({
     .positive('Amount must be greater than zero')
     .max(9999999.99, 'Amount exceeds maximum')
     .multipleOf(0.01, 'Amount cannot have more than 2 decimal places'),
-  note: z
-    .string()
-    .max(500, 'Note must be 500 characters or less')
-    .optional()
-    .or(z.literal('')),
+  note: z.string().max(500, 'Note must be 500 characters or less').optional().or(z.literal('')),
 })
 
 export const assignEventCostsSchema = z.object({
@@ -84,11 +82,7 @@ export const recordPaymentSchema = z.object({
   method: z.enum(['cash', 'check', 'zelle', 'online'], {
     message: 'Payment method must be one of: cash, check, zelle, online',
   }),
-  note: z
-    .string()
-    .max(500, 'Note must be 500 characters or less')
-    .optional()
-    .or(z.literal('')),
+  note: z.string().max(500, 'Note must be 500 characters or less').optional().or(z.literal('')),
 })
 
 export type UpdateFamilyData = z.infer<typeof updateFamilySchema>
