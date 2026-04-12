@@ -92,22 +92,14 @@ export default async function MemberOverviewPage() {
         .from('family_members')
         .select('id', { count: 'exact', head: true })
         .eq('family_id', familyId),
-      supabase
-        .from('shares')
-        .select('id')
-        .eq('family_id', familyId)
-        .eq('year', currentYear),
+      supabase.from('shares').select('id').eq('family_id', familyId).eq('year', currentYear),
       supabase
         .from('payments')
         .select('id, type, amount, note, created_at, related_event_id')
         .eq('family_id', familyId)
         .order('created_at', { ascending: false })
         .limit(5),
-      supabase
-        .from('event_charges')
-        .select('amount')
-        .eq('family_id', familyId)
-        .eq('paid', false),
+      supabase.from('event_charges').select('amount').eq('family_id', familyId).eq('paid', false),
     ])
 
   const family = familyResult.data
@@ -136,16 +128,11 @@ export default async function MemberOverviewPage() {
   }
 
   // ─── Fetch event titles for payments that reference events ────
-  const eventIds = recentPayments
-    .filter((p) => p.related_event_id)
-    .map((p) => p.related_event_id!)
+  const eventIds = recentPayments.filter((p) => p.related_event_id).map((p) => p.related_event_id!)
 
   let eventTitles: Record<string, string> = {}
   if (eventIds.length > 0) {
-    const { data: events } = await supabase
-      .from('events')
-      .select('id, title')
-      .in('id', eventIds)
+    const { data: events } = await supabase.from('events').select('id, title').in('id', eventIds)
     if (events) {
       eventTitles = Object.fromEntries(events.map((e) => [e.id, e.title]))
     }
@@ -238,7 +225,7 @@ export default async function MemberOverviewPage() {
               outstandingBalance > 0 ? 'text-red-600' : 'text-wood-900'
             }`}
           >
-            ${outstandingBalance.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+            {`$${outstandingBalance.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`}
           </div>
           <div className="mt-0.5 text-xs text-wood-800/45">
             {outstandingBalance > 0 ? 'outstanding' : 'all clear'}
@@ -276,11 +263,9 @@ export default async function MemberOverviewPage() {
                           {badge.label}
                         </span>
                       </td>
-                      <td className="px-[18px] py-3 text-wood-900">
-                        {describePayment(payment)}
-                      </td>
+                      <td className="px-[18px] py-3 text-wood-900">{describePayment(payment)}</td>
                       <td className="px-[18px] py-3 text-right font-heading font-semibold text-wood-900">
-                        ${Number(payment.amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        {`$${Number(payment.amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                       </td>
                       <td className="px-[18px] py-3 text-right text-[13px] text-wood-800/40">
                         {shortDate.format(new Date(payment.created_at))}
