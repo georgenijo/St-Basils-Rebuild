@@ -7,6 +7,7 @@ import { SpeedInsights } from '@vercel/speed-insights/next'
 import { cn } from '@/lib/utils'
 import { churchSchema } from '@/lib/structured-data'
 import { JsonLd } from '@/components/ui'
+import { DynamicFonts } from '@/components/DynamicFonts'
 
 import './globals.css'
 
@@ -75,6 +76,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={cn(raleway.variable, roboto.variable, libreBaskerville.variable)}>
       <body>
+        <DynamicFonts />
         <JsonLd data={churchSchema} />
         {children}
         {isVercelDeployment && <Analytics />}
