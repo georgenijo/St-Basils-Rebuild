@@ -23,7 +23,8 @@ async function requireAdmin(supabase: Awaited<ReturnType<typeof createClient>>) 
     .eq('id', user.id)
     .single()
 
-  if (profile?.role !== 'admin') return { user: null, error: 'Forbidden: admin access required' as const }
+  if (profile?.role !== 'admin')
+    return { user: null, error: 'Forbidden: admin access required' as const }
 
   return { user, error: null }
 }
@@ -198,8 +199,7 @@ export async function recordPaymentReceived(
           '[recordPaymentReceived] Failed to update membership expiry:',
           familyError.message
         )
-        sideEffectWarning =
-          ' (but failed to update membership expiry — please check manually)'
+        sideEffectWarning = ' (but failed to update membership expiry — please check manually)'
       }
     } else {
       sideEffectWarning = ' (but could not find family record to update membership expiry)'
