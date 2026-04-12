@@ -10,7 +10,7 @@ import interactionPlugin from '@fullcalendar/interaction'
 import rrulePlugin from '@fullcalendar/rrule'
 
 import { CHURCH_TIME_ZONE } from '@/lib/event-time'
-import type { EventClickArg } from '@fullcalendar/core'
+import type { EventClickArg, EventMountArg, EventContentArg } from '@fullcalendar/core'
 import type { CalendarEvent } from '@/components/features/EventCalendar'
 
 const CATEGORY_COLORS: Record<string, { bg: string; border: string }> = {
@@ -30,12 +30,24 @@ export function CalendarView({ events }: CalendarViewProps) {
     typeof window !== 'undefined' && window.innerWidth < 768 ? 'listWeek' : 'dayGridMonth'
   )
 
-  const coloredEvents = events.map((event) => ({
-    ...event,
-    backgroundColor: CATEGORY_COLORS[event.extendedProps.category]?.bg,
-    borderColor: CATEGORY_COLORS[event.extendedProps.category]?.border,
-    textColor: '#FFFDF8',
-  }))
+  const INSTANCE_COLORS: Record<string, { bg: string; border: string }> = {
+    modified: { bg: '#d97706', border: '#b45309' },
+    cancelled: { bg: '#dc2626', border: '#b91c1c' },
+  }
+
+  const coloredEvents = events.map((event) => {
+    const instanceType = event.extendedProps.instanceType
+    const colors = instanceType
+      ? INSTANCE_COLORS[instanceType]
+      : CATEGORY_COLORS[event.extendedProps.category]
+
+    return {
+      ...event,
+      backgroundColor: colors?.bg,
+      borderColor: colors?.border,
+      textColor: '#FFFDF8',
+    }
+  })
 
   const handleEventClick = useCallback(
     (info: EventClickArg) => {
@@ -46,6 +58,39 @@ export function CalendarView({ events }: CalendarViewProps) {
     },
     [router]
   )
+
+  const handleEventDidMount = useCallback((info: EventMountArg) => {
+    const instanceType = info.event.extendedProps.instanceType
+    if (instanceType === 'cancelled') {
+      info.el.style.opacity = '0.65'
+      info.el.style.textDecoration = 'line-through'
+    }
+  }, [])
+
+  const handleEventContent = useCallback((arg: EventContentArg) => {
+    const instanceType = arg.event.extendedProps.instanceType
+    const note = arg.event.extendedProps.note
+
+    if (instanceType === 'cancelled' && note) {
+      const container = document.createElement('div')
+      container.className = 'fc-event-main-frame'
+
+      const titleEl = document.createElement('span')
+      titleEl.style.textDecoration = 'line-through'
+      titleEl.textContent = arg.event.title
+      container.appendChild(titleEl)
+
+      const noteEl = document.createElement('div')
+      noteEl.style.fontSize = '10px'
+      noteEl.style.opacity = '0.8'
+      noteEl.textContent = note
+      container.appendChild(noteEl)
+
+      return { domNodes: [container] }
+    }
+
+    return undefined
+  }, [])
 
   return (
     <FullCalendar
@@ -58,6 +103,8 @@ export function CalendarView({ events }: CalendarViewProps) {
       }}
       events={coloredEvents}
       eventClick={handleEventClick}
+      eventDidMount={handleEventDidMount}
+      eventContent={handleEventContent}
       height="auto"
       timeZone={CHURCH_TIME_ZONE}
       dayMaxEvents={3}

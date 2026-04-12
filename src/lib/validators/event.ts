@@ -125,3 +125,34 @@ export function slugify(text: string): string {
     .replace(/-+/g, '-')
     .replace(/^-|-$/g, '')
 }
+
+// ─── Event Instance Validators ────────────────────────────────────────
+
+/** Schema for editing a single occurrence override */
+export const eventInstanceSchema = z.object({
+  event_id: z.string().uuid(),
+  original_date: z.string().min(1), // UTC ISO string from event.start.toISOString()
+  start_at: z.string().optional().or(z.literal('')),
+  end_at: z.string().optional().or(z.literal('')),
+  location: z.string().max(500).optional().or(z.literal('')),
+  note: z.string().max(1000).optional().or(z.literal('')),
+})
+
+export type EventInstanceFormData = z.infer<typeof eventInstanceSchema>
+
+/** Schema for cancelling a single occurrence */
+export const cancelInstanceSchema = z.object({
+  event_id: z.string().uuid(),
+  original_date: z.string().min(1), // UTC ISO string
+  note: z.string().max(1000).optional().or(z.literal('')),
+})
+
+export type CancelInstanceFormData = z.infer<typeof cancelInstanceSchema>
+
+/** Schema for restoring a cancelled/modified occurrence */
+export const restoreInstanceSchema = z.object({
+  event_id: z.string().uuid(),
+  original_date: z.string().min(1), // UTC ISO string
+})
+
+export type RestoreInstanceFormData = z.infer<typeof restoreInstanceSchema>

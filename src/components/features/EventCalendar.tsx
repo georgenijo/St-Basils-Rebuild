@@ -22,6 +22,8 @@ export interface CalendarEvent {
     slug: string
     category: 'liturgical' | 'community' | 'special'
     location: string | null
+    instanceType?: 'modified' | 'cancelled'
+    note?: string | null
   }
 }
 
