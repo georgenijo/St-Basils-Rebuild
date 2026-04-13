@@ -97,8 +97,7 @@ export function SharesTable({
     if (search) {
       const q = search.toLowerCase()
       result = result.filter(
-        (s) =>
-          s.person_name.toLowerCase().includes(q) || s.family_name.toLowerCase().includes(q)
+        (s) => s.person_name.toLowerCase().includes(q) || s.family_name.toLowerCase().includes(q)
       )
     }
 
@@ -149,9 +148,10 @@ export function SharesTable({
       },
       tabIndex: 0 as const,
       role: 'button' as const,
-      'aria-sort': (
-        sortKey === key ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'
-      ) as 'ascending' | 'descending' | 'none',
+      'aria-sort': (sortKey === key ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none') as
+        | 'ascending'
+        | 'descending'
+        | 'none',
     }
   }
 
@@ -222,10 +222,7 @@ export function SharesTable({
                 Bought By
                 <SortIcon active={sortKey === 'family_name'} dir={sortDir} />
               </th>
-              <th
-                className={cn(thClass, 'hidden sm:table-cell')}
-                {...sortableThProps('amount')}
-              >
+              <th className={cn(thClass, 'hidden sm:table-cell')} {...sortableThProps('amount')}>
                 Amount
                 <SortIcon active={sortKey === 'amount'} dir={sortDir} />
               </th>
@@ -299,9 +296,7 @@ export function SharesTable({
                     <span
                       className={cn(
                         'inline-flex rounded-full px-2 py-0.5 text-xs font-medium',
-                        share.paid
-                          ? 'bg-emerald-50 text-emerald-700'
-                          : 'bg-amber-50 text-amber-800'
+                        share.paid ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-800'
                       )}
                     >
                       {share.paid ? 'Paid' : 'Unpaid'}

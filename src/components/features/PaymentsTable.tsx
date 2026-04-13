@@ -21,6 +21,8 @@ export interface Payment {
   event_title: string | null
   share_label: string | null
   recorded_by_name: string | null
+  status: 'pending' | 'confirmed' | 'rejected'
+  reference_memo: string | null
 }
 
 interface PaymentsTableProps {
@@ -51,7 +53,21 @@ const METHOD_LABELS: Record<string, string> = {
   cash: 'Cash',
   check: 'Check',
   zelle: 'Zelle',
+  venmo: 'Venmo',
+  cashapp: 'Cash App',
   online: 'Online',
+}
+
+const STATUS_COLORS: Record<string, string> = {
+  pending: 'bg-amber-50 text-amber-700',
+  confirmed: 'bg-emerald-50 text-emerald-700',
+  rejected: 'bg-red-50 text-red-700',
+}
+
+const STATUS_LABELS: Record<string, string> = {
+  pending: 'Pending',
+  confirmed: 'Confirmed',
+  rejected: 'Rejected',
 }
 
 const FILTER_OPTIONS: { value: FilterValue; label: string }[] = [
@@ -209,6 +225,9 @@ export function PaymentsTable({ payments }: PaymentsTableProps) {
                 <th className="hidden px-4 py-3 text-left font-body text-xs font-semibold uppercase tracking-wider text-wood-800/50 lg:table-cell">
                   Recorded By
                 </th>
+                <th className="px-4 py-3 text-left font-body text-xs font-semibold uppercase tracking-wider text-wood-800/50">
+                  Status
+                </th>
                 <SortHeader
                   label="Date"
                   sortKey="date"
@@ -222,7 +241,7 @@ export function PaymentsTable({ payments }: PaymentsTableProps) {
               {filtered.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={7}
+                    colSpan={8}
                     className="px-4 py-12 text-center font-body text-sm text-wood-800/50"
                   >
                     {payments.length === 0
@@ -264,6 +283,16 @@ export function PaymentsTable({ payments }: PaymentsTableProps) {
                     </td>
                     <td className="hidden whitespace-nowrap px-4 py-3 font-body text-sm text-wood-800/60 lg:table-cell">
                       {payment.recorded_by_name ?? '—'}
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-3">
+                      <span
+                        className={cn(
+                          'inline-flex rounded-full px-2 py-0.5 text-xs font-medium',
+                          STATUS_COLORS[payment.status] ?? 'bg-gray-50 text-gray-700'
+                        )}
+                      >
+                        {STATUS_LABELS[payment.status] ?? payment.status}
+                      </span>
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 font-body text-sm text-wood-800/60">
                       {formatDate(payment.created_at)}

@@ -4,10 +4,13 @@ import { useState } from 'react'
 
 import { PaymentsTable } from '@/components/features/PaymentsTable'
 import { RecordPaymentPanel } from '@/components/features/RecordPaymentPanel'
+import { PendingPaymentsQueue } from '@/components/features/PendingPaymentsQueue'
 import type { Payment } from '@/components/features/PaymentsTable'
+import type { PendingPayment } from '@/components/features/PendingPaymentsQueue'
 
 interface PaymentsPageClientProps {
   payments: Payment[]
+  pendingPayments: PendingPayment[]
   families: { id: string; family_name: string }[]
   events: { id: string; title: string }[]
   unpaidShares: { id: string; family_id: string; person_name: string; year: number }[]
@@ -15,6 +18,7 @@ interface PaymentsPageClientProps {
 
 export function PaymentsPageClient({
   payments,
+  pendingPayments,
   families,
   events,
   unpaidShares,
@@ -23,6 +27,8 @@ export function PaymentsPageClient({
 
   return (
     <>
+      <PendingPaymentsQueue payments={pendingPayments} />
+
       <div className="mb-6 flex items-center justify-end">
         <button
           type="button"

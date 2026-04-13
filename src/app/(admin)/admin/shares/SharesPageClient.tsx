@@ -1,6 +1,14 @@
 'use client'
 
-import { forwardRef, useActionState, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  forwardRef,
+  useActionState,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 
 import { markSharesPaid } from '@/actions/shares'
 import { SharesTable } from '@/components/features/SharesTable'
@@ -88,8 +96,8 @@ export function SharesPageClient({ shares, years, defaultYear }: SharesPageClien
   }
 
   function handleMarkPaidSelected() {
-    const unpaidSelected = [...selectedIds].filter(
-      (id) => filtered.find((s) => s.id === id && !s.paid)
+    const unpaidSelected = [...selectedIds].filter((id) =>
+      filtered.find((s) => s.id === id && !s.paid)
     )
     if (unpaidSelected.length === 0) return
     openMarkPaidModal(unpaidSelected)
@@ -119,8 +127,8 @@ export function SharesPageClient({ shares, years, defaultYear }: SharesPageClien
     URL.revokeObjectURL(url)
   }
 
-  const unpaidSelectedCount = [...selectedIds].filter(
-    (id) => filtered.find((s) => s.id === id && !s.paid)
+  const unpaidSelectedCount = [...selectedIds].filter((id) =>
+    filtered.find((s) => s.id === id && !s.paid)
   ).length
 
   return (
@@ -196,101 +204,102 @@ interface MarkPaidDialogProps {
   onClose: () => void
 }
 
-const MarkPaidDialog = forwardRef<HTMLDialogElement, MarkPaidDialogProps>(
-  function MarkPaidDialog({ open, shareIds, onClose }, ref) {
-    const [state, formAction, isPending] = useActionState(markSharesPaid, {
-      success: false,
-      message: '',
-    })
+const MarkPaidDialog = forwardRef<HTMLDialogElement, MarkPaidDialogProps>(function MarkPaidDialog(
+  { open, shareIds, onClose },
+  ref
+) {
+  const [state, formAction, isPending] = useActionState(markSharesPaid, {
+    success: false,
+    message: '',
+  })
 
-    useEffect(() => {
-      if (state.success && open) {
-        onClose()
-      }
-    }, [state.success, open, onClose])
+  useEffect(() => {
+    if (state.success && open) {
+      onClose()
+    }
+  }, [state.success, open, onClose])
 
-    return (
-      <dialog
-        ref={ref}
-        className="w-full max-w-md rounded-2xl border border-wood-800/10 bg-cream-50 p-0 shadow-xl backdrop:bg-black/40"
-        onClose={onClose}
-      >
-        <form action={formAction} className="p-6">
-          <h2 className="font-heading text-xl font-semibold text-wood-900">Mark as Paid</h2>
-          <p className="mt-1 font-body text-sm text-wood-800/60">
-            Mark {shareIds.length} share{shareIds.length !== 1 ? 's' : ''} as paid and record the
-            payment.
-          </p>
+  return (
+    <dialog
+      ref={ref}
+      className="w-full max-w-md rounded-2xl border border-wood-800/10 bg-cream-50 p-0 shadow-xl backdrop:bg-black/40"
+      onClose={onClose}
+    >
+      <form action={formAction} className="p-6">
+        <h2 className="font-heading text-xl font-semibold text-wood-900">Mark as Paid</h2>
+        <p className="mt-1 font-body text-sm text-wood-800/60">
+          Mark {shareIds.length} share{shareIds.length !== 1 ? 's' : ''} as paid and record the
+          payment.
+        </p>
 
-          {state.message && !state.success && (
-            <p className="mt-3 font-body text-sm text-red-600">{state.message}</p>
-          )}
+        {state.message && !state.success && (
+          <p className="mt-3 font-body text-sm text-red-600">{state.message}</p>
+        )}
 
-          {/* Hidden share_ids */}
-          <input type="hidden" name="share_ids" value={JSON.stringify(shareIds)} />
+        {/* Hidden share_ids */}
+        <input type="hidden" name="share_ids" value={JSON.stringify(shareIds)} />
 
-          <div className="mt-4 space-y-4">
-            <div>
-              <label
-                htmlFor="payment-method"
-                className="mb-1 block font-body text-sm font-medium text-wood-900"
-              >
-                Payment Method
-              </label>
-              <select
-                id="payment-method"
-                name="method"
-                required
-                className="w-full rounded-lg border border-wood-800/10 bg-cream-50 px-3 py-2 font-body text-sm text-wood-900 focus:border-burgundy-700 focus:outline-none focus:ring-1 focus:ring-burgundy-700"
-              >
-                {PAYMENT_METHODS.map((m) => (
-                  <option key={m.value} value={m.value}>
-                    {m.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label
-                htmlFor="payment-note"
-                className="mb-1 block font-body text-sm font-medium text-wood-900"
-              >
-                Note (optional)
-              </label>
-              <input
-                id="payment-note"
-                name="note"
-                type="text"
-                maxLength={500}
-                className="w-full rounded-lg border border-wood-800/10 bg-cream-50 px-3 py-2 font-body text-sm text-wood-900 placeholder:text-wood-800/40 focus:border-burgundy-700 focus:outline-none focus:ring-1 focus:ring-burgundy-700"
-                placeholder="e.g. Check #1234"
-              />
-            </div>
+        <div className="mt-4 space-y-4">
+          <div>
+            <label
+              htmlFor="payment-method"
+              className="mb-1 block font-body text-sm font-medium text-wood-900"
+            >
+              Payment Method
+            </label>
+            <select
+              id="payment-method"
+              name="method"
+              required
+              className="w-full rounded-lg border border-wood-800/10 bg-cream-50 px-3 py-2 font-body text-sm text-wood-900 focus:border-burgundy-700 focus:outline-none focus:ring-1 focus:ring-burgundy-700"
+            >
+              {PAYMENT_METHODS.map((m) => (
+                <option key={m.value} value={m.value}>
+                  {m.label}
+                </option>
+              ))}
+            </select>
           </div>
 
-          <div className="mt-6 flex items-center justify-end gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={isPending}
-              className="rounded-lg px-4 py-2 font-body text-sm font-medium text-wood-800 transition-colors hover:bg-cream-100"
+          <div>
+            <label
+              htmlFor="payment-note"
+              className="mb-1 block font-body text-sm font-medium text-wood-900"
             >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isPending}
-              className="rounded-lg bg-burgundy-700 px-4 py-2 font-body text-sm font-medium text-cream-50 transition-colors hover:bg-burgundy-800 disabled:opacity-50"
-            >
-              {isPending ? 'Saving...' : 'Confirm Payment'}
-            </button>
+              Note (optional)
+            </label>
+            <input
+              id="payment-note"
+              name="note"
+              type="text"
+              maxLength={500}
+              className="w-full rounded-lg border border-wood-800/10 bg-cream-50 px-3 py-2 font-body text-sm text-wood-900 placeholder:text-wood-800/40 focus:border-burgundy-700 focus:outline-none focus:ring-1 focus:ring-burgundy-700"
+              placeholder="e.g. Check #1234"
+            />
           </div>
-        </form>
-      </dialog>
-    )
-  }
-)
+        </div>
+
+        <div className="mt-6 flex items-center justify-end gap-3">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={isPending}
+            className="rounded-lg px-4 py-2 font-body text-sm font-medium text-wood-800 transition-colors hover:bg-cream-100"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={isPending}
+            className="rounded-lg bg-burgundy-700 px-4 py-2 font-body text-sm font-medium text-cream-50 transition-colors hover:bg-burgundy-800 disabled:opacity-50"
+          >
+            {isPending ? 'Saving...' : 'Confirm Payment'}
+          </button>
+        </div>
+      </form>
+    </dialog>
+  )
+})
 
 // ─── Icons ──────────────────────────────────────────────────────────
 

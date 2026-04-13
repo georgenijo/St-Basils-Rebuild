@@ -91,8 +91,8 @@ export const recordPaymentSchema = z
       .positive('Amount must be greater than zero')
       .max(9999999.99, 'Amount exceeds maximum')
       .multipleOf(0.01, 'Amount cannot have more than 2 decimal places'),
-    method: z.enum(['cash', 'check', 'zelle', 'online'], {
-      message: 'Payment method must be one of: cash, check, zelle, online',
+    method: z.enum(['cash', 'check', 'zelle', 'venmo', 'cashapp', 'online'], {
+      message: 'Payment method must be one of: cash, check, zelle, venmo, cashapp, online',
     }),
     note: z.string().max(500, 'Note must be 500 characters or less').optional().or(z.literal('')),
     related_event_id: z.string().uuid('Invalid event ID').optional().or(z.literal('')),
@@ -135,10 +135,60 @@ export const markSharesPaidSchema = z.object({
   share_ids: z
     .array(z.string().uuid('Invalid share ID'))
     .min(1, 'At least one share ID is required'),
-  method: z.enum(['cash', 'check', 'zelle', 'online'], {
-    message: 'Payment method must be one of: cash, check, zelle, online',
+  method: z.enum(['cash', 'check', 'zelle', 'venmo', 'cashapp', 'online'], {
+    message: 'Payment method must be one of: cash, check, zelle, venmo, cashapp, online',
   }),
   note: z.string().max(500, 'Note must be 500 characters or less').optional().or(z.literal('')),
+})
+
+export const submitPaymentSchema = z
+  .object({
+    type: z.enum(['membership', 'share', 'event', 'donation'], {
+      message: 'Payment type must be one of: membership, share, event, donation',
+    }),
+    amount: z.coerce
+      .number()
+      .positive('Amount must be greater than zero')
+      .max(9999999.99, 'Amount exceeds maximum')
+      .multipleOf(0.01, 'Amount cannot have more than 2 decimal places'),
+    method: z.enum(['zelle', 'venmo', 'cashapp'], {
+      message: 'Payment method must be one of: zelle, venmo, cashapp',
+    }),
+    reference_memo: z
+      .string()
+      .min(1, 'Reference memo is required')
+      .max(200, 'Reference memo must be 200 characters or less'),
+    note: z.string().max(500, 'Note must be 500 characters or less').optional().or(z.literal('')),
+    related_event_id: z.string().uuid('Invalid event ID').optional().or(z.literal('')),
+    related_share_id: z.string().uuid('Invalid share ID').optional().or(z.literal('')),
+  })
+  .superRefine((data, ctx) => {
+    if (data.type === 'event' && !data.related_event_id) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Event ID is required for event payments',
+        path: ['related_event_id'],
+      })
+    }
+    if (data.type === 'share' && !data.related_share_id) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Share ID is required for share payments',
+        path: ['related_share_id'],
+      })
+    }
+  })
+
+export const confirmPaymentSchema = z.object({
+  payment_id: z.string().uuid('Invalid payment ID'),
+})
+
+export const rejectPaymentSchema = z.object({
+  payment_id: z.string().uuid('Invalid payment ID'),
+  reason: z
+    .string()
+    .min(1, 'Rejection reason is required')
+    .max(500, 'Reason must be 500 characters or less'),
 })
 
 export type UpdateFamilyData = z.infer<typeof updateFamilySchema>
@@ -150,3 +200,6 @@ export type AssignEventCostsData = z.infer<typeof assignEventCostsSchema>
 export type RecordPaymentData = z.infer<typeof recordPaymentSchema>
 export type UpdateDirectoryVisibilityData = z.infer<typeof updateDirectoryVisibilitySchema>
 export type MarkSharesPaidData = z.infer<typeof markSharesPaidSchema>
+export type SubmitPaymentData = z.infer<typeof submitPaymentSchema>
+export type ConfirmPaymentData = z.infer<typeof confirmPaymentSchema>
+export type RejectPaymentData = z.infer<typeof rejectPaymentSchema>

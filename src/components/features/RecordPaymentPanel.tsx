@@ -38,6 +38,8 @@ const METHODS = [
   { value: 'cash', label: 'Cash' },
   { value: 'check', label: 'Check' },
   { value: 'zelle', label: 'Zelle' },
+  { value: 'venmo', label: 'Venmo' },
+  { value: 'cashapp', label: 'Cash App' },
   { value: 'online', label: 'Online' },
 ]
 

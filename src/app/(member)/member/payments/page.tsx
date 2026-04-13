@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { Card } from '@/components/ui'
 import { RecordDonationPanel } from '@/components/member/RecordDonationPanel'
+import { MemberPaymentsClient } from '@/components/member/MemberPaymentsClient'
 
 export const metadata: Metadata = {
   title: 'Payments',
@@ -22,18 +23,22 @@ const shortDate = new Intl.DateTimeFormat('en-US', {
   timeZone: 'America/New_York',
 })
 
-// ─── Badge styles by payment type ────────────────────────────���─────
+// ─── Badge styles by payment type ──────────────────────────────────
 
 const typeBadges: Record<string, { className: string; label: string }> = {
   event: { className: 'bg-amber-100 text-amber-800', label: 'Event' },
   donation: { className: 'bg-blue-100 text-blue-800', label: 'Donation' },
   share: { className: 'bg-purple-100 text-purple-800', label: 'Shares' },
+  membership: { className: 'bg-indigo-100 text-indigo-800', label: 'Membership' },
 }
 
-const statusBadges = {
+const statusBadges: Record<string, { className: string; label: string }> = {
   paid: { className: 'bg-emerald-100 text-emerald-800', label: 'Paid' },
   due: { className: 'bg-amber-100 text-amber-800', label: 'Due' },
-} as const
+  pending: { className: 'bg-amber-100 text-amber-800', label: 'Pending' },
+  confirmed: { className: 'bg-emerald-100 text-emerald-800', label: 'Confirmed' },
+  rejected: { className: 'bg-red-100 text-red-800', label: 'Rejected' },
+}
 
 // ─── Dot colors for summary cards ──────────────────────────────────
 
@@ -52,7 +57,7 @@ type DisplayRow = {
   description: string
   method: string | null
   amount: number
-  status: 'paid' | 'due'
+  status: 'paid' | 'due' | 'pending' | 'confirmed' | 'rejected'
 }
 
 // ─── Page ──────────────────────────────────────────────────────────
@@ -86,22 +91,35 @@ export default async function PaymentsPage() {
   const familyId = profile.family_id
 
   // ─── Fetch data in parallel ──────────────────────────────────────
-  const [paymentsResult, unpaidChargesResult] = await Promise.all([
-    supabase
-      .from('payments')
-      .select('id, type, amount, method, note, created_at, related_event_id')
-      .eq('family_id', familyId)
-      .neq('type', 'membership')
-      .order('created_at', { ascending: false }),
-    supabase
-      .from('event_charges')
-      .select('id, event_id, amount, created_at')
-      .eq('family_id', familyId)
-      .eq('paid', false),
-  ])
+  const [paymentsResult, unpaidChargesResult, unpaidSharesResult, familyResult] = await Promise.all(
+    [
+      supabase
+        .from('payments')
+        .select(
+          'id, type, amount, method, note, created_at, related_event_id, status, reference_memo'
+        )
+        .eq('family_id', familyId)
+        .neq('type', 'membership')
+        .order('created_at', { ascending: false }),
+      supabase
+        .from('event_charges')
+        .select('id, event_id, amount, created_at')
+        .eq('family_id', familyId)
+        .eq('paid', false),
+      supabase
+        .from('shares')
+        .select('id, person_name, year')
+        .eq('family_id', familyId)
+        .eq('paid', false)
+        .order('year', { ascending: false }),
+      supabase.from('families').select('family_name').eq('id', familyId).single(),
+    ]
+  )
 
   const payments = paymentsResult.data ?? []
   const unpaidCharges = unpaidChargesResult.data ?? []
+  const unpaidShares = unpaidSharesResult.data ?? []
+  const familyName = familyResult.data?.family_name ?? ''
 
   // ─── Fetch event titles for both payments and charges ────────────
   const eventIdsFromPayments = payments
@@ -121,22 +139,46 @@ export default async function PaymentsPage() {
   // ─── Compute summary card values ────────────────────────────────
   const currentYear = new Date().getFullYear()
 
-  const currentYearPayments = payments.filter(
+  const confirmedPayments = payments.filter((p) => (p.status ?? 'confirmed') === 'confirmed')
+
+  const currentYearPayments = confirmedPayments.filter(
     (p) => new Date(p.created_at).getFullYear() === currentYear
   )
 
   const paidThisYear = currentYearPayments.reduce((sum, p) => sum + Number(p.amount), 0)
 
-  const outstanding = unpaidCharges.reduce((sum, c) => sum + Number(c.amount), 0)
+  const outstandingCharges = unpaidCharges.reduce((sum, c) => sum + Number(c.amount), 0)
+  const outstandingShares = unpaidShares.length * 50 // $50 per share
+  const outstanding = outstandingCharges + outstandingShares
 
   const donationsTotal = currentYearPayments
     .filter((p) => p.type === 'donation')
     .reduce((sum, p) => sum + Number(p.amount), 0)
 
+  // ─── Build outstanding items for payment initiation ─────────────
+  const outstandingItems = [
+    ...unpaidCharges.map((c) => ({
+      id: c.id,
+      type: 'event' as const,
+      description: eventTitles[c.event_id] ?? 'Event charge',
+      amount: Number(c.amount),
+      relatedEventId: c.event_id,
+      eventSlug: eventTitles[c.event_id]?.replace(/\s+/g, '-') ?? 'event',
+    })),
+    ...unpaidShares.map((s) => ({
+      id: s.id,
+      type: 'share' as const,
+      description: `${s.person_name} (${s.year})`,
+      amount: 50,
+      relatedShareId: s.id,
+      sharePersonNames: [s.person_name],
+    })),
+  ]
+
   // ─── Build unified display rows ─────────────────────────────────
   const rows: DisplayRow[] = []
 
-  // Add paid payments
+  // Add paid/pending/rejected payments
   for (const p of payments) {
     let description: string
     switch (p.type) {
@@ -156,6 +198,7 @@ export default async function PaymentsPage() {
         description = 'Payment'
     }
 
+    const paymentStatus = (p.status ?? 'confirmed') as 'pending' | 'confirmed' | 'rejected'
     rows.push({
       id: p.id,
       date: new Date(p.created_at),
@@ -163,7 +206,7 @@ export default async function PaymentsPage() {
       description,
       method: p.method,
       amount: Number(p.amount),
-      status: 'paid',
+      status: paymentStatus === 'confirmed' ? 'paid' : paymentStatus,
     })
   }
 
@@ -238,6 +281,20 @@ export default async function PaymentsPage() {
         </Card>
       </div>
 
+      {/* ─── Outstanding Items with Pay Buttons ──────────────────── */}
+      {outstandingItems.length > 0 && (
+        <Card variant="outlined" className="mb-6">
+          <div className="border-b border-wood-800/[0.06] px-5 py-4">
+            <h2 className="font-heading text-base font-semibold text-wood-900">
+              Outstanding ({outstandingItems.length})
+            </h2>
+          </div>
+          <div className="p-5">
+            <MemberPaymentsClient familyName={familyName} outstandingItems={outstandingItems} />
+          </div>
+        </Card>
+      )}
+
       {/* ─── Payment History ─────────────────────────────────────── */}
       <Card variant="outlined">
         <div className="flex items-center justify-between border-b border-wood-800/[0.06] px-5 py-4">
@@ -270,7 +327,7 @@ export default async function PaymentsPage() {
                     className: 'bg-gray-100 text-gray-800',
                     label: row.type,
                   }
-                  const status = statusBadges[row.status]
+                  const status = statusBadges[row.status] ?? statusBadges.paid
 
                   return (
                     <tr key={row.id}>

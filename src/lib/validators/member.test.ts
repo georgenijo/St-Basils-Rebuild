@@ -8,6 +8,9 @@ import {
   assignEventCostsSchema,
   recordPaymentSchema,
   markSharesPaidSchema,
+  submitPaymentSchema,
+  confirmPaymentSchema,
+  rejectPaymentSchema,
 } from '@/lib/validators/member'
 
 const validUuid = '550e8400-e29b-41d4-a716-446655440000'
@@ -475,6 +478,119 @@ describe('markSharesPaidSchema', () => {
   it('fails without method', () => {
     const result = markSharesPaidSchema.safeParse({
       share_ids: [validUuid],
+    })
+    expect(result.success).toBe(false)
+  })
+})
+
+// ─── submitPaymentSchema ────────────────────────────────────────────
+
+describe('submitPaymentSchema', () => {
+  it('passes with valid member payment submission', () => {
+    const result = submitPaymentSchema.safeParse({
+      type: 'membership',
+      amount: 100,
+      method: 'zelle',
+      reference_memo: 'DUES-APR26-NIJO',
+    })
+    expect(result.success).toBe(true)
+  })
+
+  it('passes event payment with related_event_id', () => {
+    const result = submitPaymentSchema.safeParse({
+      type: 'event',
+      amount: 25,
+      method: 'venmo',
+      reference_memo: 'EVENT-FAMNIGHT-NIJO',
+      related_event_id: validUuid,
+    })
+    expect(result.success).toBe(true)
+  })
+
+  it('fails with admin-only method (cash)', () => {
+    const result = submitPaymentSchema.safeParse({
+      type: 'donation',
+      amount: 50,
+      method: 'cash',
+      reference_memo: 'DONATE-GEN-APR26-NIJO',
+    })
+    expect(result.success).toBe(false)
+  })
+
+  it('fails event payment without related_event_id', () => {
+    const result = submitPaymentSchema.safeParse({
+      type: 'event',
+      amount: 25,
+      method: 'cashapp',
+      reference_memo: 'EVENT-TEST-NIJO',
+    })
+    expect(result.success).toBe(false)
+  })
+
+  it('fails without reference_memo', () => {
+    const result = submitPaymentSchema.safeParse({
+      type: 'membership',
+      amount: 100,
+      method: 'zelle',
+    })
+    expect(result.success).toBe(false)
+  })
+
+  it('accepts cashapp as method', () => {
+    const result = submitPaymentSchema.safeParse({
+      type: 'donation',
+      amount: 50,
+      method: 'cashapp',
+      reference_memo: 'DONATE-GEN-APR26-TEST',
+    })
+    expect(result.success).toBe(true)
+  })
+})
+
+// ─── confirmPaymentSchema ───────────────────────────────────────────
+
+describe('confirmPaymentSchema', () => {
+  it('passes with valid UUID', () => {
+    const result = confirmPaymentSchema.safeParse({ payment_id: validUuid })
+    expect(result.success).toBe(true)
+  })
+
+  it('fails with invalid UUID', () => {
+    const result = confirmPaymentSchema.safeParse({ payment_id: 'not-uuid' })
+    expect(result.success).toBe(false)
+  })
+})
+
+// ─── rejectPaymentSchema ────────────────────────────────────────────
+
+describe('rejectPaymentSchema', () => {
+  it('passes with valid payment_id and reason', () => {
+    const result = rejectPaymentSchema.safeParse({
+      payment_id: validUuid,
+      reason: 'Payment not found in bank records',
+    })
+    expect(result.success).toBe(true)
+  })
+
+  it('fails with empty reason', () => {
+    const result = rejectPaymentSchema.safeParse({
+      payment_id: validUuid,
+      reason: '',
+    })
+    expect(result.success).toBe(false)
+  })
+
+  it('fails without reason', () => {
+    const result = rejectPaymentSchema.safeParse({
+      payment_id: validUuid,
+    })
+    expect(result.success).toBe(false)
+  })
+
+  it('fails with reason exceeding 500 chars', () => {
+    const result = rejectPaymentSchema.safeParse({
+      payment_id: validUuid,
+      reason: 'x'.repeat(501),
     })
     expect(result.success).toBe(false)
   })

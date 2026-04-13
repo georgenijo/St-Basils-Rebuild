@@ -12,28 +12,39 @@ export default async function PaymentsPage() {
   const supabase = await createClient()
 
   // Fetch payments with joined family, event, and share data
-  const [paymentsResult, familiesResult, eventsResult, sharesResult] = await Promise.all([
-    supabase
-      .from('payments')
-      .select(
-        `
+  const [paymentsResult, pendingResult, familiesResult, eventsResult, sharesResult] =
+    await Promise.all([
+      supabase
+        .from('payments')
+        .select(
+          `
         id, family_id, type, amount, method, note,
         recorded_by, related_event_id, related_share_id,
-        created_at,
+        created_at, status, reference_memo,
         families(family_name),
         events(title),
         shares(person_name, year)
       `
-      )
-      .order('created_at', { ascending: false }),
-    supabase.from('families').select('id, family_name').order('family_name', { ascending: true }),
-    supabase.from('events').select('id, title').order('start_at', { ascending: false }),
-    supabase
-      .from('shares')
-      .select('id, family_id, person_name, year')
-      .eq('paid', false)
-      .order('year', { ascending: false }),
-  ])
+        )
+        .order('created_at', { ascending: false }),
+      supabase
+        .from('payments')
+        .select(
+          `
+        id, type, amount, method, reference_memo, created_at,
+        families(family_name)
+      `
+        )
+        .eq('status', 'pending')
+        .order('created_at', { ascending: true }),
+      supabase.from('families').select('id, family_name').order('family_name', { ascending: true }),
+      supabase.from('events').select('id, title').order('start_at', { ascending: false }),
+      supabase
+        .from('shares')
+        .select('id, family_id, person_name, year')
+        .eq('paid', false)
+        .order('year', { ascending: false }),
+    ])
 
   if (paymentsResult.error) {
     console.error('Failed to fetch payments:', paymentsResult.error)
@@ -89,11 +100,28 @@ export default async function PaymentsPage() {
       event_title: event?.title ?? null,
       share_label: share ? `${share.person_name} (${share.year})` : null,
       recorded_by_name: p.recorded_by ? (recorderMap.get(p.recorded_by) ?? null) : null,
+      status: (p.status ?? 'confirmed') as Payment['status'],
+      reference_memo: p.reference_memo ?? null,
+    }
+  })
+
+  // Transform pending payments for the queue
+  const pendingPayments = (pendingResult.data ?? []).map((p) => {
+    const family = p.families as unknown as { family_name: string } | null
+    return {
+      id: p.id,
+      family_name: family?.family_name ?? null,
+      type: p.type,
+      method: p.method,
+      amount: p.amount,
+      reference_memo: p.reference_memo,
+      created_at: p.created_at,
     }
   })
 
   // Summary counts
   const total = payments.length
+  const pendingCount = payments.filter((p) => p.status === 'pending').length
   const membershipCount = payments.filter((p) => p.type === 'membership').length
   const shareCount = payments.filter((p) => p.type === 'share').length
   const eventCount = payments.filter((p) => p.type === 'event').length
@@ -109,8 +137,9 @@ export default async function PaymentsPage() {
       </div>
 
       {/* Summary cards */}
-      <div className="mb-8 grid gap-4 sm:grid-cols-5">
+      <div className="mb-8 grid gap-4 sm:grid-cols-6">
         <SummaryCard label="Total" count={total} />
+        <SummaryCard label="Pending" count={pendingCount} accent="amber" />
         <SummaryCard label="Membership" count={membershipCount} accent="indigo" />
         <SummaryCard label="Share" count={shareCount} accent="amber" />
         <SummaryCard label="Event" count={eventCount} accent="green" />
@@ -119,6 +148,7 @@ export default async function PaymentsPage() {
 
       <PaymentsPageClient
         payments={payments}
+        pendingPayments={pendingPayments}
         families={familiesResult.data ?? []}
         events={eventsResult.data ?? []}
         unpaidShares={sharesResult.data ?? []}
