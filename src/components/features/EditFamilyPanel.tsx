@@ -105,14 +105,20 @@ export function EditFamilyPanel({ open, onClose, family }: EditFamilyPanelProps)
           <div className="flex-1 px-6 py-6">
             {/* Error message */}
             {state.message && !state.success && (
-              <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3" role="alert">
+              <div
+                className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3"
+                role="alert"
+              >
                 <p className="text-sm text-red-600">{state.message}</p>
               </div>
             )}
 
             {/* Family Name */}
             <div className="mb-5">
-              <label htmlFor="edit-family-name" className="mb-1.5 block text-sm font-medium text-wood-900">
+              <label
+                htmlFor="edit-family-name"
+                className="mb-1.5 block text-sm font-medium text-wood-900"
+              >
                 Family Name
               </label>
               <input
@@ -130,7 +136,10 @@ export function EditFamilyPanel({ open, onClose, family }: EditFamilyPanelProps)
 
             {/* Phone */}
             <div className="mb-5">
-              <label htmlFor="edit-family-phone" className="mb-1.5 block text-sm font-medium text-wood-900">
+              <label
+                htmlFor="edit-family-phone"
+                className="mb-1.5 block text-sm font-medium text-wood-900"
+              >
                 Phone
               </label>
               <input
@@ -147,7 +156,10 @@ export function EditFamilyPanel({ open, onClose, family }: EditFamilyPanelProps)
 
             {/* Address */}
             <div className="mb-5">
-              <label htmlFor="edit-family-address" className="mb-1.5 block text-sm font-medium text-wood-900">
+              <label
+                htmlFor="edit-family-address"
+                className="mb-1.5 block text-sm font-medium text-wood-900"
+              >
                 Address
               </label>
               <input

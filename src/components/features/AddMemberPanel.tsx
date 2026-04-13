@@ -110,14 +110,20 @@ export function AddMemberPanel({ open, onClose }: AddMemberPanelProps) {
           <div className="flex-1 px-6 py-6">
             {/* Error message */}
             {state.message && !state.success && (
-              <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3" role="alert">
+              <div
+                className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3"
+                role="alert"
+              >
                 <p className="text-sm text-red-600">{state.message}</p>
               </div>
             )}
 
             {/* Full Name */}
             <div className="mb-5">
-              <label htmlFor="add-member-name" className="mb-1.5 block text-sm font-medium text-wood-900">
+              <label
+                htmlFor="add-member-name"
+                className="mb-1.5 block text-sm font-medium text-wood-900"
+              >
                 Full Name
               </label>
               <input
@@ -135,7 +141,10 @@ export function AddMemberPanel({ open, onClose }: AddMemberPanelProps) {
 
             {/* Relationship */}
             <div className="mb-5">
-              <label htmlFor="add-member-relationship" className="mb-1.5 block text-sm font-medium text-wood-900">
+              <label
+                htmlFor="add-member-relationship"
+                className="mb-1.5 block text-sm font-medium text-wood-900"
+              >
                 Relationship
               </label>
               <select
