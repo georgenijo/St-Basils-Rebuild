@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "if": "Bash(gh pr create *)",
+            "command": "echo '{\"additionalContext\": \"PR was just created. Run /pr-review to post an independent code review, then run /loop 3m /pr-polish to start the automated fix loop (polls CI + review comments every 3 minutes, fixes issues, re-pushes, max 5 iterations).\"}'"
+          }
+        ]
+      }
+    ]
+  }
+}

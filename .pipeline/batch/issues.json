@@ -1,0 +1,26 @@
+[
+  {
+    "number": 180,
+    "title": "Zero-fee payment flow: Zelle, Venmo, and Cash App integration",
+    "labels": ["enhancement"],
+    "body_summary": "Bookkeeping layer over free P2P rails. Member selects Zelle/Venmo/Cash App, gets instructions + auto-generated reference memo, submits pending payment. Admin sees pending queue with Confirm/Reject. Schema adds status, reference_memo, confirmed_by, confirmed_at to payments table.",
+    "external_deps_closed": [148, 154, 155, 159]
+  },
+  {
+    "number": 184,
+    "title": "Transactional notification emails for payments, membership, and account events",
+    "labels": ["enhancement"],
+    "body_summary": "10 React Email templates via Resend. Wire into existing server actions. Dues reminder cron job. Notification preferences column on profiles. All emails respect prefs and include manage/portal links.",
+    "in_batch_deps": [180],
+    "external_deps_closed": [152, 154, 161, 179]
+  },
+  {
+    "number": 186,
+    "title": "Integrate Every.org for free online payments (ACH + card)",
+    "labels": ["enhancement"],
+    "body_summary": "Add Every.org donate widget as 4th payment option alongside Zelle/Venmo/Cash App. Webhook endpoint auto-creates confirmed payment rows. Guide donors toward free ACH. Supports recurring monthly payments.",
+    "in_batch_deps": [180, 184],
+    "external_deps_closed": [148],
+    "notes": "Requires treasurer approval of Every.org fiscal intermediary model before implementation can proceed."
+  }
+]
