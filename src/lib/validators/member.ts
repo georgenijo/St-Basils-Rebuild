@@ -203,3 +203,14 @@ export type MarkSharesPaidData = z.infer<typeof markSharesPaidSchema>
 export type SubmitPaymentData = z.infer<typeof submitPaymentSchema>
 export type ConfirmPaymentData = z.infer<typeof confirmPaymentSchema>
 export type RejectPaymentData = z.infer<typeof rejectPaymentSchema>
+
+export const updateNotificationPreferencesSchema = z.object({
+  payments: z.boolean(),
+  membership: z.boolean(),
+  shares: z.boolean(),
+  events: z.boolean(),
+})
+
+export type UpdateNotificationPreferencesData = z.infer<
+  typeof updateNotificationPreferencesSchema
+>
