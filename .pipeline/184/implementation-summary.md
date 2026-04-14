@@ -104,6 +104,14 @@ See `git diff --stat main`:
 - 29 files changed, 1316 insertions, 148 deletions.
 - 11 new files in `src/emails/`, 1 helper, 1 migration, 1 cron route, 1 vercel.json, 1 settings page + form, 1 new server action.
 
+## Code Review Fixes
+
+### Critical #1: Cron auth fails open when CRON_SECRET unset
+- **File**: `src/app/api/cron/dues-reminders/route.ts`
+- **Fix**: Read `process.env.CRON_SECRET` into a local, reject if falsy before comparison. Prevents `Bearer undefined` header from passing when the env var is missing.
+- **Commit**: `5650475`
+- **Verification**: tsc clean, 251/251 tests pass.
+
 ## Notes for Reviewer
 
 - **WelcomeMember category**: no dedicated "account" notification category exists in the schema. Implementation files the welcome email under the `membership` category (closest match). If a future "account" category is added, update `set-password.ts` and the preferences schema together.
