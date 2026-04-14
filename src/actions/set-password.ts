@@ -4,6 +4,8 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
 import { createClient } from '@/lib/supabase/server'
+import { sendUserNotification } from '@/lib/notifications'
+import { WelcomeMember } from '@/emails/welcome-member'
 import { setPasswordSchema } from '@/lib/validators/user'
 
 type ActionState = {
@@ -53,9 +55,18 @@ export async function setPassword(
   // Redirect based on role
   const { data: profile } = await supabase
     .from('profiles')
-    .select('role')
+    .select('role, full_name')
     .eq('id', user.id)
     .single()
+
+  // Welcome email — only for invite completions, not password recoveries
+  if (formData.get('flow') === 'invite') {
+    const fullName = profile?.full_name || user.email?.split('@')[0] || 'friend'
+    await sendUserNotification(supabase, user.id, 'membership', {
+      subject: "Welcome to St. Basil's",
+      react: WelcomeMember({ fullName }),
+    })
+  }
 
   const destination = profile?.role === 'admin' ? '/admin/dashboard' : '/member'
   redirect(destination)

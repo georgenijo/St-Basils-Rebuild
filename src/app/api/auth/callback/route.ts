@@ -20,6 +20,7 @@ export async function GET(request: NextRequest) {
   // Determine redirect destination based on auth flow type
   if (type === 'invite' || type === 'recovery') {
     redirectUrl.pathname = '/set-password'
+    redirectUrl.searchParams.set('flow', type)
   } else {
     redirectUrl.pathname = '/'
   }

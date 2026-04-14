@@ -5,7 +5,7 @@ import { useActionState } from 'react'
 import { setPassword } from '@/actions/set-password'
 import { Button } from '@/components/ui'
 
-export function SetPasswordForm() {
+export function SetPasswordForm({ flow = null }: { flow?: 'invite' | 'recovery' | null }) {
   const [state, formAction, pending] = useActionState(setPassword, {
     success: false,
     message: '',
@@ -13,6 +13,7 @@ export function SetPasswordForm() {
 
   return (
     <form action={formAction} className="space-y-5">
+      {flow && <input type="hidden" name="flow" value={flow} />}
       <p className="text-sm text-wood-800/70">Create a password to complete your account setup.</p>
 
       {state.message && !state.errors && (
