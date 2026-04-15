@@ -18,6 +18,7 @@ export async function inviteUser(prevState: ActionState, formData: FormData): Pr
     email: formData.get('email'),
     full_name: formData.get('full_name'),
     role: formData.get('role'),
+    newsletter_opt_in: formData.get('newsletter_opt_in'),
   })
 
   if (!parsed.success) {
@@ -80,7 +81,20 @@ export async function inviteUser(prevState: ActionState, formData: FormData): Pr
     }
   }
 
-  // 6. Write audit log (authenticated client — RLS enforces admin-only inserts)
+  // 6. Auto-subscribe to newsletter if opted in. ignoreDuplicates preserves
+  //    any prior unsubscribe / confirmation state on an existing row.
+  if (parsed.data.newsletter_opt_in) {
+    await adminClient.from('email_subscribers').upsert(
+      {
+        email: parsed.data.email,
+        confirmed: true,
+        confirmed_at: new Date().toISOString(),
+      },
+      { onConflict: 'email', ignoreDuplicates: true }
+    )
+  }
+
+  // 7. Write audit log (authenticated client — RLS enforces admin-only inserts)
   await supabase.from('admin_audit_log').insert({
     actor_id: user.id,
     action: 'user.invite',
@@ -89,11 +103,13 @@ export async function inviteUser(prevState: ActionState, formData: FormData): Pr
       email: parsed.data.email,
       full_name: parsed.data.full_name,
       role: parsed.data.role,
+      newsletter_opt_in: parsed.data.newsletter_opt_in,
     },
   })
 
-  // 7. Revalidate and return
+  // 8. Revalidate and return
   revalidatePath('/admin/users')
+  revalidatePath('/admin/subscribers')
   return { success: true, message: 'Invitation sent successfully' }
 }
 
