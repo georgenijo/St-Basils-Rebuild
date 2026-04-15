@@ -12,11 +12,7 @@ interface UsersPageClientProps {
   subscribedEmails?: Set<string>
 }
 
-export function UsersPageClient({
-  users,
-  currentUserId,
-  subscribedEmails,
-}: UsersPageClientProps) {
+export function UsersPageClient({ users, currentUserId, subscribedEmails }: UsersPageClientProps) {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
 
   // Derive selected user from the fresh server data so it stays in sync after actions

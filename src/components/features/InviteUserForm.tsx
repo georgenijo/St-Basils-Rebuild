@@ -119,10 +119,7 @@ export function InviteUserForm() {
           defaultChecked
           className="mt-1 h-4 w-4 rounded border-wood-800/20 text-burgundy-700 focus:ring-burgundy-700"
         />
-        <label
-          htmlFor="newsletter_opt_in"
-          className="font-body text-sm text-wood-800 leading-snug"
-        >
+        <label htmlFor="newsletter_opt_in" className="font-body text-sm text-wood-800 leading-snug">
           Subscribe to the parish newsletter
           <span className="block text-xs text-wood-800/60">
             They can unsubscribe any time from the footer of any newsletter.

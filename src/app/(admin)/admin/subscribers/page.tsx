@@ -20,9 +20,7 @@ export default async function SubscribersPage() {
   ])
 
   const profileEmails = new Set(
-    (profilesRes.data ?? [])
-      .map((p) => (p.email ?? '').toLowerCase())
-      .filter((e) => e.length > 0)
+    (profilesRes.data ?? []).map((p) => (p.email ?? '').toLowerCase()).filter((e) => e.length > 0)
   )
 
   const all = subsRes.data ?? []
@@ -38,8 +36,8 @@ export default async function SubscribersPage() {
           View and manage newsletter subscribers.
         </p>
         <p className="mt-3 inline-block rounded-lg bg-cream-100 px-3 py-2 font-body text-xs text-wood-800/70">
-          <strong>Note:</strong> Subscribers are newsletter-only email signups — they do not
-          have portal accounts. Invited members with accounts appear under{' '}
+          <strong>Note:</strong> Subscribers are newsletter-only email signups — they do not have
+          portal accounts. Invited members with accounts appear under{' '}
           <Link href="/admin/users" className="text-burgundy-700 underline hover:text-burgundy-800">
             Users
           </Link>

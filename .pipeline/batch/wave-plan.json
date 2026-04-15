@@ -1,68 +1,53 @@
 {
-  "generated_at": "2026-04-12T00:00:00Z",
+  "generated_at": "2026-04-14T00:00:00Z",
   "total_issues": 3,
-  "total_waves": 3,
+  "total_waves": 2,
   "waves": [
     {
       "wave": 1,
-      "description": "Zero-fee P2P payment flow — member submission + admin confirm/reject queue",
+      "description": "Ship #184 (already implemented on branch) and standalone #210.",
       "issues": [
         {
-          "number": 180,
-          "title": "Zero-fee payment flow: Zelle, Venmo, and Cash App integration",
+          "number": 184,
+          "title": "Transactional notification emails for payments, membership, and account events",
           "depends_on": [],
-          "external_deps_satisfied": [148, 154, 155, 159],
-          "estimated_complexity": "high"
+          "external_deps_satisfied": [180, 152, 154, 161, 179, 148],
+          "estimated_complexity": "high",
+          "status_note": "Implementation committed on branch issue/184-transactional-notification-emails (17 commits ahead of main). No PR yet. Expect pipeline to detect prior work and advance to QA/ship."
+        },
+        {
+          "number": 210,
+          "title": "Clarify subscriber vs user signup flow and consolidation",
+          "depends_on": [],
+          "estimated_complexity": "medium",
+          "status_note": "Standalone design/clarification issue. No code dependencies."
         }
       ]
     },
     {
       "wave": 2,
-      "description": "Transactional notification emails wired into payment, shares, and membership actions",
-      "issues": [
-        {
-          "number": 184,
-          "title": "Transactional notification emails for payments, membership, and account events",
-          "depends_on": [180],
-          "external_deps_satisfied": [152, 154, 161, 179],
-          "estimated_complexity": "high"
-        }
-      ]
-    },
-    {
-      "wave": 3,
-      "description": "Every.org online payment integration as 4th payment method with automated webhook confirmation",
+      "description": "Every.org integration — hard-blocked by external treasurer approval.",
       "issues": [
         {
           "number": 186,
           "title": "Integrate Every.org for free online payments (ACH + card)",
-          "depends_on": [180, 184],
-          "external_deps_satisfied": [148],
-          "estimated_complexity": "medium",
-          "blocked_by_human": "Treasurer must approve Every.org fiscal intermediary model before implementation begins"
+          "depends_on": [184],
+          "external_deps_satisfied": [180, 148],
+          "estimated_complexity": "high",
+          "blocked": true,
+          "blocker": "Issue body explicitly requires treasurer approval of Every.org fiscal-intermediary model before implementation. External human decision."
         }
       ]
     }
   ],
   "dependency_graph": {
-    "180": [],
-    "184": [180],
-    "186": [180, 184]
-  },
-  "external_dependencies": {
-    "148": { "title": "Create payments table", "state": "CLOSED", "satisfied": true },
-    "152": { "title": "Server actions: shares", "state": "CLOSED", "satisfied": true },
-    "154": { "title": "Server actions: admin event charges and payment recording", "state": "CLOSED", "satisfied": true },
-    "155": { "title": "Member portal layout, routing, and login redirect", "state": "CLOSED", "satisfied": true },
-    "159": { "title": "Member portal: Payments tab", "state": "CLOSED", "satisfied": true },
-    "161": { "title": "Admin: assign event costs to families", "state": "CLOSED", "satisfied": true },
-    "179": { "title": "Add auth callback route and set-password page for invited users", "state": "CLOSED", "satisfied": true }
+    "184": [],
+    "210": [],
+    "186": [184]
   },
   "notes": [
-    "#186 has a hard human gate: treasurer must confirm the Every.org fiscal intermediary model is acceptable before work begins. Givebutter is the documented fallback if treasurer rejects it.",
-    "#180 is the most complex issue in the batch — it touches schema (ALTER TABLE payments), new server actions (submitPayment, confirmPayment, rejectPayment), Zod validators, member UI (method selector + instruction panels), and admin UI (pending queue). Consider allocating extra time.",
-    "#184 is similarly broad — 10 email templates plus cron job plus DB migration plus settings UI. The sub-tickets in the issue body are a natural breakdown: templates first, then wiring, then cron, then preferences.",
-    "All 7 external dependencies (#148, #152, #154, #155, #159, #161, #179) are closed and merged. No external blockers.",
-    "This is a strict linear chain: 180 -> 184 -> 186. No parallelism is possible within this batch."
+    "#184 all in-batch deps CLOSED (#180, #152, #154, #161, #179, #148). Ready to ship.",
+    "#186 skipped with note — treasurer signoff required before implementation.",
+    "#210 is design-leaning; planner must select a concrete approach from the listed options."
   ]
 }

@@ -72,6 +72,39 @@ describe('inviteUserSchema', () => {
     })
     expect(result.success).toBe(false)
   })
+
+  it('parses newsletter_opt_in=on as true', () => {
+    const result = inviteUserSchema.safeParse({
+      email: 'john@example.com',
+      full_name: 'John Doe',
+      role: 'member',
+      newsletter_opt_in: 'on',
+    })
+    expect(result.success).toBe(true)
+    if (result.success) expect(result.data.newsletter_opt_in).toBe(true)
+  })
+
+  it('parses missing newsletter_opt_in as false (unchecked checkbox)', () => {
+    const result = inviteUserSchema.safeParse({
+      email: 'john@example.com',
+      full_name: 'John Doe',
+      role: 'member',
+      newsletter_opt_in: null,
+    })
+    expect(result.success).toBe(true)
+    if (result.success) expect(result.data.newsletter_opt_in).toBe(false)
+  })
+
+  it('parses empty-string newsletter_opt_in as false', () => {
+    const result = inviteUserSchema.safeParse({
+      email: 'john@example.com',
+      full_name: 'John Doe',
+      role: 'member',
+      newsletter_opt_in: '',
+    })
+    expect(result.success).toBe(true)
+    if (result.success) expect(result.data.newsletter_opt_in).toBe(false)
+  })
 })
 
 describe('updateRoleSchema', () => {
