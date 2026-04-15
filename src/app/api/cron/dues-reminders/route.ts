@@ -73,10 +73,14 @@ async function sendBatch(
 
     const { subject, react } = buildEmail(family)
     try {
-      await sendEmail({ from: FROM_ADDRESS, to: emails, subject, react })
-      sent += 1
+      const { error } = await sendEmail({ from: FROM_ADDRESS, to: emails, subject, react })
+      if (error) {
+        console.error('[dues-reminders] send failed for family', family.id, error)
+      } else {
+        sent += 1
+      }
     } catch (err) {
-      console.error('[dues-reminders] send failed for family', family.id, err)
+      console.error('[dues-reminders] send threw for family', family.id, err)
     }
   }
   return sent

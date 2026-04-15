@@ -14,6 +14,7 @@ export function SharesPurchased({
 }: SharesPurchasedProps) {
   const portalUrl = `${siteUrl}/member/shares`
   const shareWord = count === 1 ? 'share' : 'shares'
+  const verb = count === 1 ? 'has' : 'have'
 
   return (
     <EmailLayout
@@ -24,7 +25,7 @@ export function SharesPurchased({
       siteUrl={siteUrl}
     >
       <Text style={emailStyles.paragraph}>
-        {count} remembrance {shareWord} for {totalAmount} have been recorded. Payment is pending.
+        {count} remembrance {shareWord} for {totalAmount} {verb} been recorded. Payment is pending.
       </Text>
       <Text style={emailStyles.paragraph}>
         You will receive another email once your payment has been confirmed.

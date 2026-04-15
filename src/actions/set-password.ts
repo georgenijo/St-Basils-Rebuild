@@ -59,8 +59,14 @@ export async function setPassword(
     .eq('id', user.id)
     .single()
 
-  // Welcome email — only for invite completions, not password recoveries
-  if (formData.get('flow') === 'invite') {
+  // Welcome email — only for invite completions, not password recoveries.
+  // Use server-trusted signals from the auth user record rather than form data:
+  // invited_at is set by Supabase on admin invite; recovery_sent_at is set on
+  // password recovery flows. Client cannot mutate either.
+  const invitedAt = (user as { invited_at?: string | null }).invited_at ?? null
+  const recoverySentAt = (user as { recovery_sent_at?: string | null }).recovery_sent_at ?? null
+  const isInviteCompletion = Boolean(invitedAt) && !recoverySentAt
+  if (isInviteCompletion) {
     const fullName = profile?.full_name || user.email?.split('@')[0] || 'friend'
     await sendUserNotification(supabase, user.id, 'membership', {
       subject: "Welcome to St. Basil's",

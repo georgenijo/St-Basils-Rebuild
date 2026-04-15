@@ -11,11 +11,7 @@ export const metadata: Metadata = {
   description: "Set your password for St. Basil's church portal.",
 }
 
-export default async function SetPasswordPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ flow?: string }>
-}) {
+export default async function SetPasswordPage() {
   const supabase = await createClient()
   const {
     data: { user },
@@ -24,9 +20,6 @@ export default async function SetPasswordPage({
   if (!user) {
     redirect('/login')
   }
-
-  const params = await searchParams
-  const flow = params.flow === 'invite' ? 'invite' : params.flow === 'recovery' ? 'recovery' : null
 
   return (
     <main className="w-full max-w-md px-4">
@@ -42,7 +35,7 @@ export default async function SetPasswordPage({
           <h1 className="font-heading text-2xl font-semibold text-wood-900">Set Your Password</h1>
         </div>
 
-        <SetPasswordForm flow={flow} />
+        <SetPasswordForm />
       </div>
     </main>
   )

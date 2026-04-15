@@ -209,7 +209,7 @@ export async function markSharesPaid(
 
   for (const [familyId, group] of byFamily) {
     await sendFamilyNotification(supabase, familyId, 'shares', {
-      subject: `Your ${group.count} share${group.count === 1 ? '' : 's'} (${usd.format(group.total)}) have been confirmed`,
+      subject: `Your ${group.count} share${group.count === 1 ? '' : 's'} (${usd.format(group.total)}) ${group.count === 1 ? 'has' : 'have'} been confirmed`,
       react: SharesPaid({ count: group.count, totalAmount: usd.format(group.total) }),
     })
   }
