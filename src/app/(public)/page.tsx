@@ -8,6 +8,7 @@ import { formatChurchPhone, getChurchPhoneTelHref } from '@/lib/site-config'
 import { getPublicSupabaseClient } from '@/lib/supabase/public'
 import { getUpcomingEventOccurrences, type UpcomingEventSource } from '@/lib/upcoming-events'
 import { Button, Card, GoldDivider, ScrollReveal, SectionHeader } from '@/components/ui'
+import { FeastFlyer } from '@/components/features/FeastFlyer'
 import { PinnedAnnouncementsBanner } from '@/components/features/PinnedAnnouncementsBanner'
 import { HomeHero } from '@/components/features/HomeHero'
 
@@ -128,6 +129,9 @@ export default async function HomePage() {
 
       {/* ── Hero ─────────────────────────────────────────────── */}
       <HomeHero />
+
+      {/* ── Feast Flyer ──────────────────────────────────────── */}
+      <FeastFlyer />
 
       {/* ── Service Times Bar ────────────────────────────────── */}
       <section className="bg-burgundy-700 py-6 text-cream-50">
