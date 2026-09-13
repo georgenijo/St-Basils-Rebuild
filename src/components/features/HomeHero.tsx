@@ -35,15 +35,17 @@ export function HomeHero() {
           978-460-9470; Joby Eldo, Treasurer, 617-959-2633.
         </p>
       </div>
-      <Image
-        src="/images/feast-st-baselious-yeldho-bava-2026.jpg"
-        alt=""
-        width={1188}
-        height={1545}
-        priority
-        sizes="(max-width: 768px) 100vw, 65vw"
-        className="h-auto max-h-[calc(100svh-4rem)] w-auto max-w-full object-contain"
-      />
+      <div className="relative aspect-[1188/1545] w-full md:h-[calc(100svh-4rem)] md:w-auto md:max-w-full">
+        <Image
+          src="/images/feast-st-baselious-yeldho-bava-2026.jpg"
+          alt=""
+          fill
+          priority
+          fetchPriority="high"
+          sizes="(max-width: 768px) 100vw, 65vw"
+          className="object-contain"
+        />
+      </div>
     </section>
   )
 }
