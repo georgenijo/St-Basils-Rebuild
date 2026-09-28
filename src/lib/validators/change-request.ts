@@ -14,7 +14,9 @@ export const CHANGE_REQUEST_MESSAGE_MAX = 5000
 export const MAX_CHANGE_REQUEST_ATTACHMENTS = 5
 export const MAX_CHANGE_REQUEST_ATTACHMENT_BYTES = 10 * 1024 * 1024
 
-export const CHANGE_REQUEST_PAGE_PATH_PATTERN = /^\/[A-Za-z0-9/_.~-]*$/
+// Exactly one leading slash: `//host` would be a protocol-relative URL.
+// Mirrors the page_path CHECK constraint in the migration.
+export const CHANGE_REQUEST_PAGE_PATH_PATTERN = /^\/(?!\/)[A-Za-z0-9/_.~-]*$/
 
 export const ALLOWED_ATTACHMENT_TYPES = [
   'image/png',

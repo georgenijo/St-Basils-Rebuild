@@ -11,34 +11,62 @@ One request at a time:
 1. **Claim** — `claim_next_change_request(worker_id)` (service role), polling every 15 s.
    Every `PR_SYNC_INTERVAL_MS` it also requeues stale claims and syncs PR state
    (`ready_for_review`/`needs_attention` with a PR → `merged` / `closed`).
-2. **Prepare** — persistent clone in `WORK_DIR`; per job `git fetch origin main`,
-   branch `change-request/<id8>-<title-slug>` from `origin/main`, clean tree
-   (keeps `node_modules`; `npm ci` only when `package-lock.json` changed).
-   Attachments are copied to `public/images/requests/<id8>/<safe-name>`.
-3. **Agent** — `claude -p --restricted` in the checkout with only
+2. **Prepare** — deletes the request's old verification screenshots (objects
+   and rows). Trusted clone in `WORK_DIR`: per job `git fetch origin main`,
+   branch `change-request/<id8>-<slug of redacted title>` from `origin/main`,
+   clean tree (keeps `node_modules`; `npm ci` only when `package-lock.json`
+   changed). The **agent sandbox** is a separate plain export of the same
+   commit at `$WORK_DIR/../agent-<id8>` (`git archive`, no `.git`, no
+   `node_modules`, no `archive/`), removed after the job. Attachments are
+   copied into the sandbox at `public/images/requests/<id8>/<safe-name>`.
+3. **Agent** — `claude -p --restricted` in the **sandbox** with only
    `Read,Edit,Write,Glob,Grep` (no shell, no web, no subagents; file tools
-   confined to the checkout; no MCP; no session persistence). The prompt marks
-   all request text and the thread as untrusted data. `NEEDS_CLARIFICATION: …`
-   → agent message + `needs_attention`, no PR.
-4. **Guardrails** — changed files from `git status --porcelain` (incl.
-   untracked); unreferenced attachments removed; reject paths outside
+   confined to the sandbox; no MCP; no session persistence). The prompt marks
+   all request text and the thread as untrusted data and tells the agent its
+   summary is published in a public PR. `NEEDS_CLARIFICATION: …` → agent
+   message + `needs_attention`, no PR.
+4. **Guardrails** — the worker hashes the whole sandbox (lstat, never
+   following links) and diffs it against a snapshot taken before the run, so
+   every created/edited/deleted entry counts, including gitignored ones.
+   Unreferenced attachments are dropped. Rejected: paths outside
    `src/app/(public)/**`, `src/components/**`, `public/**`,
-   `src/app/globals.css`, empty diffs, > `MAX_DIFF_LINES` changed text lines,
-   or diffs containing a worker secret / secret-shaped token.
-5. **Checks** — Prettier on changed files, `npm run lint`, `npm run typecheck`;
-   one agent repair round on failure, then `needs_attention`.
-6. **PR** — commit, force-push the worker-owned branch, open (or update the
-   open) PR against `main`. The body has no requester identity.
+   `src/app/globals.css`; under `src/` anything but `.ts/.tsx/.css`; under
+   `public/` anything but `.png .jpg .jpeg .webp .gif .svg .pdf .ico .txt`;
+   hidden files/dirs; config-like names (`config`/`rc` name parts,
+   `package.json`, `tsconfig*`, `*.d.ts`, `middleware.*`, `next.config.*`);
+   `'use server'` modules; symlinks and special files; empty diffs. Only then
+   are the files copied (as regular 0644 files) into the trusted checkout,
+   where anything git ignores is rejected, and the staged diff is checked for
+   size (> `MAX_DIFF_LINES` changed text lines) and secrets.
+5. **Checks** — in the trusted checkout only: Prettier on changed files,
+   `npm run lint`, `npm run typecheck`; on failure one repair round (agent
+   again in the sandbox → guardrails → re-copy → checks), then
+   `needs_attention`.
+6. **PR** — commit in the trusted checkout, force-push the worker-owned
+   branch, open (or update the open) PR against `main`. The repository is
+   public, so the PR carries no description, thread text, or requester
+   identity: title `Change request: <title>` (redacted, ≤ 100 chars), the
+   request's short id + admin-only link, page, selector, the agent's public
+   summary, changed files and checks. Every outbound GitHub title/body/comment
+   and the commit message pass a redaction filter (worker secrets,
+   secret-shaped tokens, emails, phone numbers → `[redacted]`).
    Status → `verifying`.
-7. **Preview** — polls GitHub Deployments for the commit's Vercel `Preview`
-   deployment (`success` → `environment_url`).
+7. **Preview** — polls GitHub Deployments for the Vercel `Preview`
+   deployment of exactly the pushed SHA (`success` → `environment_url`). The
+   URL must be `https://*.vercel.app`, otherwise `needs_attention`.
 8. **Verify** — Playwright Chromium, desktop 1280×900 and Pixel 5, production
-   (`BASELINE_URL`) vs preview on `page_path`; screenshots the picked element
-   (padded) or the top of the page; checks HTTP < 400, no new uncaught page
-   errors, picked element visible (advisory). PNGs go to
-   `requests/<id>/verification/<label>.png` + `change_request_files` rows.
-   A second `claude -p` (Read only) judges the screenshots → strict JSON
-   verdict (anything unparseable → `unsure`). `pass` + hard checks OK →
+   (`BASELINE_URL`) vs preview on `page_path`; screenshots around the picked
+   element or the top of the page; checks HTTP < 400, no new uncaught page
+   errors, picked element visible (advisory). If
+   `VERCEL_AUTOMATION_BYPASS_SECRET` is set, one request to the preview
+   origin only sets Vercel's host-scoped bypass cookie (no global headers, so
+   third-party requests never see the secret; the secret URL is never
+   logged). PNGs go to `requests/<id>/verification/<label>.png` +
+   `change_request_files` rows. A second `claude -p` (Read only) judges the
+   screenshots + the picked element's HTML → exactly one JSON object
+   `{"verdict","summary"}` (optionally in one code fence; anything else →
+   `unsure`). The stored `verification` is
+   `{verdict, summary, checks, commit_sha}`. `pass` + hard checks OK →
    `ready_for_review`, otherwise `needs_attention`. Verdict is commented on
    the PR (screenshots stay in the admin UI).
 9. **Notify** — Resend email on `ready_for_review` / `needs_attention`
@@ -49,11 +77,29 @@ SIGTERM stops claiming, kills the running child process, and requeues the
 current request (or `needs_attention` after `MAX_ATTEMPTS`). Claims left in
 `in_progress`/`verifying` by this `WORKER_ID` for longer than
 `STALE_CLAIM_MINUTES` are requeued the same way. Logs are JSON lines on stdout.
+The worker only ever claims `queued` requests; `submitting` rows (still being
+written by the admin UI) are left alone.
 
-Child processes that run repository code (`npm ci`, lint, typecheck,
-Prettier) and Claude get a minimal environment: the Supabase service key,
-GitHub token and Resend key are never passed to them. The GitHub token reaches
-`git push` only via `GIT_CONFIG_*` env (never argv or `.git/config`).
+## Security model and residual risk
+
+- Request text is untrusted. The agent has file tools only, confined to a
+  sandbox that contains no dependencies and no git metadata, so nothing it
+  writes executes there.
+- Trusted tooling (`npm ci`, Prettier, ESLint, tsc) runs only in the trusted
+  checkout, which the agent never sees, and only over validated source files
+  (`.ts/.tsx/.css` in allowed areas, static assets in `public/`) — no config
+  files, dotfiles, `node_modules` writes, symlinks or server actions.
+- Residual risk: those tools still parse agent-written `.ts/.tsx/.css`, and
+  the pushed branch builds on Vercel (preview only; nothing deploys to
+  production without George merging). A bug in a parser/linter plugin or in
+  Next.js build handling of such files would run inside the worker
+  container, which holds the worker's secrets. The next hardening step is to
+  run checks in a separate, secret-less sandbox container (or CI) and have
+  the worker only read the result.
+- Child processes that run repository code and Claude get a minimal
+  environment: the Supabase service key, GitHub token and Resend key are
+  never passed to them. The GitHub token reaches `git push` only via
+  `GIT_CONFIG_*` env (never argv or `.git/config`).
 
 ## Environment
 
@@ -106,10 +152,10 @@ WORK_DIR=/tmp/cra-work/repo CLAUDE_CONFIG_DIR=$HOME/.claude-cpa npx tsx src/work
 
 # Verify step only, against an existing preview, for an existing request id
 CLAUDE_CONFIG_DIR=$HOME/.claude-cpa npx tsx src/verify-cli.ts \
-  --request <request-id> --preview https://<preview>.vercel.app [--summary "..."] [--record]
+  --request <request-id> --preview https://<preview>.vercel.app [--sha <commit>] [--summary "..."] [--record]
 ```
 
-Playwright needs Chromium: `npx playwright install chromium`.
+Requires Node 22+ (supabase-js needs native WebSocket). Playwright needs Chromium: `npx playwright install chromium`.
 
 Tests run from the repo root (`npm test` includes `services/*/src/**/*.test.ts`);
 `npm run typecheck` here checks the service alone, and root lint/typecheck/

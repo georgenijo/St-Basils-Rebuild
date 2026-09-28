@@ -1694,3 +1694,13 @@
   appearance: none;
   accent-color: var(--accent);
 }
+
+.cr-privacy {
+  padding: 10px 12px;
+  border: 1px solid color-mix(in oklch, var(--warn) 45%, var(--border));
+  border-left: 3px solid var(--warn);
+  border-radius: 6px;
+  background: color-mix(in oklch, var(--warn) 8%, transparent);
+  color: var(--fg);
+  font-size: 13px;
+}

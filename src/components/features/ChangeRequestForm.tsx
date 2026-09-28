@@ -229,6 +229,11 @@ export function ChangeRequestForm({ initialPath = '/' }: { initialPath?: string 
         </div>
       )}
 
+      <p className="cr-privacy" role="note" data-testid="change-request-privacy-notice">
+        The title and a summary of the change will appear in a public GitHub pull request.
+        Don&apos;t include private information (phone numbers, emails, passwords).
+      </p>
+
       <div className="admin-field">
         <label htmlFor="title">
           Title <span className="admin-required">*</span>

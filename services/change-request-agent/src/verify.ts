@@ -2,13 +2,14 @@ import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 
-import { chromium, devices, type Browser, type Page } from 'playwright'
+import { chromium, devices, type Browser, type BrowserContext, type Page } from 'playwright'
 
 import { READ_TOOLS, runClaude } from './claude'
 import type { Config } from './config'
 import { uploadVerificationShot, type Db } from './db'
 import { log } from './log'
 import { labelSlug } from './naming'
+import { validatePreviewUrl } from './preview'
 import { buildVerifyPrompt } from './prompt'
 import type {
   ChangeRequest,
@@ -119,14 +120,13 @@ async function capture(
   spec: ViewportSpec,
   url: string,
   selector: string | null,
-  headers: Record<string, string>
+  bypass: { origin: string; secret: string } | null
 ): Promise<PageCapture> {
-  const context = await browser.newContext({
-    ...spec.options,
-    reducedMotion: 'reduce',
-    extraHTTPHeaders: headers,
-  })
+  // No extraHTTPHeaders: they would be sent to every third-party origin the
+  // page loads. The bypass secret goes to the preview origin only.
+  const context = await browser.newContext({ ...spec.options, reducedMotion: 'reduce' })
   try {
+    if (bypass) await setVercelBypassCookie(context, bypass.origin, bypass.secret)
     const page = await context.newPage()
     const errors: string[] = []
     page.on('pageerror', (error) => errors.push(error.message.slice(0, 300)))
@@ -153,6 +153,28 @@ async function capture(
   }
 }
 
+/**
+ * One request to the preview origin (sharing the context's cookie jar) so
+ * Vercel sets its host-scoped bypass cookie. The secret-bearing URL and any
+ * error text that could contain it are never logged or rethrown.
+ */
+async function setVercelBypassCookie(
+  context: BrowserContext,
+  origin: string,
+  secret: string
+): Promise<void> {
+  const url = `${origin}/?x-vercel-protection-bypass=${encodeURIComponent(secret)}&x-vercel-set-bypass-cookie=true`
+  let status: number
+  try {
+    const response = await context.request.get(url, { maxRedirects: 0, timeout: 30_000 })
+    status = response.status()
+    await response.dispose()
+  } catch {
+    throw new Error('Vercel protection bypass request to the preview failed')
+  }
+  if (status >= 400) throw new Error(`Vercel protection bypass request returned HTTP ${status}`)
+}
+
 export interface CaptureResult {
   shots: Shot[]
   checks: VerificationCheck[]
@@ -167,13 +189,13 @@ export async function captureComparison(input: {
   selector: string | null
   bypassSecret: string | null
 }): Promise<CaptureResult> {
+  const previewOrigin = validatePreviewUrl(input.previewUrl)
+  if (!previewOrigin) throw new Error('Preview URL is not an https *.vercel.app address')
   const browser = await chromium.launch()
   const shots: Shot[] = []
   const checks: VerificationCheck[] = []
   let targetHtml: CaptureResult['targetHtml'] = null
-  const previewHeaders: Record<string, string> = input.bypassSecret
-    ? { 'x-vercel-protection-bypass': input.bypassSecret, 'x-vercel-set-bypass-cookie': 'true' }
-    : {}
+  const bypass = input.bypassSecret ? { origin: previewOrigin, secret: input.bypassSecret } : null
   try {
     for (const spec of VIEWPORTS) {
       const before = await capture(
@@ -181,14 +203,14 @@ export async function captureComparison(input: {
         spec,
         joinUrl(input.baselineUrl, input.pagePath),
         input.selector,
-        {}
+        null
       )
       const after = await capture(
         browser,
         spec,
-        joinUrl(input.previewUrl, input.pagePath),
+        joinUrl(previewOrigin, input.pagePath),
         input.selector,
-        previewHeaders
+        bypass
       )
       shots.push({
         label: `before · ${spec.name}`,
@@ -290,6 +312,8 @@ export interface VerifyInput {
   messages: ChangeRequestMessage[]
   agentSummary: string
   previewUrl: string
+  /** Commit the preview deployment was built from (recorded in the verification). */
+  commitSha: string | null
 }
 
 /** Screenshots + checks + upload + judge. Returns the verification record. */
@@ -313,5 +337,10 @@ export async function verifyPreview(input: VerifyInput): Promise<VerificationRes
       summary: `The visual review could not run: ${(error as Error).message.slice(0, 300)}`,
     }
   }
-  return { verdict: verdict.verdict, summary: verdict.summary, checks }
+  return {
+    verdict: verdict.verdict,
+    summary: verdict.summary,
+    checks,
+    commit_sha: input.commitSha,
+  }
 }

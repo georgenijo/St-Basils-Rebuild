@@ -1,4 +1,5 @@
 export type ChangeRequestStatus =
+  | 'submitting'
   | 'queued'
   | 'in_progress'
   | 'verifying'
@@ -62,6 +63,8 @@ export interface VerificationResult {
   verdict: Verdict
   summary: string
   checks: VerificationCheck[]
+  /** Commit the verified preview deployment was built from. */
+  commit_sha: string | null
 }
 
 /** An attachment copied into the checkout for the agent to reference. */

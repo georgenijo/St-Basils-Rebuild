@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { buildElementSelector, describeElement, extractElementText } from '@/lib/element-selector'
+import { sameOriginUrl } from '@/lib/change-request-status'
 import { CHANGE_REQUEST_PAGE_PATH_PATTERN } from '@/lib/validators/change-request'
 
 export const COMMON_PUBLIC_PAGES: { path: string; label: string }[] = [
@@ -39,8 +40,16 @@ interface ElementPickerProps {
   pathError?: string
 }
 
+// Any fixed origin works: we only need to know the path cannot leave it.
+const PATH_CHECK_ORIGIN = 'https://site.invalid'
+
+/** A site path that resolves on the site's own origin (never `//host`). */
 export function isValidPagePath(path: string): boolean {
-  return CHANGE_REQUEST_PAGE_PATH_PATTERN.test(path) && path.length <= 300
+  return (
+    CHANGE_REQUEST_PAGE_PATH_PATTERN.test(path) &&
+    path.length <= 300 &&
+    sameOriginUrl(path, PATH_CHECK_ORIGIN) !== null
+  )
 }
 
 const OVERLAY_ID = '__change-request-picker-overlay'
@@ -327,7 +336,7 @@ export function ElementPicker({
         <div className="cr-picker-frame" data-picking={picking ? 'true' : undefined}>
           <iframe
             ref={iframeRef}
-            src={frameSrc}
+            src={isValidPagePath(frameSrc) ? frameSrc : '/'}
             title="Page preview for element picker"
             onLoad={handleFrameLoad}
           />

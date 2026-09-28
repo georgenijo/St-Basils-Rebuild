@@ -1,7 +1,8 @@
 /**
  * Run only the preview verification step for an existing request:
  *
- *   tsx src/verify-cli.ts --request <id> --preview <url> [--summary "..."] [--record]
+ *   tsx src/verify-cli.ts --request <id> --preview <https://*.vercel.app> [--sha <commit>]
+ *     [--summary "..."] [--record]
  *
  * Captures before/after screenshots (BASELINE_URL vs preview), uploads them as
  * verification files, asks Claude for a verdict and prints the result. With
@@ -11,6 +12,7 @@
 import { loadConfig, secretValues } from './config'
 import { createDb, getMessages, getRequest, updateRequest } from './db'
 import { log, registerRedactions } from './log'
+import { validatePreviewUrl } from './preview'
 import { verifyPreview } from './verify'
 
 function arg(name: string): string | undefined {
@@ -20,10 +22,10 @@ function arg(name: string): string | undefined {
 
 async function main(): Promise<void> {
   const requestId = arg('request')
-  const previewUrl = arg('preview')?.replace(/\/+$/, '')
+  const previewUrl = validatePreviewUrl(arg('preview') ?? '')
   if (!requestId || !previewUrl) {
     throw new Error(
-      'Usage: verify-cli --request <id> --preview <https://...> [--summary text] [--record]'
+      'Usage: verify-cli --request <id> --preview <https://*.vercel.app> [--sha <commit>] [--summary text] [--record]'
     )
   }
   const config = loadConfig()
@@ -43,6 +45,7 @@ async function main(): Promise<void> {
     messages,
     agentSummary,
     previewUrl,
+    commitSha: arg('sha') ?? null,
   })
   log.info('verification result', { requestId, verification })
   if (process.argv.includes('--record')) {

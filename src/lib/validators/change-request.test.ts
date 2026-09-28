@@ -30,6 +30,13 @@ describe('changeRequestSchema', () => {
     }
   })
 
+  it.each(['/', '/giving', '/announcements/feast-2026', '/a/b_c.d~e-f/'])(
+    'accepts the site path %s',
+    (page_path) => {
+      expect(changeRequestSchema.safeParse({ ...VALID, page_path }).success).toBe(true)
+    }
+  )
+
   it('trims fields and keeps the picked element', () => {
     const result = changeRequestSchema.safeParse({
       title: '  Replace feast flyer  ',
@@ -54,6 +61,11 @@ describe('changeRequestSchema', () => {
     ['description too long', { description: 'x'.repeat(5001) }, 'description'],
     ['missing title', { title: null }, 'title'],
     ['relative path', { page_path: 'giving' }, 'page_path'],
+    ['protocol-relative URL', { page_path: '//example.com' }, 'page_path'],
+    ['protocol-relative with path', { page_path: '//example.com/giving' }, 'page_path'],
+    ['triple slash', { page_path: '///example.com' }, 'page_path'],
+    ['backslash host', { page_path: '/\\example.com' }, 'page_path'],
+    ['empty', { page_path: '' }, 'page_path'],
     ['absolute URL', { page_path: 'https://evil.example/' }, 'page_path'],
     ['query string', { page_path: '/giving?x=1' }, 'page_path'],
     ['path too long', { page_path: `/${'a'.repeat(300)}` }, 'page_path'],

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { selectPreviewDeployment, type DeploymentWithStatuses } from './preview'
+import { selectPreviewDeployment, validatePreviewUrl, type DeploymentWithStatuses } from './preview'
 
 const SHA = 'ad1ab811656d26f2b6ee5da0a85198c2f76b9d42'
 
@@ -37,6 +37,7 @@ describe('selectPreviewDeployment', () => {
       state: 'ready',
       url: 'https://st-basils-rebuild-x.vercel.app',
       deploymentId: 1,
+      sha: SHA,
     })
   })
 
@@ -98,6 +99,19 @@ describe('selectPreviewDeployment', () => {
     expect(selectPreviewDeployment([d], SHA)).toMatchObject({ state: 'failed' })
   })
 
+  it('rejects preview urls outside *.vercel.app', () => {
+    const d = dep({
+      statuses: [
+        {
+          state: 'success',
+          created_at: '2026-09-13T20:42:00Z',
+          environment_url: 'https://evil.example.com',
+        },
+      ],
+    })
+    expect(selectPreviewDeployment([d], SHA)).toMatchObject({ state: 'failed' })
+  })
+
   it('does not accept non-https urls', () => {
     const d = dep({
       statuses: [
@@ -108,6 +122,30 @@ describe('selectPreviewDeployment', () => {
         },
       ],
     })
-    expect(selectPreviewDeployment([d], SHA)).toEqual({ state: 'pending' })
+    expect(selectPreviewDeployment([d], SHA)).toMatchObject({ state: 'failed' })
   })
+})
+
+describe('validatePreviewUrl', () => {
+  it.each([
+    [
+      'https://st-basils-rebuild-easvdo5mm-george-nijos-projects.vercel.app',
+      'https://st-basils-rebuild-easvdo5mm-george-nijos-projects.vercel.app',
+    ],
+    ['https://x.vercel.app/', 'https://x.vercel.app'],
+    ['https://X.Vercel.App/some/path?q=1', 'https://x.vercel.app'],
+  ])('accepts %s', (input, expected) => expect(validatePreviewUrl(input)).toBe(expected))
+
+  it.each([
+    'http://x.vercel.app',
+    'https://vercel.app',
+    'https://x.vercel.app.evil.com',
+    'https://evil.com/x.vercel.app',
+    'https://xvercel.app',
+    'https://user:pass@x.vercel.app',
+    'https://x.vercel.app:8443',
+    'javascript:alert(1)',
+    'not a url',
+    '',
+  ])('rejects %s', (input) => expect(validatePreviewUrl(input)).toBeNull())
 })

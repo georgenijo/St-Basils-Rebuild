@@ -172,3 +172,29 @@ export async function updateIfStatus(
   if (error) throw new Error(`Updating request ${id} failed: ${error.message}`)
   return (data ?? []).length > 0
 }
+
+/**
+ * Remove every verification screenshot (Storage objects and file rows) for a
+ * request, so a retry never shows screenshots of an older revision.
+ */
+export async function deleteVerificationFiles(db: Db, requestId: string): Promise<number> {
+  const rows = await getFiles(db, requestId, 'verification')
+  const prefix = `requests/${requestId}/verification`
+  const { data: listed, error: listError } = await db.storage
+    .from(BUCKET)
+    .list(prefix, { limit: 1000 })
+  if (listError) throw new Error(`Listing ${prefix} failed: ${listError.message}`)
+  const paths = new Set<string>(rows.map((row) => row.storage_path))
+  for (const object of listed ?? []) paths.add(`${prefix}/${object.name}`)
+  if (paths.size > 0) {
+    const { error } = await db.storage.from(BUCKET).remove([...paths])
+    if (error) throw new Error(`Removing old verification files failed: ${error.message}`)
+  }
+  const { error } = await db
+    .from('change_request_files')
+    .delete()
+    .eq('request_id', requestId)
+    .eq('kind', 'verification')
+  if (error) throw new Error(`Deleting verification file rows failed: ${error.message}`)
+  return paths.size
+}

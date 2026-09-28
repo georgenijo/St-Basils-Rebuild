@@ -3,46 +3,55 @@ import { describe, expect, it } from 'vitest'
 import { parseVerdict } from './verdict'
 
 describe('parseVerdict', () => {
-  it('parses strict JSON', () => {
+  it('parses a single strict JSON object', () => {
     expect(parseVerdict('{"verdict":"pass","summary":"Looks right."}')).toEqual({
       verdict: 'pass',
       summary: 'Looks right.',
     })
+    expect(parseVerdict('  {"summary": "Broken {layout}.", "verdict": "fail"}\n')).toEqual({
+      verdict: 'fail',
+      summary: 'Broken {layout}.',
+    })
   })
 
-  it('parses fenced JSON and JSON surrounded by prose', () => {
+  it('accepts one outer code fence', () => {
     expect(parseVerdict('```json\n{"verdict":"fail","summary":"Text missing."}\n```')).toEqual({
       verdict: 'fail',
       summary: 'Text missing.',
     })
-    expect(
-      parseVerdict(
-        'I looked at them.\n{"verdict": "Unsure", "summary": "Below the fold {x}."}\nDone.'
-      )
-    ).toEqual({
-      verdict: 'unsure',
-      summary: 'Below the fold {x}.',
-    })
+    expect(parseVerdict('```\n{"verdict":"unsure","summary":"Below the fold."}\n```').verdict).toBe(
+      'unsure'
+    )
   })
 
-  it('treats invalid verdicts and garbage as unsure', () => {
+  it('never takes an example pass over the actual fail', () => {
+    const reply =
+      'For example {"verdict":"pass","summary":"example"} — but actually:\n{"verdict":"fail","summary":"The caption is missing."}'
+    expect(parseVerdict(reply).verdict).toBe('unsure')
+    expect(
+      parseVerdict('{"verdict":"pass","summary":"example"}\n{"verdict":"fail","summary":"real"}')
+        .verdict
+    ).toBe('unsure')
+  })
+
+  it('treats prose around the object as unsure', () => {
+    expect(
+      parseVerdict('I looked.\n{"verdict":"pass","summary":"Looks right."}\nDone.').verdict
+    ).toBe('unsure')
+    expect(
+      parseVerdict('Here you go:\n```json\n{"verdict":"pass","summary":"x"}\n```').verdict
+    ).toBe('unsure')
+  })
+
+  it('rejects invalid or missing fields', () => {
     expect(parseVerdict('{"verdict":"approved","summary":"yes"}').verdict).toBe('unsure')
+    expect(parseVerdict('{"verdict":"PASS","summary":"yes"}').verdict).toBe('unsure')
+    expect(parseVerdict('{"verdict":"pass"}').verdict).toBe('unsure')
+    expect(parseVerdict('{"verdict":"pass","summary":"  "}').verdict).toBe('unsure')
+    expect(parseVerdict('{"verdict":"pass","summary":"x","extra":1}').verdict).toBe('unsure')
+    expect(parseVerdict('[{"verdict":"pass","summary":"x"}]').verdict).toBe('unsure')
     expect(parseVerdict('not json at all').verdict).toBe('unsure')
     expect(parseVerdict('').verdict).toBe('unsure')
     expect(parseVerdict('{"verdict":"pass"').verdict).toBe('unsure')
-  })
-
-  it('fills a missing summary', () => {
-    expect(parseVerdict('{"verdict":"pass"}')).toEqual({
-      verdict: 'pass',
-      summary: 'No summary provided.',
-    })
-  })
-
-  it('skips non-verdict objects and finds the real one', () => {
-    expect(parseVerdict('{"note":1} then {"verdict":"fail","summary":"broken"}')).toEqual({
-      verdict: 'fail',
-      summary: 'broken',
-    })
   })
 })

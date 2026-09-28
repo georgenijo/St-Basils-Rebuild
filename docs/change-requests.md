@@ -48,11 +48,14 @@ All three tables live in `public` and are created by
 **Lifecycle (`status`):**
 
 ```
-queued → in_progress → verifying → ready_for_review → merged
-                    ↘            ↘ needs_attention      ↘ closed
-                     needs_attention (guardrail hit, agent failure, verify fail)
+submitting → queued → in_progress → verifying → ready_for_review → merged
+                                  ↘            ↘ needs_attention      ↘ closed
+                                   needs_attention (guardrail hit, agent failure, verify fail)
 ```
 
+- `submitting` — inserted by the admin's server action while attachment rows
+  are recorded; not claimable. The server flips it to `queued` when complete.
+  Abandoned `submitting` rows are swept after an hour.
 - `queued` — submitted, waiting for the worker.
 - `in_progress` — claimed; agent is editing.
 - `verifying` — PR open; waiting for the Vercel preview and running checks.
@@ -93,18 +96,26 @@ The admin UI shows files through short-lived signed URLs.
   the objects to `requests/<id>/attachments/…`. Signed read URLs are minted
   server-side.
 - `public.claim_next_change_request(worker_id text)` atomically claims the
-  oldest `queued` request that is at least 30 seconds old (so the submitting
-  action has finished recording file rows) with `FOR UPDATE SKIP LOCKED`, and
-  returns it. Executable by `service_role` only.
+  oldest `queued` request with `FOR UPDATE SKIP LOCKED`, clears any earlier
+  preview/verdict, and returns it. Executable by `service_role` only.
 
 ## Guardrails
 
 - Only active admins can submit requests.
 - Request text is untrusted input: the agent is told so, runs with file tools
-  only (no shell, no network), inside a throwaway checkout.
+  only (no shell, no network), inside a separate checkout that has no
+  `node_modules`. Only validated changes are copied into the trusted checkout
+  where formatting, lint and typecheck run.
 - The worker rejects any diff outside the allowlist (`src/app/(public)/**`,
-  `src/components/**`, `public/**`, `src/app/globals.css`). Anything else
-  becomes `needs_attention` with no PR.
+  `src/components/**`, `public/**`, `src/app/globals.css`), non-source file
+  types, tooling/config files, `'use server'` modules, and symlinks. Anything
+  else becomes `needs_attention` with no PR.
+- The GitHub repository is public. PRs carry the request title, page, the
+  agent's public summary, changed files and checks — never the admin's
+  description or thread — and every outbound GitHub payload is redacted for
+  secrets, emails and phone numbers. The form warns admins about this.
+- The Vercel protection-bypass secret (if set) is only ever sent to the preview
+  origin, as a host-scoped cookie.
 - The worker never merges. George merges; Vercel deploys on merge as usual.
 
 ## Environment

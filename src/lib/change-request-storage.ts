@@ -148,3 +148,70 @@ export async function sweepStalePendingUploads({
   }
   return removed
 }
+
+/**
+ * Best-effort removal of requests stuck in `submitting` (the submission died
+ * between inserting the row and flipping it to `queued`). Their objects are
+ * removed first (recorded file rows plus anything already moved into the
+ * request folder), then the rows; files and messages cascade.
+ */
+export async function sweepAbandonedSubmissions({
+  olderThanMs,
+  maxRequests = 25,
+  now = Date.now(),
+}: {
+  olderThanMs: number
+  maxRequests?: number
+  now?: number
+}): Promise<number> {
+  const admin = createAdminClient()
+  const cutoff = new Date(now - olderThanMs).toISOString()
+  const { data: requests, error } = await admin
+    .from('change_requests')
+    .select('id')
+    .eq('status', 'submitting')
+    .lt('created_at', cutoff)
+    .limit(maxRequests)
+
+  if (error) {
+    log.warn('change_request.submitting_sweep_failed', { error })
+    return 0
+  }
+
+  const storage = admin.storage.from(CHANGE_REQUESTS_BUCKET)
+  let removed = 0
+  for (const { id } of (requests ?? []) as { id: string }[]) {
+    const { data: fileRows } = await admin
+      .from('change_request_files')
+      .select('storage_path')
+      .eq('request_id', id)
+    const folder = `requests/${id}/attachments`
+    const { data: objects } = await storage.list(folder, { limit: 100 })
+    const paths = Array.from(
+      new Set([
+        ...((fileRows ?? []) as { storage_path: string }[]).map((row) => row.storage_path),
+        ...(objects ?? []).map((object) => `${folder}/${object.name}`),
+      ])
+    )
+    if (paths.length > 0) {
+      const { error: removeError } = await storage.remove(paths)
+      if (removeError) {
+        log.warn('change_request.submitting_sweep_failed', { error: removeError, requestId: id })
+        continue
+      }
+    }
+
+    // Only delete if it is still abandoned (never flipped meanwhile).
+    const { error: deleteError } = await admin
+      .from('change_requests')
+      .delete()
+      .eq('id', id)
+      .eq('status', 'submitting')
+    if (deleteError) {
+      log.warn('change_request.submitting_sweep_failed', { error: deleteError, requestId: id })
+    } else {
+      removed += 1
+    }
+  }
+  return removed
+}

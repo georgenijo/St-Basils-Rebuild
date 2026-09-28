@@ -11,6 +11,7 @@ import { withLogging } from '@/lib/logger.server'
 import {
   CHANGE_REQUESTS_BUCKET,
   readStoredObjectHead,
+  sweepAbandonedSubmissions,
   sweepStalePendingUploads,
 } from '@/lib/change-request-storage'
 import {
@@ -132,12 +133,18 @@ async function prepareChangeRequestUploadsImpl(files: unknown): Promise<PrepareU
     uploads.push({ path, token: data.token, signedUrl: data.signedUrl })
   }
 
-  // Tidy uploads from sessions that were never submitted, after responding.
+  // After responding, tidy uploads from sessions that were never submitted
+  // and requests whose submission died between insert and queueing.
   after(async () => {
     try {
       await sweepStalePendingUploads({ olderThanMs: UPLOAD_SESSION_TTL_MS + 10 * 60 * 1000 })
     } catch (error) {
       log.warn('change_request.pending_sweep_failed', { error })
+    }
+    try {
+      await sweepAbandonedSubmissions({ olderThanMs: 60 * 60 * 1000 })
+    } catch (error) {
+      log.warn('change_request.submitting_sweep_failed', { error })
     }
   })
 
@@ -268,10 +275,12 @@ async function notifyNewRequest(details: {
  * Storage (see prepareChangeRequestUploads); the form carries only their
  * pending paths plus the upload session id and token.
  *
- * All-or-nothing: uploads are verified, moved to
- * `requests/<id>/attachments/`, then the request row is inserted (RLS client,
- * status `queued`) and the file rows recorded. If any step fails, everything
- * is rolled back (moved and pending objects removed, request row deleted with
+ * Two-phase and all-or-nothing: uploads are verified and moved to
+ * `requests/<id>/attachments/`, the request row is inserted as `submitting`
+ * (RLS client; the worker only claims `queued`), the file rows are recorded,
+ * and only then does the service role flip it to `queued` and the
+ * notification go out. If any step before the flip fails, everything is
+ * rolled back (moved and pending objects removed, request row deleted with
  * the service role) and the admin sees an error with the form intact, so a
  * half-submitted request is never left in the queue. Pending objects are also
  * removed when the submission is rejected for invalid fields; the form
@@ -367,10 +376,12 @@ async function createChangeRequestImpl(
     }
   }
 
-  // 6. Insert the request as the signed-in admin (RLS enforces requester + status)
+  // 6. Insert the request as the signed-in admin (RLS enforces requester + status),
+  //    as 'submitting': not claimable until step 8 flips it to 'queued'.
   const { error: insertError } = await supabase.from('change_requests').insert({
     id: requestId,
     requester_id: user.id,
+    status: 'submitting',
     title: parsed.data.title,
     description: parsed.data.description,
     page_path: parsed.data.page_path,
@@ -385,8 +396,19 @@ async function createChangeRequestImpl(
   }
 
   // 7. Record file rows with the service role (no user-facing insert policy)
+  const admin = createAdminClient()
+  const rollbackRequest = async () => {
+    const { error: rollbackError } = await admin
+      .from('change_requests')
+      .delete()
+      .eq('id', requestId)
+    if (rollbackError) {
+      log.error('change_request.rollback_failed', { error: rollbackError, requestId })
+    }
+    await rollbackObjects()
+  }
+
   if (attachments.length > 0) {
-    const admin = createAdminClient()
     const { error: filesError } = await admin.from('change_request_files').insert(
       attachments.map((attachment) => ({
         request_id: requestId,
@@ -400,21 +422,28 @@ async function createChangeRequestImpl(
 
     if (filesError) {
       log.error('change_request.attachment_record_failed', { error: filesError, requestId })
-      const { error: rollbackError } = await admin
-        .from('change_requests')
-        .delete()
-        .eq('id', requestId)
-      if (rollbackError) {
-        log.error('change_request.rollback_failed', { error: rollbackError, requestId })
-      }
-      await rollbackObjects()
+      await rollbackRequest()
       return failure
     }
   }
 
+  // 8. Make it claimable: flip 'submitting' → 'queued' now that it is complete
+  const { data: queued, error: queueError } = await admin
+    .from('change_requests')
+    .update({ status: 'queued' })
+    .eq('id', requestId)
+    .eq('status', 'submitting')
+    .select('id')
+
+  if (queueError || (queued?.length ?? 0) === 0) {
+    log.error('change_request.queue_failed', { error: queueError, requestId })
+    await rollbackRequest()
+    return failure
+  }
+
   log.info('change_request.created', { requestId, attachments: attachments.length })
 
-  // 8. Notify (never fails the submission)
+  // 9. Notify (never fails the submission)
   await notifyNewRequest({
     requestId,
     title: parsed.data.title,

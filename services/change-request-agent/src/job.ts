@@ -6,6 +6,7 @@ import { formatFiles, runChecks, type CheckResult } from './checks'
 import { EDIT_TOOLS, runClaude } from './claude'
 import type { Config } from './config'
 import {
+  deleteVerificationFiles,
   downloadFile,
   getFiles,
   getMessages,
@@ -26,13 +27,28 @@ import {
   stageAll,
 } from './git'
 import type { GitHub } from './github'
-import { countChangedLines, evaluateGuardrails, unreferencedAttachments } from './guardrails'
+import {
+  countChangedLines,
+  evaluateChangeSet,
+  evaluateGuardrails,
+  unreferencedAttachments,
+} from './guardrails'
 import { log, redact } from './log'
 import { attachmentDisplayName, branchName, safeFilename, shortId } from './naming'
 import { notify } from './notify'
 import { buildPrBody, buildVerdictComment } from './prbody'
 import { selectPreviewDeployment } from './preview'
 import { buildAgentPrompt, buildRepairPrompt, parseAgentResult } from './prompt'
+import { prTitle, redactPublic } from './redact'
+import {
+  agentCheckoutDir,
+  applyChanges,
+  createAgentCheckout,
+  diffSnapshots,
+  removeAgentCheckout,
+  snapshotTree,
+  type Snapshot,
+} from './sandbox'
 import type { ChangeRequest, PlacedAttachment, VerificationResult } from './types'
 import { hardChecksPass, verifyPreview } from './verify'
 
@@ -62,18 +78,20 @@ function humanError(error: unknown): string {
   return redact(message).slice(0, 1000)
 }
 
-const TEXT_EXT = /\.(tsx?|jsx?|mjs|cjs|css|json|md|mdx|html|svg|txt|ya?ml)$/i
+const TEXT_EXT = /\.(tsx?|css|svg|txt)$/i
 
 // ─── attachments ────────────────────────────────────────────────────────
 
+/** Download attachments into the agent checkout (the agent cannot write binaries). */
 async function placeAttachments(
   ctx: JobContext,
-  request: ChangeRequest
+  request: ChangeRequest,
+  agentDir: string
 ): Promise<PlacedAttachment[]> {
   const rows = await getFiles(ctx.db, request.id, 'attachment')
   if (rows.length === 0) return []
   const relDir = path.posix.join('public', 'images', 'requests', shortId(request.id))
-  const absDir = path.join(ctx.config.workDir, relDir)
+  const absDir = path.join(agentDir, relDir)
   await fs.mkdir(absDir, { recursive: true })
   const used = new Set<string>()
   const placed: PlacedAttachment[] = []
@@ -84,7 +102,7 @@ async function placeAttachments(
       name = safeFilename(display).replace(/(\.[a-z0-9]+)?$/, `-${i}$1`)
     used.add(name)
     const data = await downloadFile(ctx.db, row.storage_path)
-    await fs.writeFile(path.join(absDir, name), data)
+    await fs.writeFile(path.join(absDir, name), data, { mode: 0o644 })
     const repoPath = path.posix.join(relDir, name)
     placed.push({
       filename: display,
@@ -106,30 +124,83 @@ interface GuardedChange {
   keptAttachments: PlacedAttachment[]
 }
 
-async function applyGuardrails(
+class GuardrailError extends Error {}
+
+interface Workspace {
+  agentDir: string
+  baseSnapshot: Snapshot
+  attachments: PlacedAttachment[]
+}
+
+/**
+ * Validate the agent's sandbox changes, then reset the trusted checkout to
+ * the base commit and copy in only the validated files. Nothing the agent
+ * wrote reaches the trusted checkout (where tooling runs) before this passes.
+ */
+async function syncValidatedChanges(ctx: JobContext, ws: Workspace): Promise<GuardedChange> {
+  const trusted = ctx.config.workDir
+  let changes = diffSnapshots(ws.baseSnapshot, await snapshotTree(ws.agentDir))
+
+  const readText = async (p: string) => fs.readFile(path.join(ws.agentDir, p), 'utf8')
+  const texts = new Map<string, string>()
+  for (const c of changes) {
+    if (c.change !== 'deleted' && c.kind === 'file' && TEXT_EXT.test(c.path)) {
+      texts.set(c.path, await readText(c.path))
+    }
+  }
+  const unused = unreferencedAttachments(
+    ws.attachments.filter((a) => changes.some((c) => c.path === a.repoPath)),
+    texts
+  )
+  if (unused.length) {
+    for (const a of unused) await fs.rm(path.join(ws.agentDir, a.repoPath), { force: true })
+    const drop = new Set(unused.map((a) => a.repoPath))
+    changes = changes.filter((c) => !drop.has(c.path))
+    log.info('removed unreferenced attachments', { files: [...drop] })
+  }
+
+  const verdict = evaluateChangeSet(changes, texts)
+  if (!verdict.ok) throw new GuardrailError(verdict.reason)
+
+  await resetTrusted(ctx)
+  await applyChanges(ws.agentDir, trusted, changes)
+
+  // Anything git would ignore must not sit silently in the trusted checkout.
+  const written = changes.filter((c) => c.change !== 'deleted').map((c) => c.path)
+  if (written.length) {
+    const ignored = (
+      await git(trusted, [
+        'ls-files',
+        '-z',
+        '--others',
+        '--ignored',
+        '--exclude-standard',
+        '--',
+        ...written,
+      ])
+    )
+      .split('\0')
+      .filter(Boolean)
+    if (ignored.length) {
+      throw new GuardrailError(`The change includes files ignored by git: ${ignored.join(', ')}`)
+    }
+  }
+  const change = await stagedChange(ctx, ws.attachments)
+  log.info('validated changes copied to trusted checkout', {
+    files: change.files,
+    changedLines: change.changedLines,
+  })
+  return change
+}
+
+/** Guardrail pass on exactly what is staged in the trusted checkout. */
+async function stagedChange(
   ctx: JobContext,
   attachments: PlacedAttachment[]
 ): Promise<GuardedChange> {
-  const dir = ctx.config.workDir
-  let files = await changedFiles(dir)
-
-  const contents = new Map<string, string>()
-  for (const file of files) {
-    const abs = path.join(dir, file.path)
-    if (TEXT_EXT.test(file.path) && existsSync(abs))
-      contents.set(file.path, await fs.readFile(abs, 'utf8'))
-  }
-  const unused = unreferencedAttachments(
-    attachments.filter((a) => existsSync(path.join(dir, a.repoPath))),
-    contents
-  )
-  for (const attachment of unused) await fs.rm(path.join(dir, attachment.repoPath), { force: true })
-  if (unused.length) {
-    log.info('removed unreferenced attachments', { files: unused.map((a) => a.repoPath) })
-    files = await changedFiles(dir)
-  }
-
-  const staged = await stageAll(dir)
+  const trusted = ctx.config.workDir
+  const staged = await stageAll(trusted)
+  const files = await changedFiles(trusted)
   const changedLines = countChangedLines(staged.numstat)
   const verdict = evaluateGuardrails({
     files,
@@ -143,11 +214,9 @@ async function applyGuardrails(
     files: files.map((f) => f.path),
     changedLines,
     patch: staged.patch,
-    keptAttachments: attachments.filter((a) => existsSync(path.join(dir, a.repoPath))),
+    keptAttachments: attachments.filter((a) => existsSync(path.join(trusted, a.repoPath))),
   }
 }
-
-class GuardrailError extends Error {}
 
 // ─── status helpers ─────────────────────────────────────────────────────
 
@@ -165,10 +234,14 @@ async function needsAttention(
     await notify(ctx.config, { request: fresh, status: 'needs_attention', headline: message })
 }
 
+async function resetTrusted(ctx: JobContext): Promise<void> {
+  await git(ctx.config.workDir, ['reset', '--hard'])
+  await git(ctx.config.workDir, ['clean', '-ffdx', '-e', '/node_modules'])
+}
+
 async function discardWorkingTree(ctx: JobContext): Promise<void> {
   try {
-    await git(ctx.config.workDir, ['reset', '--hard'])
-    await git(ctx.config.workDir, ['clean', '-ffdx', '-e', '/node_modules'])
+    await resetTrusted(ctx)
   } catch (error) {
     log.warn('failed to reset checkout', { error })
   }
@@ -177,12 +250,13 @@ async function discardWorkingTree(ctx: JobContext): Promise<void> {
 // ─── preview ────────────────────────────────────────────────────────────
 
 async function waitForPreview(ctx: JobContext, sha: string): Promise<string> {
+  // Resolves only for a deployment built from exactly `sha` (see selectPreviewDeployment).
   const deadline = Date.now() + ctx.config.previewTimeoutMs
   while (Date.now() < deadline) {
     checkpoint(ctx)
     try {
       const selection = selectPreviewDeployment(await ctx.gh.deploymentsForSha(sha), sha)
-      if (selection.state === 'ready') return selection.url
+      if (selection.state === 'ready' && selection.sha === sha) return selection.url
       if (selection.state === 'failed') throw new Error(selection.detail)
     } catch (error) {
       if ((error as Error).message.startsWith('Vercel preview')) throw error
@@ -254,6 +328,9 @@ export async function processRequest(ctx: JobContext, claimed: ChangeRequest): P
     }
   } finally {
     await discardWorkingTree(ctx)
+    await removeAgentCheckout(agentCheckoutDir(ctx.config, shortId(claimed.id))).catch((error) =>
+      log.warn('failed to remove agent checkout', { error: String(error) })
+    )
   }
 }
 
@@ -261,9 +338,12 @@ async function runPipeline(ctx: JobContext, claimed: ChangeRequest): Promise<voi
   const { config, db } = ctx
   const request = claimed
   const messages = await getMessages(db, request.id)
-  const branch = branchName(request.id, request.title)
+  // Branch names are public: slug the redacted title.
+  const branch = branchName(request.id, redactPublic(request.title, ctx.secrets))
 
-  // 2. Prepare
+  // 2. Prepare. Old verification screenshots belong to an older revision.
+  const removed = await deleteVerificationFiles(db, request.id)
+  if (removed) log.info('removed previous verification files', { requestId: request.id, removed })
   await postMessage(
     db,
     request.id,
@@ -273,23 +353,28 @@ async function runPipeline(ctx: JobContext, claimed: ChangeRequest): Promise<voi
   await ensureClone(config)
   const baseSha = await prepareBranch(config, branch)
   await ensureDependencies(config)
-  const attachments = await placeAttachments(ctx, request)
-  log.info('checkout ready', { requestId: request.id, branch, baseSha })
+
+  // Agent sandbox: plain export of the base commit, no .git, no node_modules.
+  const agentDir = agentCheckoutDir(config, shortId(request.id))
+  await createAgentCheckout(config, agentDir, baseSha)
+  const baseSnapshot = await snapshotTree(agentDir)
+  const attachments = await placeAttachments(ctx, request, agentDir)
+  const ws: Workspace = { agentDir, baseSnapshot, attachments }
+  log.info('checkouts ready', { requestId: request.id, branch, baseSha, agentDir })
   checkpoint(ctx)
 
-  // 3. Agent
+  // 3. Agent (sandbox only)
   const prompt = buildAgentPrompt({ request, messages, attachments })
   const first = await runClaude(config, {
-    cwd: config.workDir,
+    cwd: agentDir,
     prompt,
     tools: EDIT_TOOLS,
     label: 'edit',
   })
-  let outcome = parseAgentResult(first.result)
+  const outcome = parseAgentResult(first.result)
   checkpoint(ctx)
 
   if (outcome.kind === 'clarification') {
-    await discardWorkingTree(ctx)
     await postMessage(db, request.id, 'agent', outcome.question)
     await needsAttention(
       ctx,
@@ -299,25 +384,25 @@ async function runPipeline(ctx: JobContext, claimed: ChangeRequest): Promise<voi
     )
     throw new Stop('clarification requested')
   }
+  let summary = outcome.text
 
-  // 4. Guardrails
-  let change: GuardedChange
-  try {
-    change = await applyGuardrails(ctx, attachments)
-  } catch (error) {
-    if (!(error instanceof GuardrailError)) throw error
+  const rejectChange = async (error: GuardrailError, prefix: string, stop: string) => {
     await discardWorkingTree(ctx)
-    await postMessageSafe(db, request.id, 'agent', outcome.text)
-    await needsAttention(
-      ctx,
-      request.id,
-      error.message,
-      `The change was not submitted: ${error.message}`
-    )
-    throw new Stop('guardrail rejected')
+    await postMessageSafe(db, request.id, 'agent', summary)
+    await needsAttention(ctx, request.id, error.message, `${prefix}: ${error.message}`)
+    throw new Stop(stop)
   }
 
-  // 5. Checks (+ one repair round)
+  // 4. Guardrails, then copy validated files into the trusted checkout
+  let change: GuardedChange
+  try {
+    change = await syncValidatedChanges(ctx, ws)
+  } catch (error) {
+    if (!(error instanceof GuardrailError)) throw error
+    return rejectChange(error, 'The change was not submitted', 'guardrail rejected')
+  }
+
+  // 5. Checks in the trusted checkout (+ one repair round in the sandbox)
   await formatFiles(config, change.files)
   let checks: CheckResult = await runChecks(config)
   let repaired = false
@@ -325,33 +410,30 @@ async function runPipeline(ctx: JobContext, claimed: ChangeRequest): Promise<voi
     checkpoint(ctx)
     log.info('checks failed; running repair round', { requestId: request.id })
     const repair = await runClaude(config, {
-      cwd: config.workDir,
+      cwd: agentDir,
       prompt: buildRepairPrompt(prompt, change.patch, checks.output),
       tools: EDIT_TOOLS,
       label: 'repair',
     })
     repaired = true
     const repairOutcome = parseAgentResult(repair.result)
-    if (repairOutcome.kind === 'summary') outcome = repairOutcome
+    if (repairOutcome.kind === 'summary') summary = repairOutcome.text
     try {
-      change = await applyGuardrails(ctx, attachments)
+      change = await syncValidatedChanges(ctx, ws)
     } catch (error) {
       if (!(error instanceof GuardrailError)) throw error
-      await discardWorkingTree(ctx)
-      await needsAttention(
-        ctx,
-        request.id,
-        error.message,
-        `The repaired change was not submitted: ${error.message}`
+      return rejectChange(
+        error,
+        'The repaired change was not submitted',
+        'guardrail rejected after repair'
       )
-      throw new Stop('guardrail rejected after repair')
     }
     await formatFiles(config, change.files)
     checks = await runChecks(config)
     if (!checks.ok) {
       const excerpt = checks.output.slice(-1800)
       await discardWorkingTree(ctx)
-      await postMessageSafe(db, request.id, 'agent', outcome.text)
+      await postMessageSafe(db, request.id, 'agent', summary)
       await needsAttention(
         ctx,
         request.id,
@@ -361,12 +443,20 @@ async function runPipeline(ctx: JobContext, claimed: ChangeRequest): Promise<voi
       throw new Stop('checks failed')
     }
   }
-  // Formatting/repair may have changed the diff: final guardrail pass on exactly what gets committed.
-  change = await applyGuardrails(ctx, attachments)
+  // Formatting may have changed the diff: final guardrail pass on exactly what gets committed.
+  try {
+    change = await stagedChange(ctx, attachments)
+  } catch (error) {
+    if (!(error instanceof GuardrailError)) throw error
+    return rejectChange(error, 'The formatted change was not submitted', 'guardrail rejected')
+  }
   checkpoint(ctx)
 
-  // 6. Commit / PR
-  const commitMessage = `Change request: ${request.title.replace(/[\r\n]+/g, ' ')}\n\nSubmitted via /admin/requests (request ${request.id}).`
+  // 6. Commit (trusted checkout) / PR. Commit messages are public.
+  const commitMessage = redactPublic(
+    `${prTitle(request.title)}\n\nSubmitted via /admin/requests (request ${request.id}).`,
+    ctx.secrets
+  )
   const headSha = await commit(config, commitMessage)
   log.info('committed change', {
     requestId: request.id,
@@ -380,7 +470,7 @@ async function runPipeline(ctx: JobContext, claimed: ChangeRequest): Promise<voi
     process.stdout.write(
       `\n===== DRY RUN DIFF (${request.id}) =====\n${redact(patch)}\n===== END DIFF =====\n`
     )
-    await postMessage(db, request.id, 'agent', outcome.text)
+    await postMessage(db, request.id, 'agent', summary)
     await needsAttention(
       ctx,
       request.id,
@@ -395,15 +485,17 @@ async function runPipeline(ctx: JobContext, claimed: ChangeRequest): Promise<voi
   const pr = await ctx.gh.openOrUpdatePull({
     branch,
     base: config.baseBranch,
-    title: `Change request: ${request.title.replace(/[\r\n]+/g, ' ')}`,
+    title: prTitle(request.title, ctx.secrets),
     body: buildPrBody({
       request,
-      agentSummary: outcome.text,
+      siteUrl: config.siteUrl,
+      agentSummary: summary,
       changedFiles: change.files,
       changedLines: change.changedLines,
       attachmentNames: change.keptAttachments.map((a) => path.posix.basename(a.repoPath)),
       checksRan: checks.ran,
       repaired,
+      secrets: ctx.secrets,
     }),
   })
   await updateRequest(db, request.id, {
@@ -415,7 +507,7 @@ async function runPipeline(ctx: JobContext, claimed: ChangeRequest): Promise<voi
     verification: null,
     error: null,
   })
-  await postMessage(db, request.id, 'agent', outcome.text)
+  await postMessage(db, request.id, 'agent', summary)
   await postMessage(
     db,
     request.id,
@@ -424,7 +516,7 @@ async function runPipeline(ctx: JobContext, claimed: ChangeRequest): Promise<voi
   )
   log.info('pull request ready', { requestId: request.id, pr: pr.number, created: pr.created })
 
-  // 7. Preview
+  // 7. Preview for exactly the pushed commit
   let previewUrl: string
   try {
     previewUrl = await waitForPreview(ctx, headSha)
@@ -439,7 +531,7 @@ async function runPipeline(ctx: JobContext, claimed: ChangeRequest): Promise<voi
     throw new Stop('preview unavailable')
   }
   await updateRequest(db, request.id, { preview_url: previewUrl })
-  log.info('preview ready', { requestId: request.id, previewUrl })
+  log.info('preview ready', { requestId: request.id, previewUrl, sha: headSha })
 
   // 8. Verify
   const latestMessages = await getMessages(db, request.id)
@@ -448,9 +540,13 @@ async function runPipeline(ctx: JobContext, claimed: ChangeRequest): Promise<voi
     db,
     request,
     messages: latestMessages,
-    agentSummary: outcome.text,
+    agentSummary: summary,
     previewUrl,
+    commitSha: headSha,
   })
+  if (verification.commit_sha !== headSha) {
+    throw new Error('Verification does not belong to the pushed commit')
+  }
   const passed = verification.verdict === 'pass' && hardChecksPass(verification.checks)
   const finalStatus = passed ? 'ready_for_review' : 'needs_attention'
   await updateRequest(db, request.id, {

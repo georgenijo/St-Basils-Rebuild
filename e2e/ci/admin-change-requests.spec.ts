@@ -57,6 +57,9 @@ test.describe('CI admin website change requests', () => {
     const submit = page.getByRole('button', { name: 'Submit request' })
     await waitForReactHydration(submit)
 
+    await expect(page.getByTestId('change-request-privacy-notice')).toContainText(
+      'public GitHub pull request'
+    )
     await page.locator('input#title').fill(title)
     await page
       .locator('textarea#description')
@@ -139,6 +142,9 @@ test.describe('CI admin website change requests', () => {
       .select('page_path, target_selector, target_text, status')
       .eq('id', requestId)
       .single()
+    // Two-phase submit: inserted as 'submitting', flipped to 'queued' once
+    // the file rows exist. No worker runs in CI, so it stays queued.
+    expect(row?.status).toBe('queued')
     expect(row?.page_path).toBe('/')
     if (canPick) expect(row?.target_selector).toBeTruthy()
     expect(row?.target_text).toContain('Contact')

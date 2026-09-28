@@ -87,6 +87,8 @@ describe('buildAgentPrompt', () => {
     expect(prompt).toContain('src/components/features/FeastFlyer.tsx')
     expect(prompt).toContain('/images/requests/3f2a9c1e/flyer.jpg')
     expect(prompt).toContain('NEEDS_CLARIFICATION:')
+    expect(prompt).toContain('published in a public GitHub pull request')
+    expect(prompt).toContain("no 'use server' modules")
   })
 
   it('repair prompt repeats the task and carries the diff and errors', () => {

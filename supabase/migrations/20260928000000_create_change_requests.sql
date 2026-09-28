@@ -1,5 +1,10 @@
 -- Migration: Website change requests
 --
+-- Submission is two-phase: the admin inserts the request as 'submitting',
+-- the server records attachment rows, then the service role flips it to
+-- 'queued'. Only 'queued' rows are claimable, so the worker never sees a
+-- half-recorded request.
+--
 -- Admins submit change requests from /admin/requests. The change-request-agent
 -- worker (service role) claims them, opens a PR, verifies the Vercel preview,
 -- and reports back. See docs/change-requests.md.
@@ -11,11 +16,11 @@ CREATE TABLE public.change_requests (
   requester_id    UUID NOT NULL REFERENCES auth.users(id),
   title           TEXT NOT NULL CHECK (char_length(title) BETWEEN 3 AND 120),
   description     TEXT NOT NULL CHECK (char_length(description) BETWEEN 10 AND 5000),
-  page_path       TEXT NOT NULL CHECK (page_path ~ '^/[A-Za-z0-9/_.~-]*$' AND char_length(page_path) <= 300),
+  page_path       TEXT NOT NULL CHECK (page_path ~ '^/(?!/)[A-Za-z0-9/_.~-]*$' AND char_length(page_path) <= 300),
   target_selector TEXT CHECK (char_length(target_selector) <= 1000),
   target_text     TEXT CHECK (char_length(target_text) <= 500),
-  status          TEXT NOT NULL DEFAULT 'queued' CHECK (status IN (
-                    'queued', 'in_progress', 'verifying', 'ready_for_review',
+  status          TEXT NOT NULL DEFAULT 'submitting' CHECK (status IN (
+                    'submitting', 'queued', 'in_progress', 'verifying', 'ready_for_review',
                     'needs_attention', 'merged', 'closed'
                   )),
   branch_name     TEXT,
@@ -84,7 +89,7 @@ CREATE POLICY "Admins can submit change requests"
   WITH CHECK (
     public.is_admin()
     AND requester_id = auth.uid()
-    AND status = 'queued'
+    AND status = 'submitting'
     AND branch_name IS NULL AND pr_number IS NULL AND pr_url IS NULL
     AND preview_url IS NULL AND verification IS NULL AND claimed_by IS NULL
     AND claimed_at IS NULL AND attempts = 0 AND error IS NULL
@@ -125,12 +130,13 @@ AS $$
       claimed_by = worker_id,
       claimed_at = now(),
       attempts = cr.attempts + 1,
-      error = NULL
+      error = NULL,
+      -- A new attempt invalidates any earlier preview and verdict.
+      preview_url = NULL,
+      verification = NULL
   WHERE cr.id = (
     SELECT id FROM public.change_requests
     WHERE status = 'queued'
-      -- Give the submitting server action time to finish recording file rows.
-      AND created_at < now() - interval '30 seconds'
     ORDER BY created_at
     FOR UPDATE SKIP LOCKED
     LIMIT 1

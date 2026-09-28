@@ -2,7 +2,7 @@
 # Build context: this directory (services/change-request-agent).
 # Persistent volume: /data (the website clone lives in /data/repo).
 
-ARG NODE_VERSION=20
+ARG NODE_VERSION=22
 FROM node:${NODE_VERSION}-bookworm-slim
 
 ARG CLAUDE_CODE_VERSION=2.1.283

@@ -27,6 +27,7 @@ let userInsertError: { message: string } | null = null
 let fileInsertError: { message: string } | null = null
 let moveFailOn: number | null = null
 let requeueMatches = true
+let queueError: { message: string } | null = null
 
 function userFrom(table: string) {
   if (table === 'profiles') {
@@ -73,6 +74,10 @@ function adminFrom(table: string) {
         },
         select: () => {
           adminUpdates.push({ table, values, filters })
+          const isQueueFlip =
+            (values as { status?: string }).status === 'queued' &&
+            filters.some(([column, value]) => column === 'status' && value === 'submitting')
+          if (isQueueFlip && queueError) return Promise.resolve({ data: null, error: queueError })
           return Promise.resolve({ data: requeueMatches ? [{ id: 'x' }] : [], error: null })
         },
       }
@@ -123,9 +128,11 @@ const mockAfter = vi.fn()
 vi.mock('next/server', () => ({ after: (callback: () => unknown) => mockAfter(callback) }))
 
 const mockSweep = vi.fn(async () => 0)
+const mockSweepSubmitting = vi.fn(async () => 0)
 vi.mock('@/lib/change-request-storage', () => ({
   CHANGE_REQUESTS_BUCKET: 'change-requests',
   sweepStalePendingUploads: (...args: unknown[]) => mockSweep(...(args as [])),
+  sweepAbandonedSubmissions: (...args: unknown[]) => mockSweepSubmitting(...(args as [])),
   readStoredObjectHead: vi.fn(async (path: string) => {
     const object = storedObjects.get(path)
     return object
@@ -234,6 +241,7 @@ beforeEach(() => {
   fileInsertError = null
   moveFailOn = null
   requeueMatches = true
+  queueError = null
   mockGetUser.mockResolvedValue({ data: { user: { id: USER_ID, email: 'admin@example.org' } } })
   mockSendEmail.mockResolvedValue({ data: {}, error: null })
   process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-role-key'
@@ -290,6 +298,7 @@ describe('prepareChangeRequestUploads', () => {
     expect(mockAfter).toHaveBeenCalledTimes(1)
     await mockAfter.mock.calls[0][0]()
     expect(mockSweep).toHaveBeenCalledWith({ olderThanMs: expect.any(Number) })
+    expect(mockSweepSubmitting).toHaveBeenCalledWith({ olderThanMs: 60 * 60 * 1000 })
   })
 })
 
@@ -313,7 +322,7 @@ describe('createChangeRequest', () => {
   it('returns field errors and discards pending uploads for invalid input', async () => {
     const upload = uploadedSession([{ name: 'a.png' }])
     const formData = requestForm(upload)
-    formData.set('page_path', 'https://evil.example')
+    formData.set('page_path', '//evil.example')
     const result = await createChangeRequest(INITIAL, formData)
     expect(result.errors).toHaveProperty('page_path')
     expect(userInserts).toHaveLength(0)
@@ -347,8 +356,19 @@ describe('createChangeRequest', () => {
       target_selector: 'main > section:nth-of-type(2) > img',
       target_text: 'Feast flyer',
     })
-    expect(row).not.toHaveProperty('status')
+    // Inserted as 'submitting' (not claimable), flipped to 'queued' last.
+    expect(row.status).toBe('submitting')
     const requestId = row.id as string
+    expect(adminUpdates).toEqual([
+      {
+        table: 'change_requests',
+        values: { status: 'queued' },
+        filters: [
+          ['id', requestId],
+          ['status', 'submitting'],
+        ],
+      },
+    ])
     expect(url).toBe(`/admin/requests/${requestId}`)
 
     expect(moves).toHaveLength(2)
@@ -497,6 +517,37 @@ describe('createChangeRequest', () => {
     const result = await createChangeRequest(INITIAL, requestForm(upload))
     expect(result).toEqual({ success: false, message: 'Failed to submit the change request' })
     expect(removed).toEqual([[moves[0].to, ...upload.paths]])
+  })
+
+  it('rolls everything back and sends no email when the queue flip fails', async () => {
+    queueError = { message: 'db down' }
+    const upload = uploadedSession([{ name: 'a.png' }])
+    const result = await createChangeRequest(INITIAL, requestForm(upload))
+    const requestId = (userInserts[0].row as { id: string }).id
+    expect(result.message).toMatch(/Nothing was submitted/)
+    expect(adminDeletes).toEqual([{ table: 'change_requests', filters: [['id', requestId]] }])
+    expect(removed).toEqual([[moves[0].to, ...upload.paths]])
+    expect(mockSendEmail).not.toHaveBeenCalled()
+    expect(mockRedirect).not.toHaveBeenCalled()
+  })
+
+  it('rolls back when the request is no longer submitting at flip time', async () => {
+    requeueMatches = false
+    const result = await createChangeRequest(INITIAL, requestForm())
+    expect(result.success).toBe(false)
+    expect(adminDeletes).toHaveLength(1)
+    expect(mockSendEmail).not.toHaveBeenCalled()
+  })
+
+  it('sends the email only after the request is queued', async () => {
+    mockSendEmail.mockImplementation(async () => {
+      expect(adminUpdates.some((u) => (u.values as { status?: string }).status === 'queued')).toBe(
+        true
+      )
+      return { data: {}, error: null }
+    })
+    await expectRedirect(createChangeRequest(INITIAL, requestForm()))
+    expect(mockSendEmail).toHaveBeenCalledTimes(1)
   })
 
   it('still succeeds when the notification email fails', async () => {

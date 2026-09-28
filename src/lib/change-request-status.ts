@@ -9,6 +9,12 @@ interface StatusInfo {
 }
 
 export const CHANGE_REQUEST_STATUS_INFO: Record<ChangeRequestStatus, StatusInfo> = {
+  submitting: {
+    label: 'Submitting…',
+    description:
+      'Still being submitted while attachments are saved. If this does not change in a minute, the submission failed and will be cleaned up automatically; submit it again.',
+    tone: 'neutral',
+  },
   queued: {
     label: 'Queued',
     description: 'Submitted and waiting for the website agent to pick it up.',
@@ -51,6 +57,7 @@ export const CHANGE_REQUEST_STATUS_INFO: Record<ChangeRequestStatus, StatusInfo>
 
 /** Statuses where the worker is actively moving the request forward. */
 export const ACTIVE_CHANGE_REQUEST_STATUSES: readonly ChangeRequestStatus[] = [
+  'submitting',
   'queued',
   'in_progress',
   'verifying',
@@ -143,4 +150,24 @@ export function safeExternalUrl(value: string | null | undefined): string | null
   } catch {
     return null
   }
+}
+
+/**
+ * Resolve a site path against `base` and return the URL only if it stays on
+ * the base's origin. Guards against protocol-relative (`//evil.example`) and
+ * other paths that would escape the site.
+ */
+export function sameOriginUrl(path: string, base: string): string | null {
+  try {
+    const baseUrl = new URL(base)
+    const url = new URL(path, baseUrl)
+    return url.origin === baseUrl.origin ? url.toString() : null
+  } catch {
+    return null
+  }
+}
+
+/** Short form of a verified commit SHA, or null if it doesn't look like one. */
+export function shortCommitSha(value: unknown): string | null {
+  return typeof value === 'string' && /^[0-9a-f]{7,40}$/i.test(value) ? value.slice(0, 7) : null
 }

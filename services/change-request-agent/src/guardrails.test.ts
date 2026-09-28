@@ -3,8 +3,10 @@ import { describe, expect, it } from 'vitest'
 import {
   containsSecret,
   countChangedLines,
+  evaluateChangeSet,
   evaluateGuardrails,
   isAllowedPath,
+  pathPolicyViolation,
   parseNumstat,
   parsePorcelainZ,
   unreferencedAttachments,
@@ -164,5 +166,100 @@ describe('unreferencedAttachments', () => {
   it('does not count an attachment as referencing itself', () => {
     const contents = new Map([[a.repoPath, 'binary /images/requests/abcd1234/flyer.jpg']])
     expect(unreferencedAttachments([a], contents)).toEqual([a])
+  })
+})
+
+describe('pathPolicyViolation', () => {
+  it.each([
+    'src/components/features/FeastFlyer.tsx',
+    'src/components/ui/button.ts',
+    'src/app/(public)/giving/page.tsx',
+    'src/app/globals.css',
+    'public/images/requests/abcd1234/flyer.jpg',
+    'public/docs/bulletin.pdf',
+    'public/robots.txt',
+    'public/icon.svg',
+    'src/components/ConfigurationPanel.tsx',
+  ])('allows %s', (p) => expect(pathPolicyViolation(p)).toBeNull())
+
+  it.each([
+    ['src/components/prettier.config.cjs', 'file type'],
+    ['src/components/prettier.config.ts', 'configuration'],
+    ['src/components/eslint.config.mjs', 'file type'],
+    ['src/components/site-config.ts', 'configuration'],
+    ['src/components/foo.rc.ts', 'configuration'],
+    ['src/components/.prettierrc', 'hidden'],
+    ['src/components/.editorconfig', 'hidden'],
+    ['public/.well-known/x.txt', 'hidden'],
+    ['src/components/package.json', 'file type'],
+    ['public/package.json', 'file type'],
+    ['src/components/tsconfig.ts', 'configuration'],
+    ['src/components/types.d.ts', 'configuration'],
+    ['src/components/middleware.ts', 'configuration'],
+    ['src/components/next.config.ts', 'configuration'],
+    ['src/components/A.js', 'file type'],
+    ['src/components/A.jsx', 'file type'],
+    ['src/components/data.json', 'file type'],
+    ['public/script.js', 'file type'],
+    ['public/page.html', 'file type'],
+    ['public/Makefile', 'file type'],
+    ['src/lib/x.ts', 'outside'],
+    ['node_modules/prettier/index.js', 'outside'],
+  ])('rejects %s (%s)', (p, why) => expect(pathPolicyViolation(p)).toContain(why))
+})
+
+describe('evaluateChangeSet', () => {
+  const ok = (p: string) => ({ path: p, change: 'modified' as const, kind: 'file' as const })
+
+  it('passes ordinary edits and deletions', () => {
+    expect(
+      evaluateChangeSet(
+        [ok('src/components/A.tsx'), { path: 'public/old.png', change: 'deleted', kind: 'file' }],
+        new Map([['src/components/A.tsx', 'export const A = 1']])
+      )
+    ).toEqual({ ok: true })
+  })
+
+  it('rejects empty change sets', () => {
+    expect(evaluateChangeSet([], new Map())).toMatchObject({ ok: false })
+  })
+
+  it('rejects symlinks and special files even on allowed paths', () => {
+    const res = evaluateChangeSet(
+      [
+        { path: 'src/components/link.tsx', change: 'added', kind: 'symlink' },
+        { path: 'public/fifo.txt', change: 'added', kind: 'other' },
+      ],
+      new Map()
+    )
+    expect(res.ok).toBe(false)
+    if (!res.ok) {
+      expect(res.reason).toContain('src/components/link.tsx (symlink)')
+      expect(res.reason).toContain('public/fifo.txt (special file)')
+    }
+  })
+
+  it("rejects 'use server' modules", () => {
+    for (const content of [
+      "'use server'\nexport async function x() {}",
+      'async function a() { "use server" }',
+    ]) {
+      const res = evaluateChangeSet(
+        [ok('src/components/actions.ts')],
+        new Map([['src/components/actions.ts', content]])
+      )
+      expect(res).toMatchObject({ ok: false, reason: expect.stringContaining("'use server'") })
+    }
+  })
+
+  it('rejects files written into node_modules or config names', () => {
+    const res = evaluateChangeSet(
+      [
+        { path: 'node_modules/eslint/lib/api.js', change: 'added', kind: 'file' },
+        { path: 'src/components/prettier.config.cjs', change: 'added', kind: 'file' },
+      ],
+      new Map()
+    )
+    expect(res.ok).toBe(false)
   })
 })

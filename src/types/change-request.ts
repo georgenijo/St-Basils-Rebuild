@@ -2,6 +2,7 @@
 // and supabase/migrations/20260928000000_create_change_requests.sql.
 
 export const CHANGE_REQUEST_STATUSES = [
+  'submitting',
   'queued',
   'in_progress',
   'verifying',
@@ -18,6 +19,8 @@ export type ChangeRequestVerdict = 'pass' | 'fail' | 'unsure'
 export interface ChangeRequestVerification {
   verdict: ChangeRequestVerdict
   summary?: string | null
+  /** Commit the verified preview was built from. */
+  commit_sha?: string | null
   /** Worker-defined; rendered defensively (strings or objects). */
   checks?: unknown
 }

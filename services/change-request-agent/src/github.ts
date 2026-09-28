@@ -2,6 +2,7 @@ import type { Config } from './config'
 import { run } from './exec'
 import { log } from './log'
 import type { DeploymentStatus, DeploymentWithStatuses } from './preview'
+import { redactPublic, truncate } from './redact'
 
 const API = 'https://api.github.com'
 
@@ -22,10 +23,20 @@ export async function resolveGithubToken(config: Config): Promise<string | null>
 }
 
 export class GitHub {
+  /**
+   * @param secrets worker secrets; every outbound title/body/comment is passed
+   *   through redactPublic (secrets, tokens, emails, phone numbers) because the
+   *   repository is public.
+   */
   constructor(
     private readonly repo: string,
-    private readonly token: string | null
+    private readonly token: string | null,
+    private readonly secrets: string[] = []
   ) {}
+
+  private scrub(text: string, max: number): string {
+    return truncate(redactPublic(text, this.secrets), max)
+  }
 
   private async request<T>(method: string, path: string, body?: unknown): Promise<T> {
     const headers: Record<string, string> = {
@@ -71,21 +82,28 @@ export class GitHub {
     const existing = await this.findOpenPullForBranch(input.branch)
     if (existing) {
       await this.request('PATCH', `/repos/${this.repo}/pulls/${existing.number}`, {
-        title: input.title,
-        body: input.body,
+        title: this.scrub(input.title, 100),
+        body: this.scrub(input.body, 60_000),
       })
       return { ...existing, created: false }
     }
     const pr = await this.request<{ number: number; html_url: string }>(
       'POST',
       `/repos/${this.repo}/pulls`,
-      { title: input.title, body: input.body, head: input.branch, base: input.base }
+      {
+        title: this.scrub(input.title, 100),
+        body: this.scrub(input.body, 60_000),
+        head: input.branch,
+        base: input.base,
+      }
     )
     return { ...pr, created: true }
   }
 
   async comment(prNumber: number, body: string): Promise<void> {
-    await this.request('POST', `/repos/${this.repo}/issues/${prNumber}/comments`, { body })
+    await this.request('POST', `/repos/${this.repo}/issues/${prNumber}/comments`, {
+      body: this.scrub(body, 60_000),
+    })
   }
 
   async pullState(prNumber: number): Promise<{ state: 'open' | 'closed'; merged: boolean }> {

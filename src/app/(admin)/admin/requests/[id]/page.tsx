@@ -11,6 +11,8 @@ import {
   isActiveChangeRequestStatus,
   normalizeVerificationChecks,
   safeExternalUrl,
+  sameOriginUrl,
+  shortCommitSha,
 } from '@/lib/change-request-status'
 import { formatBytes } from '@/lib/validators/change-request'
 import { cn } from '@/lib/utils'
@@ -126,12 +128,21 @@ export default async function ChangeRequestDetailPage({ params }: PageProps) {
   const active = isActiveChangeRequestStatus(request.status)
   const prUrl = safeExternalUrl(request.pr_url)
   const previewUrl = safeExternalUrl(request.preview_url)
-  const previewPageUrl = previewUrl ? new URL(request.page_path, previewUrl).toString() : null
-  const verification = request.verification
+  // Only link to the preview if the page path stays on the preview's origin.
+  const previewPageUrl = previewUrl ? sameOriginUrl(request.page_path, previewUrl) : null
+  // Null after a requeue (the claim clears it); tolerate malformed values.
+  const verification =
+    request.verification &&
+    typeof request.verification === 'object' &&
+    !Array.isArray(request.verification)
+      ? request.verification
+      : null
   const verdict =
-    verification && verification.verdict in VERDICT_INFO
+    verification && typeof verification.verdict === 'string' && verification.verdict in VERDICT_INFO
       ? VERDICT_INFO[verification.verdict as ChangeRequestVerdict]
       : null
+  const commitSha = shortCommitSha(verification?.commit_sha)
+  const summary = typeof verification?.summary === 'string' ? verification.summary : null
   const checks = normalizeVerificationChecks(verification?.checks)
 
   return (
@@ -230,16 +241,28 @@ export default async function ChangeRequestDetailPage({ params }: PageProps) {
             <section className="admin-section" aria-label="Verification">
               <div className="admin-section-head">
                 <h2>Verification</h2>
-                {verdict && (
-                  <span
-                    className={cn('admin-status', toneClass(verdict.tone))}
-                    data-testid="verification-verdict"
-                  >
-                    {verdict.label}
-                  </span>
-                )}
+                <div className="cr-status-row">
+                  {commitSha && (
+                    <code className="admin-meta" title="Verified commit">
+                      {commitSha}
+                    </code>
+                  )}
+                  {verdict && (
+                    <span
+                      className={cn('admin-status', toneClass(verdict.tone))}
+                      data-testid="verification-verdict"
+                    >
+                      {verdict.label}
+                    </span>
+                  )}
+                </div>
               </div>
-              {verification?.summary && <p className="cr-prose">{verification.summary}</p>}
+              {!verification && (
+                <p className="cr-help" style={{ marginTop: 12 }}>
+                  Screenshots below are from a previous attempt.
+                </p>
+              )}
+              {summary && <p className="cr-prose">{summary}</p>}
               {checks.length > 0 && (
                 <ul className="cr-checks">
                   {checks.map((check, index) => (

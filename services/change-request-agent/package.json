@@ -5,7 +5,7 @@
   "description": "Worker that turns /admin/requests website change requests into verified pull requests",
   "type": "module",
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "scripts": {
     "start": "tsx src/worker.ts",
