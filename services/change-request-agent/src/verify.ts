@@ -20,6 +20,8 @@ import { parseVerdict } from './verdict'
 
 const MAX_SHOT_HEIGHT = 3000
 const PADDING = 32
+/** Context captured above and below the picked element, as a share of viewport height. */
+const CONTEXT_RATIO = 0.4
 
 interface ViewportSpec {
   name: 'desktop' | 'mobile'
@@ -72,20 +74,17 @@ async function screenshotAround(
               w: document.documentElement.scrollWidth,
               h: document.documentElement.scrollHeight,
             }))
-            const x = Math.max(0, box.x + scroll.x - PADDING)
-            const y = Math.max(0, box.y + scroll.y - PADDING)
-            const width = Math.min(scroll.w - x, box.width + PADDING * 2)
-            const height = Math.min(scroll.h - y, box.height + PADDING * 2, MAX_SHOT_HEIGHT)
-            // Tiny elements: show the surrounding viewport instead so the reviewer has context.
-            const clip =
-              width < 200 || height < 120
-                ? {
-                    x: 0,
-                    y: Math.max(0, box.y + scroll.y - viewport.height / 3),
-                    width: viewport.width,
-                    height: viewport.height,
-                  }
-                : { x, y, width, height }
+            // Requests often change something next to the picked element (a
+            // caption under a flyer), so capture the full page width plus
+            // generous context above and below instead of the element alone.
+            const context = Math.max(PADDING, Math.round(viewport.height * CONTEXT_RATIO))
+            const y = Math.max(0, box.y + scroll.y - context)
+            const clip = {
+              x: 0,
+              y,
+              width: Math.min(scroll.w, viewport.width),
+              height: Math.min(scroll.h - y, box.height + context * 2, MAX_SHOT_HEIGHT),
+            }
             // Scroll back to the top (the element's lazy content has loaded) so
             // fixed/sticky headers render at the top of the full-page capture
             // instead of on top of the clipped element.
