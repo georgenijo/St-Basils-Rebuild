@@ -1,5 +1,5 @@
 import { loadConfig, secretValues, type Config } from './config'
-import { cleanupAbandonedSubmissions, sweepOrphanFolders } from './abandoned'
+import { cleanupAbandonedSubmissions, sweepOrphanFolders, type SweepState } from './abandoned'
 import {
   cleanupDeps,
   claimNext,
@@ -95,19 +95,20 @@ export async function syncPullRequests(db: Db, gh: GitHub): Promise<void> {
   }
 }
 
+/** Rotating orphan-sweep cursor, kept in memory across maintenance cycles. */
+const orphanSweepState: SweepState = { cursor: 0 }
+
 export async function cleanupStorage(db: Db, config: Config): Promise<void> {
   const deps = cleanupDeps(db)
   const warn = (msg: string, fields: Record<string, unknown>) => log.warn(msg, fields)
   const abandoned = await cleanupAbandonedSubmissions(deps, new Date(), undefined, warn)
   if (abandoned.found > 0) log.info('abandoned submissions cleaned up', { ...abandoned })
-  const orphans = await sweepOrphanFolders(
-    deps,
-    new Date(),
-    config.orphanMinAgeMinutes * 60_000,
-    undefined,
-    warn
-  )
-  if (orphans.orphanFolders > 0 || orphans.foldersSkipped > 0) {
+  const orphans = await sweepOrphanFolders(deps, new Date(), {
+    minAgeMs: config.orphanMinAgeMinutes * 60_000,
+    state: orphanSweepState,
+    warn,
+  })
+  if (orphans.orphanFolders > 0 || orphans.foldersSkipped > 0 || orphans.foldersClaimed > 0) {
     log.info('orphan storage sweep', { ...orphans })
   }
 }

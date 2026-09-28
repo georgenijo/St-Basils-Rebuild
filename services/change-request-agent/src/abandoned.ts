@@ -101,48 +101,105 @@ export interface OrphanSweepResult {
   orphanFolders: number
   foldersProcessed: number
   foldersSkipped: number
+  /** Orphans skipped because a request row appeared before removal. */
+  foldersClaimed: number
   objectsRemoved: number
   objectsTooYoung: number
+  /** Listing offset the next cycle starts from. */
+  nextCursor: number
+}
+
+/**
+ * In-memory rotation state kept by the worker between cycles, so folders
+ * that can never be cleaned (unknown-age objects, repeated errors) cannot
+ * starve later orphans of the per-cycle cap.
+ */
+export interface SweepState {
+  cursor: number
+}
+
+export interface SweepOptions {
+  minAgeMs?: number
+  maxFolders?: number
+  pageSize?: number
+  state?: SweepState
+  warn?: Logger
 }
 
 export async function sweepOrphanFolders(
   deps: CleanupDeps,
   now: Date,
-  minAgeMs = ORPHAN_MIN_AGE_MS,
-  maxFolders = ORPHAN_MAX_FOLDERS_PER_CYCLE,
-  warn: Logger = noop
+  options: SweepOptions = {}
 ): Promise<OrphanSweepResult> {
+  const minAgeMs = options.minAgeMs ?? ORPHAN_MIN_AGE_MS
+  const maxFolders = options.maxFolders ?? ORPHAN_MAX_FOLDERS_PER_CYCLE
+  const pageSize = options.pageSize ?? FOLDER_PAGE
+  const state = options.state ?? { cursor: 0 }
+  const warn = options.warn ?? noop
   const result: OrphanSweepResult = {
     foldersScanned: 0,
     orphanFolders: 0,
     foldersProcessed: 0,
     foldersSkipped: 0,
+    foldersClaimed: 0,
     objectsRemoved: 0,
     objectsTooYoung: 0,
+    nextCursor: 0,
   }
   const cutoff = now.getTime() - minAgeMs
 
+  // Collect up to maxFolders orphans starting at the cursor. The cursor then
+  // moves just past the last folder examined, or back to 0 at the end of the
+  // listing, so every folder is reached within a bounded number of cycles.
   const orphans: string[] = []
-  for (let offset = 0; orphans.length < maxFolders; offset += FOLDER_PAGE) {
-    const page = await deps.listRequestFolders(offset, FOLDER_PAGE)
+  let offset = state.cursor
+  let nextCursor = 0
+  let restarted = false
+  collect: for (;;) {
+    const page = await deps.listRequestFolders(offset, pageSize)
+    if (
+      page.length === 0 &&
+      offset > 0 &&
+      !restarted &&
+      state.cursor > 0 &&
+      offset === state.cursor
+    ) {
+      // Cursor points past the end (folders were deleted): start over.
+      offset = 0
+      restarted = true
+      continue
+    }
     result.foldersScanned += page.length
-    const candidates = page.filter((name) => UUID.test(name))
-    for (let i = 0; i < candidates.length && orphans.length < maxFolders; i += 100) {
+    const candidates = page
+      .map((name, index) => ({ name, position: offset + index }))
+      .filter((c) => UUID.test(c.name))
+    for (let i = 0; i < candidates.length; i += 100) {
       const chunk = candidates.slice(i, i + 100)
       let live: Set<string>
       try {
-        live = await deps.existingRequestIds(chunk)
+        live = await deps.existingRequestIds(chunk.map((c) => c.name))
       } catch (error) {
         result.foldersSkipped += chunk.length
         warn('orphan sweep row lookup failed; skipping folders', { error: String(error) })
         continue
       }
-      for (const name of chunk) {
-        if (!live.has(name) && orphans.length < maxFolders) orphans.push(name)
+      for (const c of chunk) {
+        if (live.has(c.name)) continue
+        orphans.push(c.name)
+        if (orphans.length >= maxFolders) {
+          nextCursor = c.position + 1
+          break collect
+        }
       }
     }
-    if (page.length < FOLDER_PAGE) break
+    if (page.length < pageSize) {
+      nextCursor = 0
+      break
+    }
+    offset += pageSize
   }
+  state.cursor = nextCursor
+  result.nextCursor = nextCursor
   result.orphanFolders = orphans.length
 
   for (const id of orphans) {
@@ -151,6 +208,23 @@ export async function sweepOrphanFolders(
       const old = objects.filter((o) => o.createdAt !== null && Date.parse(o.createdAt) <= cutoff)
       result.objectsTooYoung += objects.length - old.length
       if (old.length > 0) {
+        // Ownership re-check right before deleting: a request row may have
+        // been created for this id since the lookup above.
+        let owned: Set<string>
+        try {
+          owned = await deps.existingRequestIds([id])
+        } catch (error) {
+          result.foldersSkipped++
+          warn('orphan ownership re-check failed; skipping folder', {
+            folder: id,
+            error: String(error),
+          })
+          continue
+        }
+        if (owned.has(id)) {
+          result.foldersClaimed++
+          continue
+        }
         await deps.removeObjects(old.map((o) => o.path))
         result.objectsRemoved += old.length
       }

@@ -10,6 +10,8 @@ const adminDeletes: { table: string; filters: [string, unknown][] }[] = []
 const signedUploads: string[] = []
 const moves: { from: string; to: string }[] = []
 const removed: string[][] = []
+/** Order of side effects, to assert the row exists before any move. */
+const events: string[] = []
 
 interface FakeObject {
   bytes: Uint8Array
@@ -46,6 +48,7 @@ function userFrom(table: string) {
     return {
       insert: (row: unknown) => {
         userInserts.push({ table, row })
+        events.push('insert:change_requests')
         return Promise.resolve({ error: userInsertError })
       },
       select: () => ({
@@ -132,6 +135,7 @@ vi.mock('@/lib/supabase/admin', () => ({
             return Promise.resolve({ data: null, error: { message: 'storage down' } })
           }
           moves.push({ from, to })
+          events.push('move')
           return Promise.resolve({ data: {}, error: null })
         },
         remove: (paths: string[]) => {
@@ -252,6 +256,7 @@ beforeEach(() => {
   adminDeletes.length = 0
   signedUploads.length = 0
   moves.length = 0
+  events.length = 0
   removed.length = 0
   storedObjects.clear()
   profile = { role: 'admin', full_name: 'Fr. Admin' }
@@ -381,6 +386,9 @@ describe('createChangeRequest', () => {
     })
     // Inserted as 'submitting' (not claimable), flipped to 'queued' last.
     expect(row.status).toBe('submitting')
+    // The row exists before anything lands under requests/<id>/ (the worker's
+    // orphan sweep removes objects there that have no request row).
+    expect(events).toEqual(['insert:change_requests', 'move', 'move'])
     const requestId = row.id as string
     expect(adminUpdates).toEqual([
       {
@@ -516,10 +524,30 @@ describe('createChangeRequest', () => {
     moveFailOn = 1
     const upload = uploadedSession([{ name: 'a.png' }, { name: 'b.png' }])
     const result = await createChangeRequest(INITIAL, requestForm(upload))
+    const requestId = (userInserts[0].row as { id: string }).id
     expect(result.message).toMatch(/Nothing was submitted/)
-    expect(userInserts).toHaveLength(0)
+    expect(events).toEqual(['insert:change_requests', 'move'])
+    // Guarded delete first; objects only once the row is confirmed gone.
+    expect(adminDeletes).toEqual([
+      {
+        table: 'change_requests',
+        filters: [
+          ['id', requestId],
+          ['status', 'submitting'],
+        ],
+      },
+    ])
     expect(removed).toEqual([[moves[0].to, ...upload.paths]])
     expect(mockSendEmail).not.toHaveBeenCalled()
+  })
+
+  it('keeps moved objects when a move fails and the row cannot be confirmed deleted', async () => {
+    moveFailOn = 1
+    deleteMatches = false
+    const upload = uploadedSession([{ name: 'a.png' }, { name: 'b.png' }])
+    const result = await createChangeRequest(INITIAL, requestForm(upload))
+    expect(result.message).toMatch(/may still be processing/)
+    expect(removed).toHaveLength(0)
   })
 
   it('deletes the request and all objects when recording file rows fails', async () => {
@@ -547,7 +575,9 @@ describe('createChangeRequest', () => {
     const upload = uploadedSession([{ name: 'a.png' }])
     const result = await createChangeRequest(INITIAL, requestForm(upload))
     expect(result).toEqual({ success: false, message: 'Failed to submit the change request' })
-    expect(removed).toEqual([[moves[0].to, ...upload.paths]])
+    // Nothing was moved; only the pending uploads are discarded.
+    expect(moves).toHaveLength(0)
+    expect(removed).toEqual([upload.paths])
   })
 
   it('rolls everything back and sends no email when the queue flip fails', async () => {

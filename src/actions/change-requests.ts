@@ -275,10 +275,10 @@ async function notifyNewRequest(details: {
  * Storage (see prepareChangeRequestUploads); the form carries only their
  * pending paths plus the upload session id and token.
  *
- * Two-phase and all-or-nothing: uploads are verified and moved to
- * `requests/<id>/attachments/`, the request row is inserted as `submitting`
- * (RLS client; the worker only claims `queued`), the file rows are recorded,
- * and only then does the service role flip it to `queued` and the
+ * Two-phase and all-or-nothing: uploads are verified, the request row is
+ * inserted as `submitting` (RLS client; the worker only claims `queued`), the
+ * uploads are moved to `requests/<id>/attachments/`, the file rows are
+ * recorded, and only then does the service role flip it to `queued` and the
  * notification go out. If any step before the flip fails, everything is
  * rolled back (moved and pending objects removed, request row deleted with
  * the service role) and the admin sees an error with the form intact, so a
@@ -359,25 +359,11 @@ async function createChangeRequestImpl(
     message: 'Could not save the request and its attachments. Nothing was submitted; try again.',
   }
 
-  // 5. Move verified uploads into the request's folder
-  const movedPaths: string[] = []
-  // Removing keys that no longer exist is a no-op, so clear both locations.
-  const rollbackObjects = () => removeObjects([...movedPaths, ...sessionPaths])
-  if (attachments.length > 0) {
-    const storage = createAdminClient().storage.from(CHANGE_REQUESTS_BUCKET)
-    for (const attachment of attachments) {
-      const { error } = await storage.move(attachment.pendingPath, attachment.storagePath)
-      if (error) {
-        log.error('change_request.attachment_move_failed', { error, requestId })
-        await rollbackObjects()
-        return failure
-      }
-      movedPaths.push(attachment.storagePath)
-    }
-  }
-
-  // 6. Insert the request as the signed-in admin (RLS enforces requester + status),
-  //    as 'submitting': not claimable until step 8 flips it to 'queued'.
+  // 5. Insert the request first, as the signed-in admin (RLS enforces requester
+  //    + status), as 'submitting': not claimable until step 8 flips it to
+  //    'queued'. The row must exist before any object lands under
+  //    `requests/<id>/`, because the worker's orphan sweep deletes objects there
+  //    that have no request row (a move keeps the upload's original created_at).
   const { error: insertError } = await supabase.from('change_requests').insert({
     id: requestId,
     requester_id: user.id,
@@ -391,17 +377,20 @@ async function createChangeRequestImpl(
 
   if (insertError) {
     log.error('change_request.create_failed', { error: insertError })
-    await rollbackObjects()
+    await discardPending()
     return { success: false, message: 'Failed to submit the change request' }
   }
 
-  // 7. Record file rows with the service role (no user-facing insert policy)
   const admin = createAdminClient()
   const uncertain: ActionState = {
     success: false,
     message:
       'We could not confirm whether your request was submitted. It may still be processing; check Website Requests before submitting it again.',
   }
+
+  const movedPaths: string[] = []
+  // Removing keys that no longer exist is a no-op, so clear both locations.
+  const rollbackObjects = () => removeObjects([...movedPaths, ...sessionPaths])
 
   // Delete the row only while it is still 'submitting', and remove its files
   // only once that delete is confirmed, so a request that was queued (or
@@ -425,6 +414,20 @@ async function createChangeRequestImpl(
     return 'deleted'
   }
 
+  // 6. Move verified uploads into the request's folder
+  if (attachments.length > 0) {
+    const storage = admin.storage.from(CHANGE_REQUESTS_BUCKET)
+    for (const attachment of attachments) {
+      const { error } = await storage.move(attachment.pendingPath, attachment.storagePath)
+      if (error) {
+        log.error('change_request.attachment_move_failed', { error, requestId })
+        return (await rollbackRequest()) === 'deleted' ? failure : uncertain
+      }
+      movedPaths.push(attachment.storagePath)
+    }
+  }
+
+  // 7. Record file rows with the service role (no user-facing insert policy)
   if (attachments.length > 0) {
     const { error: filesError } = await admin.from('change_request_files').insert(
       attachments.map((attachment) => ({

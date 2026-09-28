@@ -146,7 +146,7 @@ describe('sweepOrphanFolders', () => {
 
   it('removes everything with a zero threshold', async () => {
     const w = world({ rows: {}, objects: { [A]: [obj(A, 'young.png', now.toISOString())] } })
-    await sweepOrphanFolders(w.deps, now, 0)
+    await sweepOrphanFolders(w.deps, now, { minAgeMs: 0 })
     expect(w.objects.get(A)).toEqual([])
   })
 
@@ -158,7 +158,7 @@ describe('sweepOrphanFolders', () => {
       return list(prefix)
     })
     const warn = vi.fn()
-    const result = await sweepOrphanFolders(w.deps, now, undefined, undefined, warn)
+    const result = await sweepOrphanFolders(w.deps, now, { warn })
     expect(w.objects.get(A)).toHaveLength(1)
     expect(w.objects.get(B)).toEqual([])
     expect(result).toMatchObject({ orphanFolders: 2, foldersProcessed: 1, foldersSkipped: 1 })
@@ -194,9 +194,66 @@ describe('sweepOrphanFolders', () => {
         [C]: [obj(C, 'x')],
       },
     })
-    const result = await sweepOrphanFolders(w.deps, now, undefined, 2)
+    const result = await sweepOrphanFolders(w.deps, now, { maxFolders: 2 })
     expect(result.orphanFolders).toBe(2)
     expect(w.objects.get('not-a-uuid')).toHaveLength(1)
     expect(w.objects.get(C)).toHaveLength(1)
+  })
+
+  it('re-checks ownership right before removing and skips a folder that gained a row', async () => {
+    const w = world({ rows: {}, objects: { [A]: [obj(A, 'x.png')] } })
+    // The web action inserts the row after the first lookup but before removal.
+    w.deps.listObjects = vi.fn(async (prefix: string) => {
+      w.rows.set(A, 'submitting')
+      return w.objects.get(prefix.replace('requests/', '')) ?? []
+    })
+    const result = await sweepOrphanFolders(w.deps, now)
+    expect(w.deps.removeObjects).not.toHaveBeenCalled()
+    expect(w.objects.get(A)).toHaveLength(1)
+    expect(w.deps.existingRequestIds).toHaveBeenLastCalledWith([A])
+    expect(result).toMatchObject({ orphanFolders: 1, foldersClaimed: 1, objectsRemoved: 0 })
+  })
+
+  it('skips removal when the ownership re-check errors', async () => {
+    const w = world({ rows: {}, objects: { [A]: [obj(A, 'x.png')] } })
+    let calls = 0
+    w.deps.existingRequestIds = vi.fn(async () => {
+      calls++
+      if (calls > 1) throw new Error('db down')
+      return new Set<string>()
+    })
+    const result = await sweepOrphanFolders(w.deps, now)
+    expect(w.deps.removeObjects).not.toHaveBeenCalled()
+    expect(result).toMatchObject({ orphanFolders: 1, foldersSkipped: 1, objectsRemoved: 0 })
+  })
+
+  it('does not starve: 50 uncleanable orphans ahead of a real one', async () => {
+    const uuid = (n: number) => `${n.toString(16).padStart(8, '0')}-0000-4000-8000-000000000000`
+    const objects: Record<string, StoredObject[]> = {}
+    // 50 stuck folders sort first: their objects have no timestamp and are never removed.
+    for (let n = 1; n <= 50; n++) objects[uuid(n)] = [obj(uuid(n), 'x.png', null)]
+    const target = uuid(51)
+    objects[target] = [obj(target, 'x.png')]
+    const w = world({ rows: {}, objects })
+    const state = { cursor: 0 }
+
+    const first = await sweepOrphanFolders(w.deps, now, { state, pageSize: 20 })
+    expect(first).toMatchObject({ orphanFolders: 50, objectsRemoved: 0, nextCursor: 50 })
+    expect(w.objects.get(target)).toHaveLength(1)
+
+    const second = await sweepOrphanFolders(w.deps, now, { state, pageSize: 20 })
+    expect(second).toMatchObject({ objectsRemoved: 1, nextCursor: 0 })
+    expect(w.objects.get(target)).toEqual([])
+
+    // Wraps around to the start on the following cycle.
+    const third = await sweepOrphanFolders(w.deps, now, { state, pageSize: 20 })
+    expect(third.orphanFolders).toBe(50)
+  })
+
+  it('restarts from 0 when the cursor points past the end', async () => {
+    const w = world({ rows: {}, objects: { [A]: [obj(A, 'x.png')] } })
+    const state = { cursor: 500 }
+    const result = await sweepOrphanFolders(w.deps, now, { state })
+    expect(result).toMatchObject({ orphanFolders: 1, objectsRemoved: 1, nextCursor: 0 })
   })
 })
