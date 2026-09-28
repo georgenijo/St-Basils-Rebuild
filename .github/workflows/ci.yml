@@ -66,7 +66,7 @@ jobs:
 
       - name: Start isolated Supabase test stack
         run: |
-          npx supabase@2.115.0 start --exclude realtime,storage-api,imgproxy,postgres-meta,studio,mailpit,edge-runtime,logflare,vector,supavisor
+          npx supabase@2.115.0 start --exclude realtime,imgproxy,postgres-meta,studio,mailpit,edge-runtime,logflare,vector,supavisor
           npx supabase@2.115.0 db reset --local
 
           npx supabase@2.115.0 status --output json > "${RUNNER_TEMP}/supabase-status.json"
@@ -92,6 +92,7 @@ jobs:
           TURNSTILE_TEST_BYPASS_TOKEN: ci-turnstile-pass
           NEXT_PUBLIC_TURNSTILE_TEST_BYPASS_TOKEN: ci-turnstile-pass
           NEXT_PUBLIC_SITE_URL: http://127.0.0.1:3000
+          CHANGE_REQUEST_NOTIFY_EMAIL: change-requests@example.com
 
       - name: Upload Report
         if: failure()
