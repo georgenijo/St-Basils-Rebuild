@@ -4,7 +4,7 @@ export function FeastFlyer() {
   return (
     <section
       aria-labelledby="feast-heading"
-      className="flex items-center justify-center overflow-hidden bg-charcoal"
+      className="flex flex-col items-center justify-center overflow-hidden bg-charcoal"
     >
       <div className="sr-only">
         <h2 id="feast-heading">Feast of St. Baselious Yeldho Bava</h2>
@@ -44,6 +44,9 @@ export function FeastFlyer() {
           className="object-contain"
         />
       </div>
+      <p className="px-4 py-4 text-center text-base leading-relaxed text-cream-50 sm:px-6 lg:px-8">
+        All are welcome — October 3 &amp; 4, 2026 at St. Basil&apos;s, 73 Ellis Street, Newton.
+      </p>
     </section>
   )
 }
