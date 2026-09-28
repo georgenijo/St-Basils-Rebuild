@@ -77,6 +77,11 @@ SIGTERM stops claiming, kills the running child process, and requeues the
 current request (or `needs_attention` after `MAX_ATTEMPTS`). Claims left in
 `in_progress`/`verifying` by this `WORKER_ID` for longer than
 `STALE_CLAIM_MINUTES` are requeued the same way. Logs are JSON lines on stdout.
+Each maintenance cycle also deletes `submitting` rows older than 1 h (row first,
+conditionally on still being `submitting`, then its objects) and sweeps
+`requests/<uuid>/` Storage folders with no request row, removing objects older
+than `ORPHAN_MIN_AGE_MINUTES` (max 50 folders per cycle; any listing/query
+error skips the folder until the next cycle).
 The worker only ever claims `queued` requests; `submitting` rows (still being
 written by the admin UI) are left alone.
 
@@ -129,6 +134,7 @@ written by the admin UI) are left alone.
 | `POLL_INTERVAL_MS`                                     | no              | Claim poll, default 15000                                                                                                                                                                             |
 | `PR_SYNC_INTERVAL_MS`                                  | no              | PR sync + stale recovery, default 5 min                                                                                                                                                               |
 | `STALE_CLAIM_MINUTES` / `MAX_ATTEMPTS`                 | no              | Default 90 / 3                                                                                                                                                                                        |
+| `ORPHAN_MIN_AGE_MINUTES`                               | no              | Orphan Storage sweep only deletes objects older than this (default 30; 0 for testing)                                                                                                                 |
 | `PREVIEW_TIMEOUT_MS` / `PREVIEW_POLL_MS`               | no              | Default 15 min / 20 s                                                                                                                                                                                 |
 | `CHECK_TIMEOUT_MS` / `NPM_CI_TIMEOUT_MS`               | no              | Default 10 min / 15 min                                                                                                                                                                               |
 | `MAX_DIFF_LINES`                                       | no              | Default 800 (binary files excluded)                                                                                                                                                                   |

@@ -1,7 +1,7 @@
 import { loadConfig, secretValues, type Config } from './config'
-import { cleanupAbandonedSubmissions } from './abandoned'
+import { cleanupAbandonedSubmissions, sweepOrphanFolders } from './abandoned'
 import {
-  abandonedDeps,
+  cleanupDeps,
   claimNext,
   createDb,
   listByStatus,
@@ -95,18 +95,21 @@ export async function syncPullRequests(db: Db, gh: GitHub): Promise<void> {
   }
 }
 
-export async function recoverAbandonedSubmissions(db: Db): Promise<void> {
-  const result = await cleanupAbandonedSubmissions(
-    abandonedDeps(db),
+export async function cleanupStorage(db: Db, config: Config): Promise<void> {
+  const deps = cleanupDeps(db)
+  const warn = (msg: string, fields: Record<string, unknown>) => log.warn(msg, fields)
+  const abandoned = await cleanupAbandonedSubmissions(deps, new Date(), undefined, warn)
+  if (abandoned.found > 0) log.info('abandoned submissions cleaned up', { ...abandoned })
+  const orphans = await sweepOrphanFolders(
+    deps,
     new Date(),
+    config.orphanMinAgeMinutes * 60_000,
     undefined,
-    (id, error) =>
-      log.warn('abandoned submission skipped; retrying next cycle', {
-        requestId: id,
-        error: String(error),
-      })
+    warn
   )
-  if (result.found > 0) log.info('abandoned submissions cleaned up', { ...result })
+  if (orphans.orphanFolders > 0 || orphans.foldersSkipped > 0) {
+    log.info('orphan storage sweep', { ...orphans })
+  }
 }
 
 async function main(): Promise<void> {
@@ -161,8 +164,8 @@ async function main(): Promise<void> {
         log.error('stale recovery failed', { error })
       )
       await syncPullRequests(db, gh).catch((error) => log.error('pr sync failed', { error }))
-      await recoverAbandonedSubmissions(db).catch((error) =>
-        log.error('abandoned submission cleanup failed', { error })
+      await cleanupStorage(db, config).catch((error) =>
+        log.error('storage cleanup failed', { error })
       )
     }
 

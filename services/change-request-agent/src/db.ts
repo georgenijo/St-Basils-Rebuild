@@ -1,6 +1,6 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 
-import type { AbandonedDeps } from './abandoned'
+import type { CleanupDeps, StoredObject } from './abandoned'
 import type { Config } from './config'
 import { log } from './log'
 import type {
@@ -200,9 +200,9 @@ export async function deleteVerificationFiles(db: Db, requestId: string): Promis
   return paths.size
 }
 
-/** Every object path under `prefix` (Storage list is one level; folders have id null). */
-export async function listObjectsRecursive(db: Db, prefix: string): Promise<string[]> {
-  const out: string[] = []
+/** Every object under `prefix`, recursively (Storage list is one level; folders have id null). */
+export async function listObjectsRecursive(db: Db, prefix: string): Promise<StoredObject[]> {
+  const out: StoredObject[] = []
   const pending = [prefix.replace(/\/+$/, '')]
   while (pending.length > 0) {
     const dir = pending.pop() as string
@@ -212,7 +212,7 @@ export async function listObjectsRecursive(db: Db, prefix: string): Promise<stri
       const entries = data ?? []
       for (const entry of entries) {
         if (entry.id === null) pending.push(`${dir}/${entry.name}`)
-        else out.push(`${dir}/${entry.name}`)
+        else out.push({ path: `${dir}/${entry.name}`, createdAt: entry.created_at ?? null })
       }
       if (entries.length < 1000) break
     }
@@ -220,7 +220,7 @@ export async function listObjectsRecursive(db: Db, prefix: string): Promise<stri
   return out
 }
 
-export function abandonedDeps(db: Db): AbandonedDeps {
+export function cleanupDeps(db: Db): CleanupDeps {
   return {
     async listStale(cutoffIso) {
       const { data, error } = await db
@@ -232,21 +232,6 @@ export function abandonedDeps(db: Db): AbandonedDeps {
       if (error) throw new Error(`Listing abandoned submissions failed: ${error.message}`)
       return (data ?? []).map((row) => row.id as string)
     },
-    listObjects: (id) => listObjectsRecursive(db, `requests/${id}`),
-    async fileRowPaths(id) {
-      const { data, error } = await db
-        .from('change_request_files')
-        .select('storage_path')
-        .eq('request_id', id)
-      if (error) throw new Error(`Listing file rows for ${id} failed: ${error.message}`)
-      return (data ?? []).map((row) => row.storage_path as string)
-    },
-    async removeObjects(paths) {
-      for (let i = 0; i < paths.length; i += 500) {
-        const { error } = await db.storage.from(BUCKET).remove(paths.slice(i, i + 500))
-        if (error) throw new Error(`Removing objects failed: ${error.message}`)
-      }
-    },
     async deleteIfSubmitting(id) {
       const { data, error } = await db
         .from('change_requests')
@@ -256,6 +241,25 @@ export function abandonedDeps(db: Db): AbandonedDeps {
         .select('id')
       if (error) throw new Error(`Deleting abandoned submission ${id} failed: ${error.message}`)
       return (data ?? []).length > 0
+    },
+    listObjects: (prefix) => listObjectsRecursive(db, prefix),
+    async removeObjects(paths) {
+      for (let i = 0; i < paths.length; i += 500) {
+        const { error } = await db.storage.from(BUCKET).remove(paths.slice(i, i + 500))
+        if (error) throw new Error(`Removing objects failed: ${error.message}`)
+      }
+    },
+    async listRequestFolders(offset, limit) {
+      const { data, error } = await db.storage.from(BUCKET).list('requests', { limit, offset })
+      if (error) throw new Error(`Listing requests/ failed: ${error.message}`)
+      // Unfiltered so page length drives pagination; non-UUID names are ignored by the sweep.
+      return (data ?? []).map((entry) => entry.name)
+    },
+    async existingRequestIds(ids) {
+      if (ids.length === 0) return new Set()
+      const { data, error } = await db.from('change_requests').select('id').in('id', ids)
+      if (error) throw new Error(`Looking up request rows failed: ${error.message}`)
+      return new Set((data ?? []).map((row) => row.id as string))
     },
   }
 }

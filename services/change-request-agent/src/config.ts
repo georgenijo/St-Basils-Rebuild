@@ -8,6 +8,7 @@ export interface Config {
   pollIntervalMs: number
   prSyncIntervalMs: number
   staleClaimMinutes: number
+  orphanMinAgeMinutes: number
   maxAttempts: number
 
   githubRepo: string
@@ -62,6 +63,16 @@ function int(name: string, fallback: number): number {
   return parsed
 }
 
+function nonNegativeInt(name: string, fallback: number): number {
+  const raw = env(name)
+  if (!raw) return fallback
+  const parsed = Number.parseInt(raw, 10)
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    throw new Error(`Environment variable ${name} must be a non-negative integer`)
+  }
+  return parsed
+}
+
 function flag(name: string): boolean {
   const raw = env(name)?.toLowerCase()
   return raw === '1' || raw === 'true' || raw === 'yes'
@@ -81,6 +92,7 @@ export function loadConfig(options: { requireSupabase?: boolean } = {}): Config 
     pollIntervalMs: int('POLL_INTERVAL_MS', 15_000),
     prSyncIntervalMs: int('PR_SYNC_INTERVAL_MS', 5 * 60_000),
     staleClaimMinutes: int('STALE_CLAIM_MINUTES', 90),
+    orphanMinAgeMinutes: nonNegativeInt('ORPHAN_MIN_AGE_MINUTES', 30),
     maxAttempts: int('MAX_ATTEMPTS', 3),
 
     githubRepo,
