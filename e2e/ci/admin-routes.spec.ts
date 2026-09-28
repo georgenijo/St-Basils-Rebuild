@@ -44,6 +44,8 @@ const ADMIN_LIST_ROUTES = [
   '/admin/health',
   '/admin/logs',
   '/admin/payments',
+  '/admin/requests',
+  '/admin/requests/new',
   '/admin/settings',
   '/admin/shares',
   '/admin/subscribers',

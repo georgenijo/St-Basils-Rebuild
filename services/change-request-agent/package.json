@@ -1,0 +1,26 @@
+{
+  "name": "change-request-agent",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Worker that turns /admin/requests website change requests into verified pull requests",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "tsx src/worker.ts",
+    "once": "tsx src/worker.ts --once",
+    "verify": "tsx src/verify-cli.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "cd ../.. && npx vitest run services/change-request-agent"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.100.0",
+    "playwright": "1.58.2",
+    "tsx": "^4.23.15"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.1",
+    "typescript": "^5.8.3"
+  }
+}

@@ -22,6 +22,7 @@ const navigation: { label: string; items: NavItem[] }[] = [
       { label: 'Dashboard', href: '/admin/dashboard', icon: <DashboardIcon /> },
       { label: 'Events', href: '/admin/events', icon: <CalendarIcon /> },
       { label: 'Announcements', href: '/admin/announcements', icon: <MegaphoneIcon /> },
+      { label: 'Requests', href: '/admin/requests', icon: <RequestIcon /> },
     ],
   },
   {
@@ -141,6 +142,28 @@ function CalendarIcon() {
     >
       <rect x="3" y="4" width="18" height="18" rx="2" />
       <path d="M16 2v4M8 2v4M3 10h18" />
+    </svg>
+  )
+}
+
+function RequestIcon() {
+  return (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <rect x="3" y="4" width="18" height="14" rx="2" />
+      <path d="M3 8h18" />
+      <path d="M8 21h8" />
+      <path d="M12 18v3" />
+      <path d="M9.5 13.5l2 -2 3 3" />
     </svg>
   )
 }

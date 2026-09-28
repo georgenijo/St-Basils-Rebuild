@@ -36,6 +36,7 @@ export function AdminTopBar({ email, className }: AdminTopBarProps) {
 
 function getSectionName(pathname: string): string {
   if (pathname.startsWith('/admin/announcements')) return 'Announcements'
+  if (pathname.startsWith('/admin/requests')) return 'Website requests'
   if (pathname.startsWith('/admin/subscribers')) return 'Subscribers'
   if (pathname.startsWith('/admin/families')) return 'Families'
   if (pathname.startsWith('/admin/payments')) return 'Payments'
