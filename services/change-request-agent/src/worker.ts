@@ -10,6 +10,7 @@ import {
   type Db,
 } from './db'
 import { killAllChildren } from './exec'
+import { startHealthServer, type HealthState } from './health'
 import { createGitHub, type GitHub, resolveGithubToken } from './github'
 import { processRequest, type JobContext } from './job'
 import { log, registerRedactions } from './log'
@@ -148,6 +149,9 @@ async function main(): Promise<void> {
   process.on('SIGTERM', () => onSignal('SIGTERM'))
   process.on('SIGINT', () => onSignal('SIGINT'))
 
+  const health: HealthState = { startedAt: Date.now(), lastLoopAt: Date.now(), busy: false }
+  const healthServer = once ? null : startHealthServer(config.healthPort, health)
+
   log.info('worker started', {
     workerId: config.workerId,
     once,
@@ -159,6 +163,7 @@ async function main(): Promise<void> {
 
   let lastMaintenance = 0
   while (!shuttingDown) {
+    health.lastLoopAt = Date.now()
     if (Date.now() - lastMaintenance >= config.prSyncIntervalMs || lastMaintenance === 0) {
       lastMaintenance = Date.now()
       await recoverStaleClaims(db, config).catch((error) =>
@@ -177,7 +182,10 @@ async function main(): Promise<void> {
       log.error('claim failed', { error })
     }
     if (claimed) {
-      await processRequest(ctx, claimed)
+      health.busy = true
+      await processRequest(ctx, claimed).finally(() => {
+        health.busy = false
+      })
       if (once) break
       continue
     }
@@ -187,6 +195,7 @@ async function main(): Promise<void> {
     }
     await sleep(config.pollIntervalMs)
   }
+  healthServer?.close()
   log.info('worker stopped')
 }
 

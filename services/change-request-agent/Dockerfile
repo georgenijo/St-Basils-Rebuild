@@ -37,6 +37,7 @@ RUN groupadd --system worker \
 USER worker
 ENV HOME=/home/worker
 VOLUME ["/data"]
+EXPOSE 3000
 
 ENTRYPOINT ["/usr/bin/tini", "--"]
 CMD ["node", "--import", "tsx", "src/worker.ts"]

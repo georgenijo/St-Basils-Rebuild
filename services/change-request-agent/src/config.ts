@@ -9,6 +9,8 @@ export interface Config {
   prSyncIntervalMs: number
   staleClaimMinutes: number
   orphanMinAgeMinutes: number
+  /** Port for the HTTP health endpoint (Family Host health checks). */
+  healthPort: number
   maxAttempts: number
 
   githubRepo: string
@@ -93,6 +95,7 @@ export function loadConfig(options: { requireSupabase?: boolean } = {}): Config 
     prSyncIntervalMs: int('PR_SYNC_INTERVAL_MS', 5 * 60_000),
     staleClaimMinutes: int('STALE_CLAIM_MINUTES', 90),
     orphanMinAgeMinutes: nonNegativeInt('ORPHAN_MIN_AGE_MINUTES', 30),
+    healthPort: int('PORT', 3000),
     maxAttempts: int('MAX_ATTEMPTS', 3),
 
     githubRepo,
