@@ -397,15 +397,32 @@ async function createChangeRequestImpl(
 
   // 7. Record file rows with the service role (no user-facing insert policy)
   const admin = createAdminClient()
-  const rollbackRequest = async () => {
-    const { error: rollbackError } = await admin
+  const uncertain: ActionState = {
+    success: false,
+    message:
+      'We could not confirm whether your request was submitted. It may still be processing; check Website Requests before submitting it again.',
+  }
+
+  // Delete the row only while it is still 'submitting', and remove its files
+  // only once that delete is confirmed, so a request that was queued (or
+  // claimed) meanwhile is never torn down.
+  const rollbackRequest = async (): Promise<'deleted' | 'kept' | 'unknown'> => {
+    const { data: deleted, error: rollbackError } = await admin
       .from('change_requests')
       .delete()
       .eq('id', requestId)
+      .eq('status', 'submitting')
+      .select('id')
     if (rollbackError) {
       log.error('change_request.rollback_failed', { error: rollbackError, requestId })
+      return 'unknown'
+    }
+    if ((deleted?.length ?? 0) === 0) {
+      log.warn('change_request.rollback_skipped', { requestId })
+      return 'kept'
     }
     await rollbackObjects()
+    return 'deleted'
   }
 
   if (attachments.length > 0) {
@@ -422,12 +439,13 @@ async function createChangeRequestImpl(
 
     if (filesError) {
       log.error('change_request.attachment_record_failed', { error: filesError, requestId })
-      await rollbackRequest()
-      return failure
+      return (await rollbackRequest()) === 'deleted' ? failure : uncertain
     }
   }
 
-  // 8. Make it claimable: flip 'submitting' → 'queued' now that it is complete
+  // 8. Make it claimable: flip 'submitting' → 'queued' now that it is complete.
+  //    If the flip is not confirmed (error or lost response), re-read the row:
+  //    it may already be queued or even claimed by the worker.
   const { data: queued, error: queueError } = await admin
     .from('change_requests')
     .update({ status: 'queued' })
@@ -436,9 +454,31 @@ async function createChangeRequestImpl(
     .select('id')
 
   if (queueError || (queued?.length ?? 0) === 0) {
-    log.error('change_request.queue_failed', { error: queueError, requestId })
-    await rollbackRequest()
-    return failure
+    log.error('change_request.queue_unconfirmed', { error: queueError, requestId })
+    const { data: current, error: readError } = await admin
+      .from('change_requests')
+      .select('status')
+      .eq('id', requestId)
+      .maybeSingle()
+
+    if (readError) {
+      log.error('change_request.queue_state_unknown', { error: readError, requestId })
+      return uncertain
+    }
+    if (!current) {
+      // Row is gone (nothing to queue); its files would be orphaned.
+      await rollbackObjects()
+      return failure
+    }
+    if ((current as { status: string }).status === 'submitting') {
+      const outcome = await rollbackRequest()
+      return outcome === 'deleted' ? failure : uncertain
+    }
+    // Already queued or further along: the submission went through.
+    log.info('change_request.queue_confirmed_on_reread', {
+      requestId,
+      status: (current as { status: string }).status,
+    })
   }
 
   log.info('change_request.created', { requestId, attachments: attachments.length })

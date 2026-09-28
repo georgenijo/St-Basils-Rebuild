@@ -151,7 +151,9 @@ export async function sweepStalePendingUploads({
 
 /**
  * Best-effort removal of requests stuck in `submitting` (the submission died
- * between inserting the row and flipping it to `queued`). Their objects are
+ * between inserting the row and flipping it to `queued`). The worker runs the
+ * same sweep periodically; this one supplements it whenever an admin starts
+ * an upload. Their objects are
  * removed first (recorded file rows plus anything already moved into the
  * request folder), then the rows; files and messages cascade.
  */
@@ -181,16 +183,32 @@ export async function sweepAbandonedSubmissions({
   const storage = admin.storage.from(CHANGE_REQUESTS_BUCKET)
   let removed = 0
   for (const { id } of (requests ?? []) as { id: string }[]) {
-    const { data: fileRows } = await admin
+    // Build the full inventory first; if any part of it fails, skip this
+    // request so a later sweep retries instead of orphaning objects.
+    const { data: fileRows, error: filesError } = await admin
       .from('change_request_files')
       .select('storage_path')
       .eq('request_id', id)
     const folder = `requests/${id}/attachments`
-    const { data: objects } = await storage.list(folder, { limit: 100 })
+    const { data: objects, error: listError } = await storage.list(folder, { limit: 1000 })
+    if (filesError || listError || !fileRows || !objects) {
+      log.warn('change_request.submitting_sweep_skipped', {
+        requestId: id,
+        error: filesError ?? listError ?? 'missing inventory',
+      })
+      continue
+    }
+    if (objects.length >= 1000) {
+      log.warn('change_request.submitting_sweep_skipped', {
+        requestId: id,
+        error: 'too many objects',
+      })
+      continue
+    }
     const paths = Array.from(
       new Set([
-        ...((fileRows ?? []) as { storage_path: string }[]).map((row) => row.storage_path),
-        ...(objects ?? []).map((object) => `${folder}/${object.name}`),
+        ...(fileRows as { storage_path: string }[]).map((row) => row.storage_path),
+        ...objects.map((object) => `${folder}/${object.name}`),
       ])
     )
     if (paths.length > 0) {

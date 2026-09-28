@@ -36,3 +36,42 @@ describe('prTitle', () => {
     expect(long.endsWith('…')).toBe(true)
   })
 })
+
+describe('private key redaction', () => {
+  it('removes the whole PEM block including body and footer', () => {
+    const key = [
+      '-----BEGIN RSA PRIVATE KEY-----',
+      'MIIEowIBAAKCAQEAu1SU1LfVLPHCozMxH2Mo4lgOEePzNm0tRgeLezV6ffAt0gun',
+      'VTLw7onLRnrq0/IzW7yWR7QkrmBL7jTKEn5u+qKhbwKfBstIs+bMY2Zkp18gnTxK',
+      '-----END RSA PRIVATE KEY-----',
+    ].join('\n')
+    const out = redactPublic(`before\n${key}\nafter`)
+    expect(out).toBe('before\n[redacted]\nafter')
+    expect(out).not.toContain('MIIE')
+    expect(out).not.toContain('END RSA')
+  })
+
+  it('removes a header with no footer through the end of the text', () => {
+    const out = redactPublic('x -----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASC')
+    expect(out).toBe('x [redacted]')
+  })
+
+  it('removes several blocks without swallowing the text between them', () => {
+    const block = '-----BEGIN EC PRIVATE KEY-----\nabc\n-----END EC PRIVATE KEY-----'
+    expect(redactPublic(`${block} middle ${block}`)).toBe('[redacted] middle [redacted]')
+  })
+})
+
+describe('prTitle secret at the truncation boundary', () => {
+  it('redacts exact secret values before truncating', () => {
+    const secret = 'exact-secret-value-crossing-boundary-0123456789'
+    // "Change request: " is 16 chars; place the secret across position 100.
+    const title = `${'a'.repeat(70)} ${secret} tail`
+    const out = prTitle(title, [secret])
+    expect(out.length).toBeLessThanOrEqual(100)
+    expect(out).not.toContain(secret.slice(0, 10))
+    expect(out).toContain('[redacted]')
+    // Without the secret list, the truncated prefix would leak.
+    expect(prTitle(title)).toContain(secret.slice(0, 10))
+  })
+})

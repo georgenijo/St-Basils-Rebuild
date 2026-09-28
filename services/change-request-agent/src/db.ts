@@ -1,5 +1,6 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 
+import type { AbandonedDeps } from './abandoned'
 import type { Config } from './config'
 import { log } from './log'
 import type {
@@ -197,4 +198,64 @@ export async function deleteVerificationFiles(db: Db, requestId: string): Promis
     .eq('kind', 'verification')
   if (error) throw new Error(`Deleting verification file rows failed: ${error.message}`)
   return paths.size
+}
+
+/** Every object path under `prefix` (Storage list is one level; folders have id null). */
+export async function listObjectsRecursive(db: Db, prefix: string): Promise<string[]> {
+  const out: string[] = []
+  const pending = [prefix.replace(/\/+$/, '')]
+  while (pending.length > 0) {
+    const dir = pending.pop() as string
+    for (let offset = 0; ; offset += 1000) {
+      const { data, error } = await db.storage.from(BUCKET).list(dir, { limit: 1000, offset })
+      if (error) throw new Error(`Listing ${dir} failed: ${error.message}`)
+      const entries = data ?? []
+      for (const entry of entries) {
+        if (entry.id === null) pending.push(`${dir}/${entry.name}`)
+        else out.push(`${dir}/${entry.name}`)
+      }
+      if (entries.length < 1000) break
+    }
+  }
+  return out
+}
+
+export function abandonedDeps(db: Db): AbandonedDeps {
+  return {
+    async listStale(cutoffIso) {
+      const { data, error } = await db
+        .from('change_requests')
+        .select('id')
+        .eq('status', 'submitting')
+        .lt('created_at', cutoffIso)
+        .limit(100)
+      if (error) throw new Error(`Listing abandoned submissions failed: ${error.message}`)
+      return (data ?? []).map((row) => row.id as string)
+    },
+    listObjects: (id) => listObjectsRecursive(db, `requests/${id}`),
+    async fileRowPaths(id) {
+      const { data, error } = await db
+        .from('change_request_files')
+        .select('storage_path')
+        .eq('request_id', id)
+      if (error) throw new Error(`Listing file rows for ${id} failed: ${error.message}`)
+      return (data ?? []).map((row) => row.storage_path as string)
+    },
+    async removeObjects(paths) {
+      for (let i = 0; i < paths.length; i += 500) {
+        const { error } = await db.storage.from(BUCKET).remove(paths.slice(i, i + 500))
+        if (error) throw new Error(`Removing objects failed: ${error.message}`)
+      }
+    },
+    async deleteIfSubmitting(id) {
+      const { data, error } = await db
+        .from('change_requests')
+        .delete()
+        .eq('id', id)
+        .eq('status', 'submitting')
+        .select('id')
+      if (error) throw new Error(`Deleting abandoned submission ${id} failed: ${error.message}`)
+      return (data ?? []).length > 0
+    },
+  }
 }

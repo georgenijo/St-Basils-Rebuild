@@ -454,7 +454,7 @@ async function runPipeline(ctx: JobContext, claimed: ChangeRequest): Promise<voi
 
   // 6. Commit (trusted checkout) / PR. Commit messages are public.
   const commitMessage = redactPublic(
-    `${prTitle(request.title)}\n\nSubmitted via /admin/requests (request ${request.id}).`,
+    `${prTitle(request.title, ctx.secrets)}\n\nSubmitted via /admin/requests (request ${request.id}).`,
     ctx.secrets
   )
   const headSha = await commit(config, commitMessage)

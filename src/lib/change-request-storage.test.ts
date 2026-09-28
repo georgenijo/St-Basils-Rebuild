@@ -6,6 +6,8 @@ let submittingRows: { id: string }[] = []
 const submittingQuery: [string, unknown][] = []
 const fileRows = new Map<string, { storage_path: string }[]>()
 const deletes: [string, unknown][][] = []
+const fileRowErrors = new Set<string>()
+const listErrors = new Set<string>()
 
 function from(table: string) {
   if (table === 'change_requests') {
@@ -43,7 +45,11 @@ function from(table: string) {
   return {
     select: () => ({
       eq: (_column: string, id: string) =>
-        Promise.resolve({ data: fileRows.get(id) ?? [], error: null }),
+        Promise.resolve(
+          fileRowErrors.has(id)
+            ? { data: null, error: { message: 'db timeout' } }
+            : { data: fileRows.get(id) ?? [], error: null }
+        ),
     }),
   }
 }
@@ -54,7 +60,11 @@ vi.mock('@/lib/supabase/admin', () => ({
     storage: {
       from: () => ({
         list: (folder: string) =>
-          Promise.resolve({ data: listings.get(folder) ?? [], error: null }),
+          Promise.resolve(
+            listErrors.has(folder)
+              ? { data: null, error: { message: 'storage down' } }
+              : { data: listings.get(folder) ?? [], error: null }
+          ),
         remove: (paths: string[]) => {
           removed.push(paths)
           return Promise.resolve({ data: [], error: null })
@@ -81,6 +91,8 @@ beforeEach(() => {
   submittingQuery.length = 0
   fileRows.clear()
   deletes.length = 0
+  fileRowErrors.clear()
+  listErrors.clear()
 })
 
 describe('sweepStalePendingUploads', () => {
@@ -128,6 +140,28 @@ describe('sweepAbandonedSubmissions', () => {
     expect(deletes).toEqual([
       [
         ['id', 'r1'],
+        ['status', 'submitting'],
+      ],
+    ])
+  })
+
+  it.each([
+    ['the file-row query fails', () => fileRowErrors.add('r1')],
+    ['the Storage listing fails', () => listErrors.add('requests/r1/attachments')],
+  ])('skips a request (no removal, no delete) when %s', async (_label, breakInventory) => {
+    submittingRows = [{ id: 'r1' }, { id: 'r2' }]
+    fileRows.set('r1', [{ storage_path: 'requests/r1/attachments/a.png' }])
+    listings.set('requests/r1/attachments', [{ name: 'a.png', created_at: iso(2 * HOUR) }])
+    breakInventory()
+
+    const count = await sweepAbandonedSubmissions({ olderThanMs: HOUR, now: NOW })
+
+    // r1 is left for a later sweep; r2 (clean inventory, no files) is removed.
+    expect(count).toBe(1)
+    expect(removed).toEqual([])
+    expect(deletes).toEqual([
+      [
+        ['id', 'r2'],
         ['status', 'submitting'],
       ],
     ])

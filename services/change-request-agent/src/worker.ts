@@ -1,7 +1,16 @@
 import { loadConfig, secretValues, type Config } from './config'
-import { claimNext, createDb, listByStatus, postMessageSafe, updateIfStatus, type Db } from './db'
+import { cleanupAbandonedSubmissions } from './abandoned'
+import {
+  abandonedDeps,
+  claimNext,
+  createDb,
+  listByStatus,
+  postMessageSafe,
+  updateIfStatus,
+  type Db,
+} from './db'
 import { killAllChildren } from './exec'
-import { GitHub, resolveGithubToken } from './github'
+import { createGitHub, type GitHub, resolveGithubToken } from './github'
 import { processRequest, type JobContext } from './job'
 import { log, registerRedactions } from './log'
 import { staleClaimAction } from './stale'
@@ -86,6 +95,20 @@ export async function syncPullRequests(db: Db, gh: GitHub): Promise<void> {
   }
 }
 
+export async function recoverAbandonedSubmissions(db: Db): Promise<void> {
+  const result = await cleanupAbandonedSubmissions(
+    abandonedDeps(db),
+    new Date(),
+    undefined,
+    (id, error) =>
+      log.warn('abandoned submission skipped; retrying next cycle', {
+        requestId: id,
+        error: String(error),
+      })
+  )
+  if (result.found > 0) log.info('abandoned submissions cleaned up', { ...result })
+}
+
 async function main(): Promise<void> {
   const once = process.argv.includes('--once')
   const config = loadConfig()
@@ -96,12 +119,13 @@ async function main(): Promise<void> {
   }
 
   const db = createDb(config)
-  const gh = new GitHub(config.githubRepo, config.githubToken)
+  const secrets = secretValues(config)
+  const gh = createGitHub(config)
   const ctx: JobContext = {
     config,
     db,
     gh,
-    secrets: secretValues(config),
+    secrets,
     isShuttingDown: () => shuttingDown,
   }
 
@@ -137,6 +161,9 @@ async function main(): Promise<void> {
         log.error('stale recovery failed', { error })
       )
       await syncPullRequests(db, gh).catch((error) => log.error('pr sync failed', { error }))
+      await recoverAbandonedSubmissions(db).catch((error) =>
+        log.error('abandoned submission cleanup failed', { error })
+      )
     }
 
     let claimed = null

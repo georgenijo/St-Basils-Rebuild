@@ -204,22 +204,20 @@ export function unreferencedAttachments(
   )
 }
 
+/** Detection only (non-global); replacement patterns live in redact.ts. */
 export const SECRET_PATTERNS: RegExp[] = [
-  /sk-ant-[A-Za-z0-9_-]{16,}/g,
-  /gh[pousr]_[A-Za-z0-9]{30,}/g,
-  /github_pat_[A-Za-z0-9_]{30,}/g,
-  /re_[A-Za-z0-9]{8,}_[A-Za-z0-9]{16,}/g,
-  /sb_secret_[A-Za-z0-9_-]{16,}/g,
-  /-----BEGIN [A-Z ]*PRIVATE KEY-----/g,
+  /sk-ant-[A-Za-z0-9_-]{16,}/,
+  /gh[pousr]_[A-Za-z0-9]{30,}/,
+  /github_pat_[A-Za-z0-9_]{30,}/,
+  /re_[A-Za-z0-9]{8,}_[A-Za-z0-9]{16,}/,
+  /sb_secret_[A-Za-z0-9_-]{16,}/,
+  /-----BEGIN [A-Z ]*PRIVATE KEY-----/,
 ]
 
 /** True when the diff text contains a known secret value or a secret-shaped token. */
 export function containsSecret(diffText: string, secrets: string[]): boolean {
   if (secrets.some((secret) => secret.length >= 12 && diffText.includes(secret))) return true
-  return SECRET_PATTERNS.some((pattern) => {
-    pattern.lastIndex = 0
-    return pattern.test(diffText)
-  })
+  return SECRET_PATTERNS.some((pattern) => pattern.test(diffText))
 }
 
 export interface GuardrailInput {

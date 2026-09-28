@@ -12,7 +12,7 @@ export const CHANGE_REQUEST_STATUS_INFO: Record<ChangeRequestStatus, StatusInfo>
   submitting: {
     label: 'Submitting…',
     description:
-      'Still being submitted while attachments are saved. If this does not change in a minute, the submission failed and will be cleaned up automatically; submit it again.',
+      'Still being submitted while attachments are saved. If this does not change within a minute, the submission did not finish; submit it again. The unfinished request is removed automatically later.',
     tone: 'neutral',
   },
   queued: {

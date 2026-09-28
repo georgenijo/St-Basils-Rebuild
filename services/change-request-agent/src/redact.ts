@@ -1,4 +1,17 @@
-import { SECRET_PATTERNS } from './guardrails'
+/**
+ * Replacement patterns (global). Kept separate from the detection patterns in
+ * guardrails.ts: a detector only needs to see a PEM header, but redaction must
+ * remove the whole key block, including body and footer. A header without a
+ * footer (e.g. truncated text) is removed through the end of the text.
+ */
+const SECRET_REPLACEMENTS: RegExp[] = [
+  /-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?(?:-----END [A-Z ]*PRIVATE KEY-----|$)/g,
+  /sk-ant-[A-Za-z0-9_-]{16,}/g,
+  /gh[pousr]_[A-Za-z0-9]{30,}/g,
+  /github_pat_[A-Za-z0-9_]{30,}/g,
+  /re_[A-Za-z0-9]{8,}_[A-Za-z0-9]{16,}/g,
+  /sb_secret_[A-Za-z0-9_-]{16,}/g,
+]
 
 const EMAIL = /[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}/g
 // North American numbers (617-555-0123, (617) 555 0123, +1 617.555.0123) and
@@ -19,7 +32,7 @@ export function redactPublic(text: string, secrets: string[] = []): string {
   for (const secret of secrets) {
     if (secret.length >= 8) out = out.split(secret).join(REDACTED)
   }
-  for (const pattern of SECRET_PATTERNS) out = out.replace(pattern, REDACTED)
+  for (const pattern of SECRET_REPLACEMENTS) out = out.replace(pattern, REDACTED)
   return out.replace(EMAIL, REDACTED).replace(PHONE_INTL, REDACTED).replace(PHONE_NANP, REDACTED)
 }
 

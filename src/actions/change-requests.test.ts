@@ -28,6 +28,11 @@ let fileInsertError: { message: string } | null = null
 let moveFailOn: number | null = null
 let requeueMatches = true
 let queueError: { message: string } | null = null
+// Re-read after an unconfirmed queue flip, and the guarded rollback delete.
+let rereadRow: { status: string } | null = { status: 'submitting' }
+let rereadError: { message: string } | null = null
+let deleteMatches = true
+let deleteError: { message: string } | null = null
 
 function userFrom(table: string) {
   if (table === 'profiles') {
@@ -83,12 +88,26 @@ function adminFrom(table: string) {
       }
       return builder
     },
-    delete: () => ({
-      eq: (column: string, value: unknown) => {
-        adminDeletes.push({ table, filters: [[column, value]] })
-        return Promise.resolve({ error: null })
-      },
+    select: () => ({
+      eq: () => ({
+        maybeSingle: () => Promise.resolve({ data: rereadRow, error: rereadError }),
+      }),
     }),
+    delete: () => {
+      const filters: [string, unknown][] = []
+      const builder = {
+        eq: (column: string, value: unknown) => {
+          filters.push([column, value])
+          return builder
+        },
+        select: () => {
+          adminDeletes.push({ table, filters })
+          if (deleteError) return Promise.resolve({ data: null, error: deleteError })
+          return Promise.resolve({ data: deleteMatches ? [{ id: 'x' }] : [], error: null })
+        },
+      }
+      return builder
+    },
   }
 }
 
@@ -242,6 +261,10 @@ beforeEach(() => {
   moveFailOn = null
   requeueMatches = true
   queueError = null
+  rereadRow = { status: 'submitting' }
+  rereadError = null
+  deleteMatches = true
+  deleteError = null
   mockGetUser.mockResolvedValue({ data: { user: { id: USER_ID, email: 'admin@example.org' } } })
   mockSendEmail.mockResolvedValue({ data: {}, error: null })
   process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-role-key'
@@ -505,7 +528,15 @@ describe('createChangeRequest', () => {
     const result = await createChangeRequest(INITIAL, requestForm(upload))
     const requestId = (userInserts[0].row as { id: string }).id
     expect(result.success).toBe(false)
-    expect(adminDeletes).toEqual([{ table: 'change_requests', filters: [['id', requestId]] }])
+    expect(adminDeletes).toEqual([
+      {
+        table: 'change_requests',
+        filters: [
+          ['id', requestId],
+          ['status', 'submitting'],
+        ],
+      },
+    ])
     expect(removed).toEqual([[moves[0].to, ...upload.paths]])
     expect(mockSendEmail).not.toHaveBeenCalled()
     expect(mockRedirect).not.toHaveBeenCalled()
@@ -525,18 +556,82 @@ describe('createChangeRequest', () => {
     const result = await createChangeRequest(INITIAL, requestForm(upload))
     const requestId = (userInserts[0].row as { id: string }).id
     expect(result.message).toMatch(/Nothing was submitted/)
-    expect(adminDeletes).toEqual([{ table: 'change_requests', filters: [['id', requestId]] }])
+    expect(adminDeletes).toEqual([
+      {
+        table: 'change_requests',
+        filters: [
+          ['id', requestId],
+          ['status', 'submitting'],
+        ],
+      },
+    ])
     expect(removed).toEqual([[moves[0].to, ...upload.paths]])
     expect(mockSendEmail).not.toHaveBeenCalled()
     expect(mockRedirect).not.toHaveBeenCalled()
   })
 
-  it('rolls back when the request is no longer submitting at flip time', async () => {
+  it('rolls back when the flip matches no row and the re-read shows submitting', async () => {
     requeueMatches = false
     const result = await createChangeRequest(INITIAL, requestForm())
-    expect(result.success).toBe(false)
+    expect(result.message).toMatch(/Nothing was submitted/)
     expect(adminDeletes).toHaveLength(1)
     expect(mockSendEmail).not.toHaveBeenCalled()
+  })
+
+  it.each(['queued', 'in_progress'])(
+    'treats a flip whose response was lost as success when the row is already %s',
+    async (status) => {
+      queueError = { message: 'socket hang up' }
+      rereadRow = { status }
+      const upload = uploadedSession([{ name: 'a.png' }])
+      const url = await expectRedirect(createChangeRequest(INITIAL, requestForm(upload)))
+      expect(url).toMatch(/^\/admin\/requests\//)
+      expect(adminDeletes).toHaveLength(0)
+      expect(removed).toHaveLength(0)
+      expect(mockSendEmail).toHaveBeenCalledTimes(1)
+    }
+  )
+
+  it('leaves everything alone and says it may still be processing when the state is unknown', async () => {
+    queueError = { message: 'socket hang up' }
+    rereadError = { message: 'still down' }
+    const upload = uploadedSession([{ name: 'a.png' }])
+    const result = await createChangeRequest(INITIAL, requestForm(upload))
+    expect(result.success).toBe(false)
+    expect(result.message).toMatch(/may still be processing/)
+    expect(adminDeletes).toHaveLength(0)
+    expect(removed).toHaveLength(0)
+    expect(mockSendEmail).not.toHaveBeenCalled()
+    expect(mockRedirect).not.toHaveBeenCalled()
+  })
+
+  it('keeps the files when the guarded rollback delete removes no row', async () => {
+    queueError = { message: 'socket hang up' }
+    deleteMatches = false // flipped between the re-read and the delete
+    const upload = uploadedSession([{ name: 'a.png' }])
+    const result = await createChangeRequest(INITIAL, requestForm(upload))
+    expect(result.message).toMatch(/may still be processing/)
+    expect(adminDeletes).toHaveLength(1)
+    expect(removed).toHaveLength(0)
+  })
+
+  it('keeps the files when the rollback delete errors', async () => {
+    fileInsertError = { message: 'insert failed' }
+    deleteError = { message: 'db down' }
+    const upload = uploadedSession([{ name: 'a.png' }])
+    const result = await createChangeRequest(INITIAL, requestForm(upload))
+    expect(result.message).toMatch(/may still be processing/)
+    expect(removed).toHaveLength(0)
+  })
+
+  it('removes the files when the row is gone at re-read', async () => {
+    queueError = { message: 'socket hang up' }
+    rereadRow = null
+    const upload = uploadedSession([{ name: 'a.png' }])
+    const result = await createChangeRequest(INITIAL, requestForm(upload))
+    expect(result.message).toMatch(/Nothing was submitted/)
+    expect(adminDeletes).toHaveLength(0)
+    expect(removed).toEqual([[moves[0].to, ...upload.paths]])
   })
 
   it('sends the email only after the request is queued', async () => {

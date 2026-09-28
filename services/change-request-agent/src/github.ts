@@ -1,4 +1,4 @@
-import type { Config } from './config'
+import { secretValues, type Config } from './config'
 import { run } from './exec'
 import { log } from './log'
 import type { DeploymentStatus, DeploymentWithStatuses } from './preview'
@@ -133,4 +133,9 @@ export class GitHub {
       }))
     )
   }
+}
+
+/** The worker's GitHub client: every outbound text is redacted with the configured secrets. */
+export function createGitHub(config: Config): GitHub {
+  return new GitHub(config.githubRepo, config.githubToken, secretValues(config))
 }
