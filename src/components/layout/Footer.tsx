@@ -50,7 +50,7 @@ export function Footer() {
                     href="/contact"
                     className="inline-flex min-h-[44px] items-center transition-colors hover:text-cream-50"
                   >
-                    Contact Us
+                    Contact the parish office
                   </Link>
                 </li>
                 <li>
