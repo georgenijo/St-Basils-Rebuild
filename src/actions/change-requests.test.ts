@@ -166,6 +166,10 @@ vi.mock('@/lib/change-request-storage', () => ({
 
 const mockSendEmail = vi.fn()
 vi.mock('@/lib/email', () => ({ sendEmail: (...args: unknown[]) => mockSendEmail(...args) }))
+const mockTriggerAgent = vi.fn()
+vi.mock('@/lib/change-request-agent', () => ({
+  triggerChangeRequestAgent: (...args: unknown[]) => mockTriggerAgent(...args),
+}))
 
 const mockRedirect = vi.fn((url: string) => {
   throw new Error(`NEXT_REDIRECT:${url}`)
@@ -272,6 +276,7 @@ beforeEach(() => {
   deleteError = null
   mockGetUser.mockResolvedValue({ data: { user: { id: USER_ID, email: 'admin@example.org' } } })
   mockSendEmail.mockResolvedValue({ data: {}, error: null })
+  mockTriggerAgent.mockResolvedValue('not_configured')
   process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-role-key'
   process.env.CHANGE_REQUEST_NOTIFY_EMAIL = 'george@example.com'
   process.env.NEXT_PUBLIC_SITE_URL = 'https://stbasilsboston.org'
@@ -675,6 +680,56 @@ describe('createChangeRequest', () => {
     expect(mockSendEmail).toHaveBeenCalledTimes(1)
   })
 
+  it('wakes the agent only after the completed request is queued', async () => {
+    mockTriggerAgent.mockImplementation(async (id: string) => {
+      expect(adminUpdates).toContainEqual(expect.objectContaining({ values: { status: 'queued' } }))
+      expect(userInserts).toContainEqual(
+        expect.objectContaining({
+          table: 'change_requests',
+          row: expect.objectContaining({ id }),
+        })
+      )
+      return 'accepted'
+    })
+    const url = await expectRedirect(createChangeRequest(INITIAL, requestForm()))
+    expect(mockTriggerAgent).toHaveBeenCalledExactlyOnceWith(url.split('/').pop())
+    expect(
+      adminUpdates.every((update) => (update.values as { status: string }).status === 'queued')
+    ).toBe(true)
+  })
+
+  it('does not launch a request whose queue state is unknown or still submitting', async () => {
+    queueError = { message: 'connection lost' }
+    rereadError = { message: 'offline' }
+    await createChangeRequest(INITIAL, requestForm())
+    expect(mockTriggerAgent).not.toHaveBeenCalled()
+    rereadError = null
+    await createChangeRequest(INITIAL, requestForm())
+    expect(mockTriggerAgent).not.toHaveBeenCalled()
+  })
+
+  it('does not launch again when rereading shows an existing worker claimed it', async () => {
+    queueError = { message: 'response lost' }
+    rereadRow = { status: 'in_progress' }
+    await expectRedirect(createChangeRequest(INITIAL, requestForm()))
+    expect(mockTriggerAgent).not.toHaveBeenCalled()
+  })
+
+  it('preserves a queued request and records a private retry notice when launch is unconfirmed', async () => {
+    mockTriggerAgent.mockResolvedValue('unavailable')
+    await expectRedirect(createChangeRequest(INITIAL, requestForm()))
+    expect(adminDeletes).toHaveLength(0)
+    expect(adminInserts).toContainEqual(
+      expect.objectContaining({
+        table: 'change_request_messages',
+        row: expect.objectContaining({
+          author_kind: 'system',
+          body: expect.stringContaining('post a reply to retry'),
+        }),
+      })
+    )
+  })
+
   it('still succeeds when the notification email fails', async () => {
     mockSendEmail.mockRejectedValue(new Error('resend down'))
     await expectRedirect(createChangeRequest(INITIAL, requestForm()))
@@ -733,6 +788,15 @@ describe('addChangeRequestMessage', () => {
     ])
     expect(adminUpdates).toHaveLength(0)
     expect(adminInserts).toHaveLength(0)
+    expect(mockTriggerAgent).not.toHaveBeenCalled()
+  })
+
+  it('retries launch on a queued reply without resetting an existing claim', async () => {
+    requestRow = { id: REQUEST_ID, status: 'queued' }
+    const result = await addChangeRequestMessage(INITIAL, replyForm())
+    expect(result).toEqual({ success: true, message: 'Reply posted.' })
+    expect(mockTriggerAgent).toHaveBeenCalledExactlyOnceWith(REQUEST_ID)
+    expect(adminUpdates).toHaveLength(0)
   })
 
   it('requeues a needs_attention request and adds a system message', async () => {
@@ -756,6 +820,7 @@ describe('addChangeRequestMessage', () => {
       row: { request_id: REQUEST_ID, author_kind: 'system', author_id: null },
     })
     expect((adminInserts[0].row as { body: string }).body).toMatch(/Requeued/)
+    expect(mockTriggerAgent).toHaveBeenCalledExactlyOnceWith(REQUEST_ID)
   })
 
   it('does not add a system message if the status changed underneath the reply', async () => {
@@ -764,5 +829,6 @@ describe('addChangeRequestMessage', () => {
     const result = await addChangeRequestMessage(INITIAL, replyForm())
     expect(result).toEqual({ success: true, message: 'Reply posted.' })
     expect(adminInserts).toHaveLength(0)
+    expect(mockTriggerAgent).not.toHaveBeenCalled()
   })
 })

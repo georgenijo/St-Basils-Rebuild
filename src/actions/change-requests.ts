@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { after } from 'next/server'
 
 import { ChangeRequestNotification } from '@/emails/change-request-notification'
+import { triggerChangeRequestAgent } from '@/lib/change-request-agent'
 import { sendEmail } from '@/lib/email'
 import { logger } from '@/lib/logger'
 import { withLogging } from '@/lib/logger.server'
@@ -51,6 +52,22 @@ export type PrepareUploadsResult =
   | { success: false; message: string }
 
 const log = logger.child({ scope: 'change-requests' })
+
+async function wakeChangeRequestAgent(requestId: string): Promise<void> {
+  if ((await triggerChangeRequestAgent(requestId)) !== 'unavailable') return
+  // Dispatch failure must not roll back a saved request or change claim ownership.
+  try {
+    const { error } = await createAdminClient().from('change_request_messages').insert({
+      request_id: requestId,
+      author_kind: 'system',
+      author_id: null,
+      body: 'The request is saved, but the agent launch could not be confirmed. If it stays queued, post a reply to retry launching the agent.',
+    })
+    if (error) log.warn('change_request.dispatch_notice_failed', { requestId })
+  } catch {
+    log.warn('change_request.dispatch_notice_failed', { requestId })
+  }
+}
 
 interface VerifiedAttachment {
   pendingPath: string
@@ -449,6 +466,7 @@ async function createChangeRequestImpl(
   // 8. Make it claimable: flip 'submitting' → 'queued' now that it is complete.
   //    If the flip is not confirmed (error or lost response), re-read the row:
   //    it may already be queued or even claimed by the worker.
+  let shouldWakeAgent = true
   const { data: queued, error: queueError } = await admin
     .from('change_requests')
     .update({ status: 'queued' })
@@ -478,6 +496,7 @@ async function createChangeRequestImpl(
       return outcome === 'deleted' ? failure : uncertain
     }
     // Already queued or further along: the submission went through.
+    shouldWakeAgent = (current as { status: string }).status === 'queued'
     log.info('change_request.queue_confirmed_on_reread', {
       requestId,
       status: (current as { status: string }).status,
@@ -485,6 +504,7 @@ async function createChangeRequestImpl(
   }
 
   log.info('change_request.created', { requestId, attachments: attachments.length })
+  if (shouldWakeAgent) await wakeChangeRequestAgent(requestId)
 
   // 9. Notify (never fails the submission)
   await notifyNewRequest({
@@ -589,6 +609,10 @@ async function addChangeRequestMessageImpl(
       log.info('change_request.requeued', { requestId })
     }
   }
+
+  // A reply to an already queued request also retries an unconfirmed launch.
+  // The worker's atomic claim prevents duplicate processing if another run won.
+  if (requeued || request.status === 'queued') await wakeChangeRequestAgent(requestId)
 
   revalidatePath(`/admin/requests/${requestId}`)
   revalidatePath('/admin/requests')
