@@ -1,0 +1,96 @@
+name: Change Request Agent Image
+
+# Builds and publishes the public change-request-agent worker image to GHCR.
+# GitHub-hosted runners only (this repo is public; the worker's own build
+# must never run on self-hosted/family infrastructure). No secrets beyond
+# the default, repo-scoped GITHUB_TOKEN are used — the resulting image is
+# public-image-only per the managed-agents contract (no private base image,
+# no baked-in credentials, no cache or request artifacts).
+#
+# NOTE: GHCR packages default to private even when pushed from a public
+# repo. After the first successful run, the package's visibility needs a
+# one-time manual change (package settings -> Change visibility -> Public)
+# before Family Host can pull it anonymously. Not something this workflow
+# can do for itself.
+#
+# The pull_request trigger below gives PRs touching the service a build-only
+# validation pass (Dockerfile/build context still resolves) with no registry
+# login and no push: publishing stays restricted to a push on main, which a
+# pull_request event never is.
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'services/change-request-agent/**'
+      - '.github/workflows/change-request-agent-image.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'services/change-request-agent/**'
+      - '.github/workflows/change-request-agent-image.yml'
+  workflow_dispatch: {}
+
+concurrency:
+  group: change-request-agent-image-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  IMAGE_NAME: ghcr.io/${{ github.repository }}/change-request-agent
+
+jobs:
+  build-and-push:
+    name: Build and push
+    runs-on: ubuntu-latest
+    outputs:
+      digest: ${{ steps.push.outputs.digest }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      # Skipped entirely on pull_request runs: no registry credential is
+      # exchanged when we're only validating the build, never publishing it.
+      - name: Log in to GHCR
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/metadata-action@v5
+        id: meta
+        with:
+          images: ${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha,format=long
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - uses: docker/build-push-action@v6
+        id: push
+        with:
+          context: services/change-request-agent
+          push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # No cache-from/cache-to: keeps the published image free of any
+          # build-cache layer that could carry request/env artifacts across
+          # runs (see managed-agents-contract.md's public-image constraints).
+
+      - name: Summary
+        run: |
+          if [ "${{ github.event_name }}" != "push" ] || [ "${{ github.ref }}" != "refs/heads/main" ]; then
+            echo "### Build validated (not published)" >> "$GITHUB_STEP_SUMMARY"
+            echo "Build validation only: the image was not pushed to GHCR. Publishing only happens on a push to main." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "### Published image" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            echo "${IMAGE_NAME}@${{ steps.push.outputs.digest }}" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            echo "Use this exact digest reference as the managed-agent LAUNCH.image (public-image-only, no mutable tag)." >> "$GITHUB_STEP_SUMMARY"
+          fi

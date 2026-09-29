@@ -48,6 +48,8 @@ interface PageCapture {
   /** outerHTML of the picked element (truncated), for non-visual changes like alt text. */
   targetHtml: string | null
   png: Buffer
+  /** Finalized .webm path, only set when `recordDir` was passed to `capture`. */
+  videoPath: string | null
 }
 
 export function joinUrl(base: string, pagePath: string): string {
@@ -57,7 +59,7 @@ export function joinUrl(base: string, pagePath: string): string {
 async function screenshotAround(
   page: Page,
   selector: string | null
-): Promise<Omit<PageCapture, 'status' | 'errors' | 'targetHtml'>> {
+): Promise<Omit<PageCapture, 'status' | 'errors' | 'targetHtml' | 'videoPath'>> {
   const viewport = page.viewportSize() ?? { width: 1280, height: 900 }
   if (selector) {
     try {
@@ -120,11 +122,17 @@ async function capture(
   spec: ViewportSpec,
   url: string,
   selector: string | null,
-  bypass: { origin: string; secret: string } | null
+  bypass: { origin: string; secret: string } | null,
+  /** When set, records this capture to a private .webm under this directory. */
+  recordDir: string | null = null
 ): Promise<PageCapture> {
   // No extraHTTPHeaders: they would be sent to every third-party origin the
   // page loads. The bypass secret goes to the preview origin only.
-  const context = await browser.newContext({ ...spec.options, reducedMotion: 'reduce' })
+  const context = await browser.newContext({
+    ...spec.options,
+    reducedMotion: 'reduce',
+    ...(recordDir ? { recordVideo: { dir: recordDir } } : {}),
+  })
   try {
     if (bypass) await setVercelBypassCookie(context, bypass.origin, bypass.secret)
     const page = await context.newPage()
@@ -147,9 +155,14 @@ async function capture(
         .catch(() => null)
     }
     const shot = await screenshotAround(page, selector)
-    return { status, errors, targetHtml, ...shot }
-  } finally {
+    // The video file is only finalized once the context (owning the page) closes.
+    const video = page.video()
     await context.close()
+    const videoPath = video ? await video.path().catch(() => null) : null
+    return { status, errors, targetHtml, ...shot, videoPath }
+  } catch (error) {
+    await context.close().catch(() => {})
+    throw error
   }
 }
 
@@ -175,11 +188,23 @@ async function setVercelBypassCookie(
   if (status >= 400) throw new Error(`Vercel protection bypass request returned HTTP ${status}`)
 }
 
+export interface Recording {
+  label: string
+  file: string
+  webm: Buffer
+}
+
 export interface CaptureResult {
   shots: Shot[]
   checks: VerificationCheck[]
   /** Desktop outerHTML of the picked element before/after (null when not found). */
   targetHtml: { before: string | null; after: string | null } | null
+  /**
+   * Screen recording of the desktop preview load, private evidence alongside
+   * the screenshots (admin-only; never linked from the public PR). Null when
+   * the desktop preview capture did not produce a readable video file.
+   */
+  recording: Recording | null
 }
 
 export async function captureComparison(input: {
@@ -195,7 +220,9 @@ export async function captureComparison(input: {
   const shots: Shot[] = []
   const checks: VerificationCheck[] = []
   let targetHtml: CaptureResult['targetHtml'] = null
+  let recording: Recording | null = null
   const bypass = input.bypassSecret ? { origin: previewOrigin, secret: input.bypassSecret } : null
+  const videoDir = await fs.mkdtemp(path.join(os.tmpdir(), 'cr-verify-video-'))
   try {
     for (const spec of VIEWPORTS) {
       const before = await capture(
@@ -205,12 +232,17 @@ export async function captureComparison(input: {
         input.selector,
         null
       )
+      // Only the desktop "after" load is recorded: it is the one screen the
+      // admin needs a real walkthrough of, and recording every capture would
+      // multiply verification time and private storage for no extra signal.
+      const recordAfter = spec.name === 'desktop'
       const after = await capture(
         browser,
         spec,
         joinUrl(previewOrigin, input.pagePath),
         input.selector,
-        bypass
+        bypass,
+        recordAfter ? videoDir : null
       )
       shots.push({
         label: `before · ${spec.name}`,
@@ -220,6 +252,16 @@ export async function captureComparison(input: {
       shots.push({ label: `after · ${spec.name}`, file: `after-${spec.name}.png`, png: after.png })
       if (input.selector && spec.name === 'desktop') {
         targetHtml = { before: before.targetHtml, after: after.targetHtml }
+      }
+      if (recordAfter && after.videoPath) {
+        try {
+          const webm = await fs.readFile(after.videoPath)
+          recording = { label: 'after · desktop (recording)', file: 'after-desktop.webm', webm }
+        } catch (error) {
+          log.warn('preview recording could not be read; continuing without it', {
+            error: String(error),
+          })
+        }
       }
 
       checks.push({
@@ -247,13 +289,40 @@ export async function captureComparison(input: {
     }
   } finally {
     await browser.close()
+    await fs.rm(videoDir, { recursive: true, force: true })
   }
-  return { shots, checks, targetHtml }
+  return { shots, checks, targetHtml, recording }
 }
 
 /** Hard checks gate `ready_for_review`; advisory ones only inform the judge. */
 export function hardChecksPass(checks: VerificationCheck[]): boolean {
   return checks.filter((c) => !c.name.includes('advisory')).every((c) => c.ok)
+}
+
+/**
+ * The desktop screen recording is required private evidence, not a
+ * best-effort extra: this is a non-advisory check specifically so
+ * `hardChecksPass` (and therefore job.ts's `passed` / `markReadyForReview`
+ * gate) fails whenever it is missing or failed to upload. `captureComparison`
+ * already logs the underlying reason (video not produced, or unreadable);
+ * this only decides pass/fail and carries a public-safe (no raw error text —
+ * this check's `detail` reaches the public PR via buildVerdictComment)
+ * summary of which case happened.
+ */
+export function evidenceCheck(
+  recording: Recording | null,
+  uploadFailed: boolean
+): VerificationCheck {
+  const ok = recording !== null && !uploadFailed
+  return {
+    name: 'private evidence recording captured (required)',
+    ok,
+    detail: ok
+      ? undefined
+      : recording === null
+        ? 'The desktop preview pass was not recorded, or the recording could not be read; see the worker log.'
+        : 'The screen recording was captured but could not be uploaded to private storage; see the worker log.',
+  }
 }
 
 export async function judge(
@@ -305,6 +374,24 @@ export async function uploadShots(db: Db, requestId: string, shots: Shot[]): Pro
   }
 }
 
+/** Private evidence; never referenced from the public PR (see prbody.ts). */
+export async function uploadRecording(
+  db: Db,
+  requestId: string,
+  recording: Recording
+): Promise<void> {
+  const slug = labelSlug(recording.label)
+  await uploadVerificationShot(
+    db,
+    requestId,
+    `requests/${requestId}/verification/${slug}.webm`,
+    `${slug}.webm`,
+    recording.label,
+    recording.webm,
+    'video/webm'
+  )
+}
+
 export interface VerifyInput {
   config: Config
   db: Db
@@ -319,7 +406,7 @@ export interface VerifyInput {
 /** Screenshots + checks + upload + judge. Returns the verification record. */
 export async function verifyPreview(input: VerifyInput): Promise<VerificationResult> {
   const { config, request } = input
-  const { shots, checks, targetHtml } = await captureComparison({
+  const { shots, checks, targetHtml, recording } = await captureComparison({
     baselineUrl: config.baselineUrl,
     previewUrl: input.previewUrl,
     pagePath: request.page_path,
@@ -328,9 +415,28 @@ export async function verifyPreview(input: VerifyInput): Promise<VerificationRes
   })
   await uploadShots(input.db, request.id, shots)
   log.info('verification screenshots uploaded', { requestId: request.id, count: shots.length })
+  let uploadFailed = false
+  if (recording) {
+    try {
+      await uploadRecording(input.db, request.id, recording)
+      log.info('verification recording uploaded', { requestId: request.id })
+    } catch (error) {
+      uploadFailed = true
+      // This is required private evidence (see evidenceCheck below), so a
+      // failure here does end up gating the verdict — but the raw error is
+      // only ever logged, never stored or posted anywhere the public PR or
+      // an admin-visible check `detail` can echo it.
+      log.warn('verification recording upload failed; treating as missing required evidence', {
+        error: String(error),
+      })
+    }
+  } else {
+    log.warn('no verification recording produced; treating as missing required evidence')
+  }
+  const allChecks = [...checks, evidenceCheck(recording, uploadFailed)]
   let verdict: { verdict: VerificationResult['verdict']; summary: string }
   try {
-    verdict = await judge(config, { ...input, shots, checks, targetHtml })
+    verdict = await judge(config, { ...input, shots, checks: allChecks, targetHtml })
   } catch (error) {
     verdict = {
       verdict: 'unsure',
@@ -340,7 +446,7 @@ export async function verifyPreview(input: VerifyInput): Promise<VerificationRes
   return {
     verdict: verdict.verdict,
     summary: verdict.summary,
-    checks,
+    checks: allChecks,
     commit_sha: input.commitSha,
   }
 }

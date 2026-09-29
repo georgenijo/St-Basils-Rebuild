@@ -43,6 +43,46 @@ jobs:
 
       - run: npm test
 
+  service-change-request-agent:
+    name: Change Request Agent Service
+    runs-on: ubuntu-latest
+
+    # The change-request-agent service (services/change-request-agent/) is a
+    # separate Node project with its own package-lock.json and tsconfig.json,
+    # deliberately not a root npm workspace. Root's `unit-tests` job above
+    # already sweeps its test files in via vitest.config.ts's glob include,
+    # but that only validates them against whatever versions root's own
+    # lockfile happens to hoist, and never runs the service's own `typecheck`
+    # script (a distinct tsconfig from root's Next.js config). This job closes
+    # both gaps: it installs the service's OWN locked dependency graph, which
+    # Node's module resolution then prefers over root's for any file under
+    # that directory, and it runs the service's own typecheck.
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            services/change-request-agent/package-lock.json
+
+      # Needed even though we're testing the service: its own "test" script
+      # has no vitest devDependency of its own and shells out to root's.
+      - run: npm ci
+
+      - name: Install the service's own locked dependencies
+        working-directory: services/change-request-agent
+        run: npm ci
+
+      - name: Typecheck the service (its own tsconfig.json)
+        working-directory: services/change-request-agent
+        run: npm run typecheck
+
+      - name: Test the service against its own locked dependencies
+        run: npx vitest run services/change-request-agent
+
   flow-tests:
     name: Browser Flow Tests
     needs: validate

@@ -1,5 +1,6 @@
 import { loadConfig, secretValues, type Config } from './config'
 import { cleanupAbandonedSubmissions, sweepOrphanFolders, type SweepState } from './abandoned'
+import { startCredentialRefresh, type CredentialRefreshHandle } from './credential-refresh'
 import {
   cleanupDeps,
   claimNext,
@@ -155,37 +156,64 @@ async function main(): Promise<void> {
     repo: config.githubRepo,
     workDir: config.workDir,
     model: config.claudeModel,
+    fhRunId: config.fhRunId,
+    fhAgentId: config.fhAgentId,
   })
 
-  let lastMaintenance = 0
-  while (!shuttingDown) {
-    if (Date.now() - lastMaintenance >= config.prSyncIntervalMs || lastMaintenance === 0) {
-      lastMaintenance = Date.now()
-      await recoverStaleClaims(db, config).catch((error) =>
-        log.error('stale recovery failed', { error })
-      )
-      await syncPullRequests(db, gh).catch((error) => log.error('pr sync failed', { error }))
-      await cleanupStorage(db, config).catch((error) =>
-        log.error('storage cleanup failed', { error })
-      )
-    }
+  // Long single-repo runs (Family Host managed agents) can outlive the
+  // GITHUB_TOKEN minted at claim time; only set up when the platform gave us
+  // a refresh endpoint (FH_CREDENTIAL_URL/FH_RUN_CREDENTIAL — see
+  // managed-agents-contract.md). Off in every other deployment mode.
+  let credentialRefresh: CredentialRefreshHandle | null = null
+  if (config.fhCredentialUrl && config.fhRunCredential) {
+    credentialRefresh = startCredentialRefresh({
+      url: config.fhCredentialUrl,
+      runCredential: config.fhRunCredential,
+      intervalMs: config.credentialRefreshIntervalMs,
+      expectedRepository: config.githubRepo,
+      onRefreshed: (token) => {
+        config.githubToken = token
+        gh.setToken(token)
+      },
+    })
+    log.info('github credential refresh enabled', {
+      intervalMs: config.credentialRefreshIntervalMs,
+    })
+  }
 
-    let claimed = null
-    try {
-      claimed = await claimNext(db, config.workerId)
-    } catch (error) {
-      log.error('claim failed', { error })
+  try {
+    let lastMaintenance = 0
+    while (!shuttingDown) {
+      if (Date.now() - lastMaintenance >= config.prSyncIntervalMs || lastMaintenance === 0) {
+        lastMaintenance = Date.now()
+        await recoverStaleClaims(db, config).catch((error) =>
+          log.error('stale recovery failed', { error })
+        )
+        await syncPullRequests(db, gh).catch((error) => log.error('pr sync failed', { error }))
+        await cleanupStorage(db, config).catch((error) =>
+          log.error('storage cleanup failed', { error })
+        )
+      }
+
+      let claimed = null
+      try {
+        claimed = await claimNext(db, config.workerId)
+      } catch (error) {
+        log.error('claim failed', { error })
+      }
+      if (claimed) {
+        await processRequest(ctx, claimed)
+        if (once) break
+        continue
+      }
+      if (once) {
+        log.info('no queued requests')
+        break
+      }
+      await sleep(config.pollIntervalMs)
     }
-    if (claimed) {
-      await processRequest(ctx, claimed)
-      if (once) break
-      continue
-    }
-    if (once) {
-      log.info('no queued requests')
-      break
-    }
-    await sleep(config.pollIntervalMs)
+  } finally {
+    credentialRefresh?.stop()
   }
   log.info('worker stopped')
 }

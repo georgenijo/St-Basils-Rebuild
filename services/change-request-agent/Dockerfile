@@ -1,6 +1,10 @@
-# change-request-agent — Family Host (Coolify) image.
+# change-request-agent — public image for Family Host managed agents.
 # Build context: this directory (services/change-request-agent).
-# Persistent volume: /data (the website clone lives in /data/repo).
+# /data is job-owned scratch, not guaranteed to persist between runs (see
+# managed-agents-contract.md); the same image also runs on a Coolify
+# deployment with a persistent /data volume when argv omits --once.
+# The default is one-shot. NODE_OPTIONS carries the tsx loader so it survives
+# a LAUNCH.argv override, which fully replaces CMD rather than appending to it.
 
 ARG NODE_VERSION=22
 FROM node:${NODE_VERSION}-bookworm-slim
@@ -9,6 +13,7 @@ ARG CLAUDE_CODE_VERSION=2.1.283
 ENV DEBIAN_FRONTEND=noninteractive \
     PLAYWRIGHT_BROWSERS_PATH=/ms-playwright \
     WORK_DIR=/data/repo \
+    NODE_OPTIONS=--import=tsx \
     npm_config_update_notifier=false \
     DISABLE_AUTOUPDATER=1
 
@@ -39,4 +44,6 @@ ENV HOME=/home/worker
 VOLUME ["/data"]
 
 ENTRYPOINT ["/usr/bin/tini", "--"]
-CMD ["node", "--import", "tsx", "src/worker.ts"]
+# A managed-agent LAUNCH sets argv to exactly this (see managed-agents-contract.md);
+# this default also makes `docker run` do the right thing on scratch storage.
+CMD ["node", "src/worker.ts", "--once"]

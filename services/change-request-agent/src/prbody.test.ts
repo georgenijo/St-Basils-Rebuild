@@ -6,61 +6,65 @@ import type { ChangeRequest } from './types'
 const request = {
   id: '3f2a9c1e-1234-4abc-9def-0123456789ab',
   requester_id: 'requester-uuid',
-  title: 'Update flyer',
+  title: 'Private title',
   description: 'PRIVATE: call Mary at 617-555-0123 or mary@example.com about the flyer',
-  page_path: '/',
-  target_selector: 'img',
+  page_path: '/private-page',
+  target_selector: '#private-selector',
 } as ChangeRequest
 
 describe('buildPrBody', () => {
   const body = buildPrBody({
     request,
     siteUrl: 'https://stbasilsboston.org',
-    agentSummary: 'Updated the flyer alt text. Contact mary@example.com or (617) 555-0123.',
+    agentSummary: 'PRIVATE_SUMMARY: internal discussion without any contact pattern.',
     changedFiles: ['src/components/features/FeastFlyer.tsx'],
     changedLines: 4,
-    attachmentNames: ['flyer.jpg'],
-    checksRan: ['lint', 'typecheck'],
-    repaired: false,
+    attachmentNames: ['private-attachment.jpg'],
     secrets: [],
   })
 
-  it('includes the admin link, page, selector, summary, files and checks', () => {
+  it('includes the authenticated admin link, public changed files and fixed checks', () => {
     expect(body).toContain('`3f2a9c1e`')
     expect(body).toContain(`https://stbasilsboston.org/admin/requests/${request.id}`)
-    expect(body).toContain('**Page:** `/`')
-    expect(body).toContain('**Target element:** `img`')
-    expect(body).toContain('Updated the flyer alt text.')
-    expect(body).toContain('`npm run lint` passed')
+    expect(body).toContain('All required CI jobs passed on this exact commit')
     expect(body).toContain('src/components/features/FeastFlyer.tsx')
-    expect(body).toContain('flyer.jpg')
-    expect(body).toContain(`Submitted via /admin/requests (request ${request.id})`)
   })
 
-  it('never includes the private description, requester identity, or contact details', () => {
-    expect(body).not.toContain('PRIVATE')
-    expect(body).not.toContain('Mary')
-    expect(body).not.toContain('requester-uuid')
-    expect(body).not.toContain('mary@example.com')
-    expect(body).not.toContain('555-0123')
-    expect(body).toContain('[redacted]')
+  it('omits all private metadata and generated prose, not just contact patterns', () => {
+    for (const value of [
+      'PRIVATE',
+      'Mary',
+      'requester-uuid',
+      'mary@example.com',
+      '555-0123',
+      request.title,
+      request.page_path,
+      request.target_selector!,
+      'private-attachment.jpg',
+    ]) {
+      expect(body).not.toContain(value)
+    }
   })
 })
 
 describe('buildVerdictComment', () => {
-  it('includes verdict, commit and checks', () => {
+  it('publishes only verdict, preview, commit and the private admin link', () => {
     const comment = buildVerdictComment(
       {
         verdict: 'pass',
-        summary: 'Looks right.',
-        checks: [{ name: 'preview responds (desktop)', ok: true, detail: 'HTTP 200' }],
+        summary: 'Private generated verification details.',
+        checks: [{ name: 'Private check name', ok: true, detail: 'Private browser output' }],
         commit_sha: 'abcdef1234567890',
       },
-      'https://x.vercel.app'
+      'https://x.vercel.app',
+      `https://stbasilsboston.org/admin/requests/${request.id}`
     )
     expect(comment).toContain('PASS')
     expect(comment).toContain('commit abcdef1')
-    expect(comment).toContain('- [x] preview responds (desktop) — HTTP 200')
+    expect(comment).toContain(`/admin/requests/${request.id}`)
+    expect(comment).not.toContain('Private generated')
+    expect(comment).not.toContain('Private check')
+    expect(comment).not.toContain('Private browser')
   })
 })
 

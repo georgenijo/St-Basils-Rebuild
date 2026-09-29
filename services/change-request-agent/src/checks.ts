@@ -7,6 +7,15 @@ import { log } from './log'
 
 const FORMATTABLE = /\.(tsx?|jsx?|mjs|cjs|css|json|md|mdx|html|ya?ml)$/i
 
+/**
+ * The only check the worker still runs locally: a trusted, deterministic
+ * formatting pass (never rejects, unlike lint/typecheck which need the full
+ * dependency graph and can disagree with what actually runs in CI). Lint,
+ * typecheck and build now run in CI against the exact pushed commit (see
+ * ci-status.ts and job.ts's waitForCi) instead of a second local copy of
+ * the same checks — this keeps the worker's own scratch environment out of
+ * the loop for anything that already has a dedicated CI job.
+ */
 export async function formatFiles(config: Config, files: string[]): Promise<void> {
   const targets = files.filter(
     (file) => FORMATTABLE.test(file) && existsSync(path.join(config.workDir, file))
@@ -17,37 +26,7 @@ export async function formatFiles(config: Config, files: string[]): Promise<void
     ['--write', '--ignore-unknown', '--log-level', 'warn', '--', ...targets],
     { cwd: config.workDir, env: childEnv(), timeoutMs: config.checkTimeoutMs }
   )
-  // A prettier syntax error is reported again (more usefully) by lint/typecheck.
+  // A prettier syntax error is reported again (more usefully) by CI's lint/typecheck.
   if (res.code !== 0)
     log.warn('prettier reported errors', { output: (res.stderr || res.stdout).slice(-2000) })
-}
-
-export interface CheckResult {
-  ok: boolean
-  /** Combined failure output (empty when ok). */
-  output: string
-  ran: string[]
-}
-
-export async function runChecks(config: Config): Promise<CheckResult> {
-  const failures: string[] = []
-  const ran: string[] = []
-  for (const script of ['lint', 'typecheck']) {
-    const started = Date.now()
-    const res = await run('npm', ['run', '--silent', script], {
-      cwd: config.workDir,
-      env: childEnv({ CI: '1' }),
-      timeoutMs: config.checkTimeoutMs,
-    })
-    ran.push(script)
-    const ok = res.code === 0 && !res.timedOut
-    log.info('check finished', { script, ok, durationMs: Date.now() - started })
-    if (!ok) {
-      const body = `${res.stdout}\n${res.stderr}`.trim()
-      failures.push(
-        `$ npm run ${script}${res.timedOut ? ' (timed out)' : ''}\n${body.slice(-8000)}`
-      )
-    }
-  }
-  return { ok: failures.length === 0, output: failures.join('\n\n'), ran }
 }

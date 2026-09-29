@@ -1,0 +1,67 @@
+name: Change Request Agent Maintenance Trigger
+
+# Closes the "bounded-trigger" gap documented in
+# services/change-request-agent/README.md ("Maintenance under a
+# bounded-trigger dispatch model"): a Family Host managed-agent run only does
+# its maintenance sweep (stale-claim recovery, PR sync, storage cleanup) once
+# at startup, not on an idle-period timer. This workflow periodically wakes a
+# run — via the same site-owned automation endpoint the admin UI already uses
+# (src/lib/change-request-agent.ts's triggerChangeRequestAgent) — purely so a
+# fresh run's startup maintenance happens on a bounded cadence even when no
+# new change request is submitted. It never touches a specific request: the
+# worker only ever reads its own claim queue (see worker.ts), so a maintenance
+# ping with no request_id still runs the same startup sweep before exiting
+# idle (`--once`, no queued request → exit).
+#
+# No new platform/scheduling architecture: this reuses the existing
+# FAMILY_HOST_AGENT_TRIGGER_TOKEN-authenticated endpoint the website already
+# calls (same token, provisioned the same way — see the Environment section
+# in services/change-request-agent/README.md). GitHub-hosted runner only.
+
+on:
+  schedule:
+    # Every 20 minutes, at an off-the-hour minute (avoids GitHub's documented
+    # top-of-hour scheduling congestion). Best-effort delivery only: GitHub
+    # does not guarantee schedules run exactly on time under load, and GitHub
+    # disables `schedule` triggers automatically after 60 days with no
+    # repository activity (push/PR) on the default branch — a long-quiet repo
+    # needs a manual workflow_dispatch (or any push) to re-arm it.
+    - cron: '7,27,47 * * * *'
+  workflow_dispatch: {}
+
+concurrency:
+  group: change-request-agent-maintenance
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  trigger:
+    name: Trigger maintenance run
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Ping the Family Host automation endpoint
+        env:
+          FAMILY_HOST_AGENT_TRIGGER_TOKEN: ${{ secrets.FAMILY_HOST_AGENT_TRIGGER_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "${FAMILY_HOST_AGENT_TRIGGER_TOKEN:-}" ]; then
+            echo "FAMILY_HOST_AGENT_TRIGGER_TOKEN is not set; skipping (see README provisioning note)." >&2
+            exit 0
+          fi
+          # -sS: quiet but still show curl's own errors. -o /dev/null: never
+          # log the response body (it can carry credential-shaped material,
+          # same rule as src/lib/change-request-agent.ts). --max-redirs 0:
+          # never follow a redirect with the bearer token attached.
+          # --max-time 8: bounded, matches the site trigger's own timeout.
+          status=$(curl -sS -o /dev/null -w '%{http_code}' \
+            --max-time 8 --max-redirs 0 \
+            -X POST 'https://family.georgenijo.com/api/automation/agents/run' \
+            -H "Authorization: Bearer ${FAMILY_HOST_AGENT_TRIGGER_TOKEN}" \
+            -H 'Content-Type: application/json' \
+            -d '{"input":{"reason":"scheduled-maintenance"}}')
+          echo "Trigger endpoint responded with HTTP ${status}."
+          if [ "$status" != "202" ]; then
+            echo "::warning::Maintenance trigger did not return 202 (got ${status}); a run may not have been queued. Not treated as a hard failure — see README's bounded-trigger caveat." >&2
+          fi
