@@ -13,7 +13,6 @@ ARG CLAUDE_CODE_VERSION=2.1.283
 ENV DEBIAN_FRONTEND=noninteractive \
     PLAYWRIGHT_BROWSERS_PATH=/ms-playwright \
     WORK_DIR=/data/repo \
-    NODE_OPTIONS=--import=tsx \
     npm_config_update_notifier=false \
     DISABLE_AUTOUPDATER=1
 
@@ -40,7 +39,9 @@ RUN groupadd --system worker \
  && mkdir -p /data \
  && chown -R worker:worker /data /home/worker
 USER worker
-ENV HOME=/home/worker
+# Enable the loader only after npm and Playwright installation have finished.
+ENV HOME=/home/worker \
+    NODE_OPTIONS=--import=tsx
 VOLUME ["/data"]
 
 ENTRYPOINT ["/usr/bin/tini", "--"]
