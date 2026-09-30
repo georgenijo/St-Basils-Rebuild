@@ -30,7 +30,10 @@ jobs:
         id: lighthouse
         uses: treosh/lighthouse-ci-action@v12
         with:
-          urls: ${{ steps.vercel.outputs.url }}?x-vercel-protection-bypass=${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+          # Never put the protection-bypass secret in the tested URL: Lighthouse
+          # records that URL in the uploaded public report and in the PR
+          # comment. Previews are not protected, so no bypass is needed.
+          urls: ${{ steps.vercel.outputs.url }}
           configPath: .github/lighthouse/lighthouserc.json
           uploadArtifacts: true
           temporaryPublicStorage: true
@@ -66,6 +69,8 @@ jobs:
               : 'Preview noindex expected';
 
             const reportUrl = Object.values(links)[0];
+            // Defence in depth: never echo a query string into a public comment.
+            const testedUrl = String(result.url).split(/[?#]/)[0];
 
             const body = [
               '## Lighthouse Results',
@@ -79,7 +84,7 @@ jobs:
               '',
               reportUrl ? `[Full Report](${reportUrl})` : '',
               '',
-              `*Tested: ${result.url}*`,
+              `*Tested: ${testedUrl}*`,
             ].join('\n');
 
             const { data: comments } = await github.rest.issues.listComments({
