@@ -17,6 +17,18 @@ export interface Config {
   githubToken: string | null
   workDir: string
 
+  /** Family Host managed-agent run/agent id, when launched that way (log correlation only). */
+  fhRunId: string | null
+  fhAgentId: string | null
+  /** Family Host per-run credential refresh (GITHUB_TOKEN rotation for long runs). Optional. */
+  fhCredentialUrl: string | null
+  fhRunCredential: string | null
+  credentialRefreshIntervalMs: number
+
+  ciCheckName: string
+  ciTimeoutMs: number
+  ciPollMs: number
+
   claudeBin: string
   claudeModel: string
   claudeTimeoutMs: number
@@ -80,7 +92,11 @@ function flag(name: string): boolean {
 
 export function loadConfig(options: { requireSupabase?: boolean } = {}): Config {
   const requireSupabase = options.requireSupabase ?? true
-  const githubRepo = env('GITHUB_REPO') ?? 'georgenijo/St-Basils-Rebuild'
+  // GITHUB_REPO is this worker's own historical setting; GITHUB_REPOSITORY is
+  // what a Family Host managed-agent launch sets when a repository is
+  // configured (see managed-agents-contract.md). Prefer the explicit one.
+  const githubRepo =
+    env('GITHUB_REPO') ?? env('GITHUB_REPOSITORY') ?? 'georgenijo/St-Basils-Rebuild'
   const configDir = env('CLAUDE_CONFIG_DIR')
 
   return {
@@ -100,6 +116,18 @@ export function loadConfig(options: { requireSupabase?: boolean } = {}): Config 
     baseBranch: env('BASE_BRANCH') ?? 'main',
     githubToken: env('GITHUB_TOKEN') ?? null,
     workDir: path.resolve(env('WORK_DIR') ?? '/data/repo'),
+
+    fhRunId: env('FH_RUN_ID') ?? null,
+    fhAgentId: env('FH_AGENT_ID') ?? null,
+    fhCredentialUrl: env('FH_CREDENTIAL_URL') ?? null,
+    fhRunCredential: env('FH_RUN_CREDENTIAL') ?? null,
+    // Runs can last 7200 seconds; refresh before the initial GitHub token
+    // expires and keep refreshing until the one-shot worker stops.
+    credentialRefreshIntervalMs: int('FH_CREDENTIAL_REFRESH_INTERVAL_MS', 40 * 60_000),
+
+    ciCheckName: env('CI_CHECK_NAME') ?? 'Validate',
+    ciTimeoutMs: int('CI_TIMEOUT_MS', 15 * 60_000),
+    ciPollMs: int('CI_POLL_MS', 20_000),
 
     claudeBin: env('CLAUDE_BIN') ?? 'claude',
     claudeModel: env('CLAUDE_MODEL') ?? 'claude-opus-5-5',
@@ -136,6 +164,7 @@ export function secretValues(config: Config): string[] {
     config.githubToken,
     config.resendApiKey,
     config.vercelBypassSecret,
+    config.fhRunCredential,
     env('ANTHROPIC_API_KEY'),
     env('ANTHROPIC_AUTH_TOKEN'),
     env('CLAUDE_CODE_OAUTH_TOKEN'),

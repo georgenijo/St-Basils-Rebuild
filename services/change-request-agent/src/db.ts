@@ -112,17 +112,25 @@ export async function downloadFile(db: Db, storagePath: string): Promise<Buffer>
   return Buffer.from(await data.arrayBuffer())
 }
 
+/**
+ * Upload one verification artifact (screenshot or, since content_type is
+ * caller-supplied, the private preview recording added alongside them) and
+ * record its file row. Both kinds stay `kind: 'verification'`: they are
+ * distinguished by content_type/label, not by a separate enum value, so no
+ * schema (CHECK constraint) change was needed to add recordings.
+ */
 export async function uploadVerificationShot(
   db: Db,
   requestId: string,
   storagePath: string,
   filename: string,
   label: string,
-  png: Buffer
+  data: Buffer,
+  contentType = 'image/png'
 ): Promise<void> {
   const { error: uploadError } = await db.storage
     .from(BUCKET)
-    .upload(storagePath, png, { contentType: 'image/png', upsert: true })
+    .upload(storagePath, data, { contentType, upsert: true })
   if (uploadError) throw new Error(`Uploading ${storagePath} failed: ${uploadError.message}`)
 
   // Re-runs overwrite the object; keep exactly one row per storage path.
@@ -138,8 +146,8 @@ export async function uploadVerificationShot(
     kind: 'verification',
     storage_path: storagePath,
     filename,
-    content_type: 'image/png',
-    size_bytes: png.length,
+    content_type: contentType,
+    size_bytes: data.length,
     label,
   })
   if (error) throw new Error(`Recording ${storagePath} failed: ${error.message}`)

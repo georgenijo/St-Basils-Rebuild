@@ -116,14 +116,14 @@ export function buildRepairPrompt(
   return `${originalPrompt}
 
 REPAIR ROUND
-You already made the change below (it is present in the working tree), but the website checks (ESLint and the TypeScript checker) failed. Fix the errors while keeping the same intent. Do not start over and do not revert the change unless it cannot be fixed.
+You already made the change below (it is present in the working tree), but the CI checks (Prettier format check, ESLint, the TypeScript checker, and the production build) failed on GitHub Actions for the pushed commit. Fix the errors while keeping the same intent. Do not start over and do not revert the change unless it cannot be fixed.
 
 Current diff:
 \`\`\`diff
 ${truncate(currentDiff, 30_000)}
 \`\`\`
 
-Check output:
+CI failure output:
 \`\`\`
 ${truncate(checkOutput, 12_000)}
 \`\`\`

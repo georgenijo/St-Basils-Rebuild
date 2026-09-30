@@ -5,6 +5,7 @@ import type { DeploymentStatus, DeploymentWithStatuses } from './preview'
 import { redactPublic, truncate } from './redact'
 
 const API = 'https://api.github.com'
+const GRAPHQL_API = 'https://api.github.com/graphql'
 
 /** GITHUB_TOKEN, or locally the token of the logged-in gh CLI. */
 export async function resolveGithubToken(config: Config): Promise<string | null> {
@@ -23,6 +24,9 @@ export async function resolveGithubToken(config: Config): Promise<string | null>
 }
 
 export class GitHub {
+  private token: string | null
+  private secrets: string[]
+
   /**
    * @param secrets worker secrets; every outbound title/body/comment is passed
    *   through redactPublic (secrets, tokens, emails, phone numbers) because the
@@ -30,9 +34,23 @@ export class GitHub {
    */
   constructor(
     private readonly repo: string,
-    private readonly token: string | null,
-    private readonly secrets: string[] = []
-  ) {}
+    token: string | null,
+    secrets: string[] = []
+  ) {
+    this.token = token
+    this.secrets = secrets
+  }
+
+  /**
+   * Apply a refreshed GITHUB_TOKEN mid-run (long single-repo runs, see
+   * credential-refresh.ts). The old token keeps being redacted (log.ts's
+   * `addRedactions` is additive and this appends to the local scrub list too);
+   * only the new token is used for subsequent requests.
+   */
+  setToken(token: string | null): void {
+    this.token = token
+    if (token && !this.secrets.includes(token)) this.secrets = [...this.secrets, token]
+  }
 
   private scrub(text: string, max: number): string {
     return truncate(redactPublic(text, this.secrets), max)
@@ -59,6 +77,58 @@ export class GitHub {
     return (text ? JSON.parse(text) : null) as T
   }
 
+  /**
+   * GitHub's GraphQL v4 API. Used only where REST has no equivalent field —
+   * today that is exactly `markPullRequestReadyForReview` (see
+   * `markReadyForReview` below): the REST "Update a pull request" endpoint
+   * does not accept a `draft` field, so there is no way to flip draft→ready
+   * over REST (this matches `gh pr ready`, which uses this same mutation).
+   */
+  private async graphql<T>(query: string, variables: Record<string, unknown>): Promise<T> {
+    const headers: Record<string, string> = {
+      Accept: 'application/vnd.github+json',
+      'User-Agent': 'st-basils-change-request-agent',
+      'Content-Type': 'application/json',
+    }
+    if (this.token) headers.Authorization = `Bearer ${this.token}`
+    const res = await fetch(GRAPHQL_API, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ query, variables }),
+      signal: AbortSignal.timeout(30_000),
+    })
+    const text = await res.text()
+    if (!res.ok) {
+      throw new Error(`GitHub GraphQL → ${res.status}: ${text.slice(0, 300)}`)
+    }
+    const parsed = (text ? JSON.parse(text) : {}) as { data?: T; errors?: unknown[] }
+    if (parsed.errors && parsed.errors.length > 0) {
+      throw new Error(`GitHub GraphQL errors: ${JSON.stringify(parsed.errors).slice(0, 300)}`)
+    }
+    return parsed.data as T
+  }
+
+  /** Like `request`, but returns the raw response body text instead of parsing JSON. */
+  private async requestText(method: string, path: string): Promise<string> {
+    const headers: Record<string, string> = {
+      Accept: 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28',
+      'User-Agent': 'st-basils-change-request-agent',
+    }
+    if (this.token) headers.Authorization = `Bearer ${this.token}`
+    const res = await fetch(`${API}${path}`, {
+      method,
+      headers,
+      redirect: 'follow',
+      signal: AbortSignal.timeout(30_000),
+    })
+    const text = await res.text()
+    if (!res.ok) {
+      throw new Error(`GitHub ${method} ${path} → ${res.status}: ${text.slice(0, 300)}`)
+    }
+    return text
+  }
+
   private get owner(): string {
     return this.repo.split('/')[0]
   }
@@ -73,6 +143,26 @@ export class GitHub {
     return pulls[0] ?? null
   }
 
+  /** Remove stale readiness before editing or pushing another revision. */
+  async markDraftForBranch(branch: string): Promise<void> {
+    const existing = await this.findOpenPullForBranch(branch)
+    if (!existing) return
+    const pr = await this.request<{ node_id: string; draft: boolean }>(
+      'GET',
+      `/repos/${this.repo}/pulls/${existing.number}`
+    )
+    if (pr.draft) return
+    await this.graphql(
+      `mutation($id: ID!) {
+        convertPullRequestToDraft(input: { pullRequestId: $id }) {
+          pullRequest { id isDraft }
+        }
+      }`,
+      { id: pr.node_id }
+    )
+  }
+
+  /** Open as draft, or update a PR already re-drafted at pipeline admission. */
   async openOrUpdatePull(input: {
     branch: string
     base: string
@@ -95,9 +185,35 @@ export class GitHub {
         body: this.scrub(input.body, 60_000),
         head: input.branch,
         base: input.base,
+        draft: true,
       }
     )
     return { ...pr, created: true }
+  }
+
+  /**
+   * Convert a draft PR to "ready for review". Only called after CI and the
+   * preview/verification steps all succeed (see job.ts); a job that fails
+   * any of those simply never calls this, so the PR stays draft for a human
+   * to look at — no separate "close/reopen" or status field needed. REST's
+   * "Update a pull request" endpoint has no `draft` field, so this goes
+   * through GraphQL's `markPullRequestReadyForReview` (same mechanism
+   * `gh pr ready` uses). A no-op if the PR is already not a draft.
+   */
+  async markReadyForReview(prNumber: number): Promise<void> {
+    const pr = await this.request<{ node_id: string; draft: boolean }>(
+      'GET',
+      `/repos/${this.repo}/pulls/${prNumber}`
+    )
+    if (!pr.draft) return
+    await this.graphql(
+      `mutation($id: ID!) {
+        markPullRequestReadyForReview(input: { pullRequestId: $id }) {
+          pullRequest { id isDraft }
+        }
+      }`,
+      { id: pr.node_id }
+    )
   }
 
   async comment(prNumber: number, body: string): Promise<void> {
@@ -133,6 +249,43 @@ export class GitHub {
       }))
     )
   }
+
+  /** Check runs reported against the exact commit SHA that was pushed and opened as a PR. */
+  async checkRunsForSha(sha: string): Promise<GithubCheckRun[]> {
+    const page = await this.request<{ check_runs: GithubCheckRun[] }>(
+      'GET',
+      `/repos/${this.repo}/commits/${sha}/check-runs?per_page=100`
+    )
+    return page.check_runs
+  }
+
+  /**
+   * Plain-text job log for a failed run, used to build a repair prompt. The
+   * Actions API redirects this endpoint to short-lived blob storage; `fetch`
+   * follows the redirect automatically. GitHub Actions creates one check-run
+   * per job with the check-run id equal to the job id, so a failing check
+   * run's `id` can be passed straight through here.
+   */
+  async jobLog(jobId: number): Promise<string> {
+    return this.requestText('GET', `/repos/${this.repo}/actions/jobs/${jobId}/logs`)
+  }
+}
+
+export interface GithubCheckRun {
+  id: number
+  name: string
+  status: 'queued' | 'in_progress' | 'completed'
+  conclusion:
+    | 'success'
+    | 'failure'
+    | 'neutral'
+    | 'cancelled'
+    | 'skipped'
+    | 'timed_out'
+    | 'action_required'
+    | 'stale'
+    | null
+  html_url: string | null
 }
 
 /** The worker's GitHub client: every outbound text is redacted with the configured secrets. */

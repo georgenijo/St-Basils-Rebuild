@@ -2,8 +2,9 @@ import { existsSync } from 'node:fs'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 
-import { formatFiles, runChecks, type CheckResult } from './checks'
+import { formatFiles } from './checks'
 import { EDIT_TOOLS, runClaude } from './claude'
+import { selectRequiredCiConclusion } from './ci-status'
 import type { Config } from './config'
 import {
   deleteVerificationFiles,
@@ -269,6 +270,51 @@ async function waitForPreview(ctx: JobContext, sha: string): Promise<string> {
   )
 }
 
+// ─── CI ─────────────────────────────────────────────────────────────────
+
+interface CiFailure {
+  checkRunId: number
+  htmlUrl: string | null
+}
+
+/**
+ * Poll GitHub Checks for the exact pushed `sha` (see ci-status.ts). This
+ * replaced running lint/typecheck/build a second time locally: CI already
+ * runs `ci:validate` against this exact commit (.github/workflows/ci.yml),
+ * so the worker now waits on that instead of duplicating it in its own
+ * scratch checkout.
+ */
+async function waitForCi(ctx: JobContext, sha: string): Promise<CiFailure | null> {
+  const deadline = Date.now() + ctx.config.ciTimeoutMs
+  while (Date.now() < deadline) {
+    checkpoint(ctx)
+    try {
+      const runs = await ctx.gh.checkRunsForSha(sha)
+      const selection = selectRequiredCiConclusion(runs, ctx.config.ciCheckName)
+      if (selection.state === 'success') return null
+      if (selection.state === 'failure') {
+        return { checkRunId: selection.checkRunId, htmlUrl: selection.htmlUrl }
+      }
+    } catch (error) {
+      log.warn('CI status lookup failed; retrying', { error: String(error) })
+    }
+    await new Promise((resolve) => setTimeout(resolve, ctx.config.ciPollMs))
+  }
+  throw new Error(
+    `CI check "${ctx.config.ciCheckName}" did not conclude for ${sha.slice(0, 7)} within ${Math.round(ctx.config.ciTimeoutMs / 60_000)} minutes`
+  )
+}
+
+/** Best-effort job log for the failing check run, redacted and truncated for a repair prompt. */
+async function ciFailureExcerpt(ctx: JobContext, failure: CiFailure): Promise<string> {
+  try {
+    const text = await ctx.gh.jobLog(failure.checkRunId)
+    return redact(text).slice(-12_000)
+  } catch (error) {
+    return `(could not fetch the CI job log: ${String(error)}${failure.htmlUrl ? `; see ${failure.htmlUrl}` : ''})`
+  }
+}
+
 // ─── pipeline ───────────────────────────────────────────────────────────
 
 export async function processRequest(ctx: JobContext, claimed: ChangeRequest): Promise<void> {
@@ -338,8 +384,9 @@ async function runPipeline(ctx: JobContext, claimed: ChangeRequest): Promise<voi
   const { config, db } = ctx
   const request = claimed
   const messages = await getMessages(db, request.id)
-  // Branch names are public: slug the redacted title.
-  const branch = branchName(request.id, redactPublic(request.title, ctx.secrets))
+  // Reuse existing branches, but never publish private titles in new names.
+  const branch = request.branch_name || branchName(request.id, 'website-update')
+  if (!config.dryRun) await ctx.gh.markDraftForBranch(branch)
 
   // 2. Prepare. Old verification screenshots belong to an older revision.
   const removed = await deleteVerificationFiles(db, request.id)
@@ -402,47 +449,8 @@ async function runPipeline(ctx: JobContext, claimed: ChangeRequest): Promise<voi
     return rejectChange(error, 'The change was not submitted', 'guardrail rejected')
   }
 
-  // 5. Checks in the trusted checkout (+ one repair round in the sandbox)
+  // 5. Prettier only (a trusted, deterministic formatting pass — see checks.ts).
   await formatFiles(config, change.files)
-  let checks: CheckResult = await runChecks(config)
-  let repaired = false
-  if (!checks.ok) {
-    checkpoint(ctx)
-    log.info('checks failed; running repair round', { requestId: request.id })
-    const repair = await runClaude(config, {
-      cwd: agentDir,
-      prompt: buildRepairPrompt(prompt, change.patch, checks.output),
-      tools: EDIT_TOOLS,
-      label: 'repair',
-    })
-    repaired = true
-    const repairOutcome = parseAgentResult(repair.result)
-    if (repairOutcome.kind === 'summary') summary = repairOutcome.text
-    try {
-      change = await syncValidatedChanges(ctx, ws)
-    } catch (error) {
-      if (!(error instanceof GuardrailError)) throw error
-      return rejectChange(
-        error,
-        'The repaired change was not submitted',
-        'guardrail rejected after repair'
-      )
-    }
-    await formatFiles(config, change.files)
-    checks = await runChecks(config)
-    if (!checks.ok) {
-      const excerpt = checks.output.slice(-1800)
-      await discardWorkingTree(ctx)
-      await postMessageSafe(db, request.id, 'agent', summary)
-      await needsAttention(
-        ctx,
-        request.id,
-        'Lint/typecheck failed after one repair attempt',
-        `The change did not pass the website checks, even after one repair attempt, so no pull request was opened.\n\n${excerpt}`
-      )
-      throw new Stop('checks failed')
-    }
-  }
   // Formatting may have changed the diff: final guardrail pass on exactly what gets committed.
   try {
     change = await stagedChange(ctx, attachments)
@@ -454,10 +462,10 @@ async function runPipeline(ctx: JobContext, claimed: ChangeRequest): Promise<voi
 
   // 6. Commit (trusted checkout) / PR. Commit messages are public.
   const commitMessage = redactPublic(
-    `${prTitle(request.title, ctx.secrets)}\n\nSubmitted via /admin/requests (request ${request.id}).`,
+    `${prTitle(`Website update ${shortId(request.id)}`, ctx.secrets)}\n\nSubmitted via /admin/requests (request ${request.id}).`,
     ctx.secrets
   )
-  const headSha = await commit(config, commitMessage)
+  let headSha = await commit(config, commitMessage)
   log.info('committed change', {
     requestId: request.id,
     headSha,
@@ -475,7 +483,7 @@ async function runPipeline(ctx: JobContext, claimed: ChangeRequest): Promise<voi
       ctx,
       request.id,
       'dry run',
-      `Dry run: the change passed guardrails and checks (${change.files.length} files, ${change.changedLines} lines) but was not pushed and no pull request was opened.`,
+      `Dry run: the change passed guardrails (${change.files.length} files, ${change.changedLines} lines) but was not pushed and no pull request was opened.`,
       { branch_name: branch }
     )
     throw new Stop('dry run')
@@ -485,7 +493,7 @@ async function runPipeline(ctx: JobContext, claimed: ChangeRequest): Promise<voi
   const pr = await ctx.gh.openOrUpdatePull({
     branch,
     base: config.baseBranch,
-    title: prTitle(request.title, ctx.secrets),
+    title: prTitle(`Website update ${shortId(request.id)}`, ctx.secrets),
     body: buildPrBody({
       request,
       siteUrl: config.siteUrl,
@@ -493,8 +501,6 @@ async function runPipeline(ctx: JobContext, claimed: ChangeRequest): Promise<voi
       changedFiles: change.files,
       changedLines: change.changedLines,
       attachmentNames: change.keptAttachments.map((a) => path.posix.basename(a.repoPath)),
-      checksRan: checks.ran,
-      repaired,
       secrets: ctx.secrets,
     }),
   })
@@ -512,11 +518,111 @@ async function runPipeline(ctx: JobContext, claimed: ChangeRequest): Promise<voi
     db,
     request.id,
     'system',
-    `${pr.created ? 'Opened' : 'Updated'} pull request #${pr.number}: ${pr.html_url}\nWaiting for the Vercel preview to verify it.`
+    `${pr.created ? 'Opened pull request' : 'Updated pull request'} #${pr.number}: ${pr.html_url}\n${pr.created ? 'It opens as a draft and is' : 'It is'} marked ready for review automatically once CI checks and the Vercel preview verification both pass.`
   )
   log.info('pull request ready', { requestId: request.id, pr: pr.number, created: pr.created })
 
-  // 7. Preview for exactly the pushed commit
+  // 7. CI on the exact pushed commit (+ one repair round if it fails). The PR
+  // is already open (as a draft, see openOrUpdatePull) at this point: unlike
+  // the old local-checks flow, a CI failure here does not mean "no PR was
+  // opened" — it means the open (draft) PR is left with failing checks for a
+  // human to look at (reported to the parent task as a deliberate, PR-visible
+  // behavior change from the previous never-opens-a-PR-on-failure model; the
+  // draft state is what keeps a not-yet-verified PR from looking mergeable).
+  let ciFailure: CiFailure | null
+  try {
+    ciFailure = await waitForCi(ctx, headSha)
+  } catch (error) {
+    if (error instanceof ShutdownError) throw error
+    await needsAttention(
+      ctx,
+      request.id,
+      humanError(error),
+      `Pull request #${pr.number} is open but its CI checks could not be verified: ${humanError(error)}`
+    )
+    throw new Stop('CI unavailable')
+  }
+  if (ciFailure) {
+    checkpoint(ctx)
+    log.info('CI failed; running repair round', {
+      requestId: request.id,
+      checkRunId: ciFailure.checkRunId,
+    })
+    const excerpt = await ciFailureExcerpt(ctx, ciFailure)
+    const repair = await runClaude(config, {
+      cwd: agentDir,
+      prompt: buildRepairPrompt(prompt, change.patch, excerpt),
+      tools: EDIT_TOOLS,
+      label: 'repair',
+    })
+    const repairOutcome = parseAgentResult(repair.result)
+    if (repairOutcome.kind === 'summary') summary = repairOutcome.text
+
+    const rejectRepair = async (error: GuardrailError): Promise<never> => {
+      await discardWorkingTree(ctx)
+      await postMessageSafe(db, request.id, 'agent', summary)
+      await needsAttention(
+        ctx,
+        request.id,
+        error.message,
+        `Pull request #${pr.number} is open but its CI checks failed, and the repair attempt did not pass guardrails so nothing more was pushed: ${error.message}`
+      )
+      throw new Stop('guardrail rejected after CI repair')
+    }
+
+    try {
+      change = await syncValidatedChanges(ctx, ws)
+    } catch (error) {
+      if (!(error instanceof GuardrailError)) throw error
+      await rejectRepair(error)
+    }
+    await formatFiles(config, change.files)
+    try {
+      change = await stagedChange(ctx, attachments)
+    } catch (error) {
+      if (!(error instanceof GuardrailError)) throw error
+      await rejectRepair(error)
+    }
+    checkpoint(ctx)
+
+    headSha = await commit(config, commitMessage)
+    log.info('committed CI repair', { requestId: request.id, headSha })
+    await pushBranch(config, branch)
+    await postMessage(db, request.id, 'agent', summary)
+    await postMessage(
+      db,
+      request.id,
+      'system',
+      `Pushed a repair for the failing CI checks (commit ${headSha.slice(0, 7)}); waiting on CI again.`
+    )
+
+    let secondFailure: CiFailure | null
+    try {
+      secondFailure = await waitForCi(ctx, headSha)
+    } catch (error) {
+      if (error instanceof ShutdownError) throw error
+      await needsAttention(
+        ctx,
+        request.id,
+        humanError(error),
+        `Pull request #${pr.number} is open but its CI checks could not be verified after the repair: ${humanError(error)}`
+      )
+      throw new Stop('CI unavailable after repair')
+    }
+    if (secondFailure) {
+      const secondExcerpt = (await ciFailureExcerpt(ctx, secondFailure)).slice(-1800)
+      await needsAttention(
+        ctx,
+        request.id,
+        'CI checks failed after one repair attempt',
+        `Pull request #${pr.number} is open but its CI checks failed even after one repair attempt, so it was left open for a human to fix.\n\n${secondExcerpt}`
+      )
+      throw new Stop('CI failed')
+    }
+  }
+  log.info('CI passed', { requestId: request.id, headSha })
+
+  // 8. Preview for exactly the pushed (possibly repaired) commit
   let previewUrl: string
   try {
     previewUrl = await waitForPreview(ctx, headSha)
@@ -533,7 +639,7 @@ async function runPipeline(ctx: JobContext, claimed: ChangeRequest): Promise<voi
   await updateRequest(db, request.id, { preview_url: previewUrl })
   log.info('preview ready', { requestId: request.id, previewUrl, sha: headSha })
 
-  // 8. Verify
+  // 9. Verify
   const latestMessages = await getMessages(db, request.id)
   const verification: VerificationResult = await verifyPreview({
     config,
@@ -548,6 +654,9 @@ async function runPipeline(ctx: JobContext, claimed: ChangeRequest): Promise<voi
     throw new Error('Verification does not belong to the pushed commit')
   }
   const passed = verification.verdict === 'pass' && hardChecksPass(verification.checks)
+  // Persist private evidence first, but never report readiness before GitHub confirms it.
+  await updateRequest(db, request.id, { verification })
+  if (passed) await ctx.gh.markReadyForReview(pr.number)
   const finalStatus = passed ? 'ready_for_review' : 'needs_attention'
   await updateRequest(db, request.id, {
     verification,
@@ -555,11 +664,21 @@ async function runPipeline(ctx: JobContext, claimed: ChangeRequest): Promise<voi
     error: passed
       ? null
       : verification.verdict === 'pass'
-        ? 'Automated preview checks failed'
+        ? `Automated preview checks failed: ${verification.checks
+            .filter((c) => !c.ok && !c.name.includes('advisory'))
+            .map((c) => c.name)
+            .join(', ')}`
         : `Verification verdict: ${verification.verdict}`,
   })
   try {
-    await ctx.gh.comment(pr.number, buildVerdictComment(verification, previewUrl))
+    await ctx.gh.comment(
+      pr.number,
+      buildVerdictComment(
+        { ...verification, verdict: passed ? 'pass' : 'fail' },
+        previewUrl,
+        `${config.siteUrl}/admin/requests/${request.id}`
+      )
+    )
   } catch (error) {
     log.warn('failed to comment verdict on PR', { error: String(error) })
   }

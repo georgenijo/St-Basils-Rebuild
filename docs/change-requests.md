@@ -12,9 +12,26 @@ Admin (/admin/requests) ──▶ Supabase (change_requests, messages, files, St
                                         ▲
                                         │ service role
                          change-request-agent (Family Host / any Fleet node)
-                           claim → agent edits → guardrails → PR → Vercel preview
-                           → Playwright verify → report + email
+                           claim → agent edits → guardrails → draft PR (before CI is
+                           known to pass) → CI on the exact pushed commit (one repair
+                           round on failure) → Vercel preview → Playwright verify
+                           (screenshots + private recording) → mark PR ready for
+                           review → report + email
 ```
+
+The worker runs two ways from the same image: a persistent long-poll deploy
+(e.g. Coolify), or as a Family Host **managed agent** — a bounded, per-run
+container launched with `argv: ["node", "src/worker.ts", "--once"]` against a
+public GHCR image, on job-owned scratch storage instead of a persistent
+volume. See `services/change-request-agent/README.md`'s "Deploying on Family
+Host" section for both modes, the image build
+(`.github/workflows/change-request-agent-image.yml`), and the caveat that
+managed-agent runs only do their maintenance sweep (stale-claim recovery, PR
+sync, storage cleanup) once at startup rather than on an idle-period timer —
+bounded to roughly 20 minutes by a scheduled GitHub Actions trigger
+(`.github/workflows/change-request-agent-maintenance.yml`, see the README's
+"Maintenance under a bounded-trigger dispatch model" section for its
+best-effort/60-day-inactivity limitations and secret provisioning).
 
 ## Data contract
 
@@ -58,7 +75,8 @@ submitting → queued → in_progress → verifying → ready_for_review → mer
   Abandoned `submitting` rows are swept after an hour.
 - `queued` — submitted, waiting for the worker.
 - `in_progress` — claimed; agent is editing.
-- `verifying` — PR open; waiting for the Vercel preview and running checks.
+- `verifying` — PR open; waiting for CI on the exact pushed commit, then the
+  Vercel preview and the Playwright verification pass.
 - `ready_for_review` — PR open, preview verified; waiting for George to merge.
 - `needs_attention` — something needs a human (see `error` and the thread).
 - `merged` / `closed` — worker syncs PR state after review.
@@ -76,10 +94,21 @@ The thread shown on the request detail page, oldest first.
 e.g. `before · desktop`), `created_at`.
 
 Files are stored in the private Storage bucket **`change-requests`**
-(10 MB limit; images and PDFs). Paths:
+(images and PDFs, 10 MB limit as of the original migration;
+`supabase/migrations/20260929000000_add_video_to_change_requests_bucket.sql`
+widens `allowed_mime_types` to add `video/webm` and raises the limit to
+50 MB for the Playwright screen recording below — not yet applied to
+production). Paths:
 
 - attachments: `requests/<request_id>/attachments/<uuid>-<safe filename>`
-- verification: `requests/<request_id>/verification/<label-slug>.png`
+- verification (screenshots): `requests/<request_id>/verification/<label-slug>.png`
+- verification (recording): `requests/<request_id>/verification/<label-slug>.webm`
+  — a private screen recording of the desktop before/after Playwright pass.
+  Recordings share `kind: 'verification'` with screenshots (distinguished by
+  `content_type`, not a separate `kind` value, to avoid a schema change); the
+  admin request page renders them with a native `<video controls>` element.
+  Never linked or embedded anywhere public — the PR only ever gets the
+  verdict comment (`buildVerdictComment`) and the `/admin/requests/<id>` link.
 
 The admin UI shows files through short-lived signed URLs.
 
@@ -104,16 +133,41 @@ The admin UI shows files through short-lived signed URLs.
 - Only active admins can submit requests.
 - Request text is untrusted input: the agent is told so, runs with file tools
   only (no shell, no network), inside a separate checkout that has no
-  `node_modules`. Only validated changes are copied into the trusted checkout
-  where formatting, lint and typecheck run.
+  `node_modules`. Only validated changes are copied into the trusted checkout,
+  where a local Prettier pass runs; lint, typecheck and the production build
+  run in CI against the exact pushed commit instead (see below), not in the
+  worker's own container.
 - The worker rejects any diff outside the allowlist (`src/app/(public)/**`,
   `src/components/**`, `public/**`, `src/app/globals.css`), non-source file
   types, tooling/config files, `'use server'` modules, and symlinks. Anything
   else becomes `needs_attention` with no PR.
-- The GitHub repository is public. PRs carry the request title, page, the
-  agent's public summary, changed files and checks — never the admin's
-  description or thread — and every outbound GitHub payload is redacted for
-  secrets, emails and phone numbers. The form warns admins about this.
+- **CI gating (behavior change from the original local-checks design):** the
+  worker now pushes and opens the PR right after guardrails, before CI has
+  run — CI runs against the exact pushed commit, the same way it would for
+  any other PR. The PR is opened as a **draft** (`draft: true` at creation)
+  specifically so this early-open doesn't make an unverified change look
+  mergeable; it is only flipped to ready-for-review after CI, the Vercel
+  preview, and the Playwright verification all pass (via GitHub's GraphQL
+  `markPullRequestReadyForReview` — REST has no `draft` field to PATCH). If
+  CI fails, the worker gives the agent one repair attempt (using the failing
+  job's log) and pushes again; if it still fails, the PR is left open **and
+  still draft** with failing checks and the request goes to
+  `needs_attention` — the PR is not closed automatically, and nothing marks
+  it ready for review. This means a PR can now exist (visible to anyone with
+  repo access, but in draft) for a change that ultimately failed CI, which
+  was not possible under the old model where a local check failure meant no
+  PR was ever opened; draft status is the mitigation for that visibility
+  change, not a separate manual gate.
+- All four always-on PR CI jobs must actually succeed on the exact SHA:
+  Validate, Unit Tests, Change Request Agent Service, and Browser Flow Tests.
+  Existing PRs are re-drafted before another attempt edits or pushes a revision.
+  The admin request is not marked ready until GitHub promotion succeeds.
+- The repository is public. New branch names, titles, and commit messages use
+  a generic label plus request ID, never private request titles. Public bodies
+  include only the admin-only link, public changed files, and fixed checks.
+  Generated summaries, request fields, attachment names, check details, and
+  recordings stay private; public verdict comments link back to admin.
+  Every outbound payload also receives the existing secret/contact redaction.
 - The Vercel protection-bypass secret (if set) is only ever sent to the preview
   origin, as a host-scoped cookie.
 - The worker never merges. George merges; Vercel deploys on merge as usual.

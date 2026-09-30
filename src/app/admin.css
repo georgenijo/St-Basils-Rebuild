@@ -1547,6 +1547,13 @@
   object-position: top;
 }
 
+.cr-shot video {
+  display: block;
+  width: 100%;
+  max-height: 360px;
+  object-fit: contain;
+}
+
 .cr-shot figcaption {
   padding: 6px 8px;
   color: var(--muted);

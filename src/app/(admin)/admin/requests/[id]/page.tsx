@@ -117,7 +117,17 @@ export default async function ChangeRequestDetailPage({ params }: PageProps) {
   const messages = (messageData ?? []) as ChangeRequestMessage[]
   const files = await signChangeRequestFiles((fileData ?? []) as ChangeRequestFile[])
   const attachments = files.filter((file) => file.kind === 'attachment')
-  const verificationShots = files.filter((file) => file.kind === 'verification')
+  const verificationFiles = files.filter((file) => file.kind === 'verification')
+  // Screenshots and the private preview recording share `kind: 'verification'`
+  // (see db.ts's uploadVerificationShot); split by content_type to render each.
+  // Signed URLs come from signChangeRequestFiles and this route is admin-only,
+  // so the recording is only ever reachable here — never from the public PR.
+  const verificationShots = verificationFiles.filter((file) =>
+    file.content_type.startsWith('image/')
+  )
+  const verificationVideos = verificationFiles.filter((file) =>
+    file.content_type.startsWith('video/')
+  )
 
   const names = await fetchPeopleNames(supabase, [
     request.requester_id,
@@ -237,7 +247,7 @@ export default async function ChangeRequestDetailPage({ params }: PageProps) {
             </dl>
           </section>
 
-          {(verification || verificationShots.length > 0) && (
+          {(verification || verificationShots.length > 0 || verificationVideos.length > 0) && (
             <section className="admin-section" aria-label="Verification">
               <div className="admin-section-head">
                 <h2>Verification</h2>
@@ -295,6 +305,23 @@ export default async function ChangeRequestDetailPage({ params }: PageProps) {
                           <div className="cr-file-thumb">Unavailable</div>
                         )}
                         <figcaption>{shot.label ?? shot.filename}</figcaption>
+                      </figure>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {verificationVideos.length > 0 && (
+                <ul className="cr-shots" aria-label="Preview recordings (admin-only)">
+                  {verificationVideos.map((video) => (
+                    <li key={video.id}>
+                      <figure className="cr-shot">
+                        {video.url ? (
+                          // eslint-disable-next-line jsx-a11y/media-has-caption -- private admin evidence, no spoken audio track
+                          <video src={video.url} controls preload="metadata" />
+                        ) : (
+                          <div className="cr-file-thumb">Unavailable</div>
+                        )}
+                        <figcaption>{video.label ?? video.filename}</figcaption>
                       </figure>
                     </li>
                   ))}
