@@ -196,3 +196,30 @@ export function formatBytes(bytes: number): string {
   if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
+
+// Words that usually mean the requester meant to include a file. Matched as
+// whole words so e.g. "imagine" or "pdfs-like" wording does not trigger.
+const ATTACHMENT_MENTION_PATTERN =
+  /\b(attach(?:ed|ment|ments|ing)?|enclosed|images?|photos?|photographs?|pictures?|flyers?|fliers?|posters?|brochures?|screenshots?|pdfs?|files?)\b/i
+
+// "no attachment", "without a photo", "don't need an image": the requester
+// has said there is no file, so do not nag them.
+const NEGATED_MENTION_PATTERN =
+  /\b(?:no|without|not|don'?t need|doesn'?t need|isn'?t|aren'?t)\s+(?:(?:a|an|any|the|new|separate)\s+)?$/i
+
+/**
+ * The first word in the request text that suggests a file should be attached
+ * (e.g. "flyer" in "use the attached flyer"), or null. Used to warn before a
+ * request is submitted with no attachments; it is a hint, not validation.
+ */
+export function findAttachmentMention(...texts: string[]): string | null {
+  for (const text of texts) {
+    const pattern = new RegExp(ATTACHMENT_MENTION_PATTERN.source, 'gi')
+    for (const match of text.matchAll(pattern)) {
+      const before = text.slice(Math.max(0, match.index - 40), match.index)
+      if (NEGATED_MENTION_PATTERN.test(before)) continue
+      return match[0]
+    }
+  }
+  return null
+}

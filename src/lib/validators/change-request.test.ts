@@ -5,6 +5,7 @@ import {
   changeRequestMessageSchema,
   changeRequestSchema,
   detectAttachmentType,
+  findAttachmentMention,
   formatBytes,
   guessAttachmentType,
   sanitizeAttachmentFilename,
@@ -206,5 +207,33 @@ describe('guessAttachmentType', () => {
     expect(guessAttachmentType('doc.pdf', '')).toBe('application/pdf')
     expect(guessAttachmentType('a.svg', 'image/svg+xml')).toBeNull()
     expect(guessAttachmentType('a.exe', '')).toBeNull()
+  })
+})
+
+describe('findAttachmentMention', () => {
+  it.each([
+    ['replace flyer on home page', 'use attached image', 'flyer'],
+    ['Update the photo', 'Swap the staff photo for the new one.', 'photo'],
+    ['New schedule', 'Please link the attached PDF from the giving page.', 'attached'],
+    ['Bulletin', 'See attachment for the wording.', 'attachment'],
+    ['Poster', 'Put up the Easter poster, file enclosed.', 'Poster'],
+  ])('finds a mention in %j / %j', (title, description, word) => {
+    expect(findAttachmentMention(title, description)).toBe(word)
+  })
+
+  it.each([
+    ['Fix typo', 'Change "Qurbana" to "Qurbono" in the footer.'],
+    ['Imagine', 'Imagined wording: reword the profile section intro.'],
+    ['Text only', 'No attachment needed, just update the service time to 9:15 AM.'],
+    ['Wording', 'Without an image, reword the heading to "Welcome".'],
+    ['Wording', "We don't need a photo here; shorten the paragraph."],
+  ])('ignores %j / %j', (title, description) => {
+    expect(findAttachmentMention(title, description)).toBeNull()
+  })
+
+  it('keeps looking after a negated mention', () => {
+    expect(
+      findAttachmentMention('No image change', 'Keep the layout, but use the attached flyer.')
+    ).toBe('attached')
   })
 })

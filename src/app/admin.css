@@ -1711,3 +1711,19 @@
   color: var(--fg);
   font-size: 13px;
 }
+
+.cr-attachment-warning {
+  margin-top: 6px;
+  padding: 8px 12px;
+  border: 1px solid color-mix(in oklch, var(--warn) 45%, var(--border));
+  border-left: 3px solid var(--warn);
+  border-radius: 6px;
+  background: color-mix(in oklch, var(--warn) 8%, transparent);
+  color: var(--fg);
+  font-size: 13px;
+}
+
+.cr-attachment-warning:focus-visible {
+  outline: 2px solid var(--warn);
+  outline-offset: 2px;
+}
