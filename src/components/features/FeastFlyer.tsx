@@ -16,7 +16,7 @@ export function FeastFlyer() {
         <ul>
           <li>6 PM: Flag Hoisting</li>
           <li>6:30 PM: Evening Prayer</li>
-          <li>8 PM: Devotional Address</li>
+          <li>8 PM: Devotional Address by Rev. Fr. Varghese Paul</li>
           <li>9 PM: Dinner</li>
         </ul>
         <h3>Sunday, October 4</h3>
@@ -35,9 +35,9 @@ export function FeastFlyer() {
           978-460-9470; Joby Eldo, Treasurer, 617-959-2633.
         </p>
       </div>
-      <div className="relative aspect-[1188/1545] w-full md:h-[calc(100svh-4rem)] md:w-auto md:max-w-full">
+      <div className="relative aspect-[1545/2000] w-full md:h-[calc(100svh-4rem)] md:w-auto md:max-w-full">
         <Image
-          src="/images/feast-st-baselious-yeldho-bava-2026.jpg"
+          src="/images/requests/89f80eb9/2026-perunnal-flyer.jpeg"
           alt=""
           fill
           sizes="(max-width: 768px) 100vw, 65vw"
