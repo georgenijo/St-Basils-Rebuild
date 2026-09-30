@@ -244,14 +244,14 @@ export default async function HomePage() {
       </section>
 
       {/* ── Upcoming Events ──────────────────────────────────── */}
-      <section className="py-16 md:py-22 lg:py-28">
+      <section className="py-10 md:py-14 lg:py-16">
         <ScrollReveal className="mx-auto max-w-[1200px] px-4 sm:px-6 lg:px-8">
           <SectionHeader
             title="Upcoming Events"
             subtitle="From feast days to fellowship gatherings, there is always something happening at St. Basil's."
           />
           {upcoming.length > 0 ? (
-            <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-3">
+            <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-3">
               {upcoming.map((event) => (
                 <Link key={event.id} href={`/events/${event.slug}`} className="group block h-full">
                   <Card
@@ -278,11 +278,11 @@ export default async function HomePage() {
               ))}
             </div>
           ) : (
-            <p className="mt-12 text-center text-wood-800/60">
+            <p className="mt-6 text-center text-wood-800/60">
               No upcoming events are scheduled. Check back soon.
             </p>
           )}
-          <div className="mt-10 text-center">
+          <div className="mt-6 text-center">
             <Button href="/events">View Events Calendar</Button>
           </div>
         </ScrollReveal>
