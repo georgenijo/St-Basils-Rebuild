@@ -291,7 +291,8 @@ The same image supports two deployment modes; `CMD` and the presence of
 - `LAUNCH.argv` (fully replaces the image's `CMD`, per
   managed-agents-contract.md): `["node", "src/worker.ts", "--once"]`. The
   Dockerfile sets `NODE_OPTIONS=--import=tsx` so the `tsx` loader still
-  applies even though `argv` overrides `CMD`.
+  applies even though `argv` overrides `CMD`. Child processes (`npm ci`, git,
+  Claude) do not inherit it; the website checkout does not install `tsx`.
   `/data`/`/artifacts` are job-owned scratch (not guaranteed to persist
   between runs) — every run does a fresh `git clone` + `npm ci`, so expect a
   clone the first job at every run, not just the first ever.
