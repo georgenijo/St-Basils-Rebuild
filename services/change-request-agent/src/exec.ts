@@ -34,7 +34,6 @@ const SAFE_ENV_KEYS = [
   'TERM',
   'TMPDIR',
   'SHELL',
-  'NODE_OPTIONS',
   'npm_config_cache',
   'PLAYWRIGHT_BROWSERS_PATH',
   'XDG_CACHE_HOME',
@@ -45,7 +44,9 @@ const SAFE_ENV_KEYS = [
 /**
  * Minimal environment for child processes that run repository code (npm,
  * eslint, tsc, prettier). Worker secrets (Supabase service key, GitHub token,
- * Resend key) are never passed through.
+ * Resend key) are never passed through. NODE_OPTIONS is withheld too: the image
+ * sets it to preload the worker's own tsx loader, which the website checkout
+ * does not install, so inheriting it breaks `npm ci` there.
  */
 export function childEnv(extra: Record<string, string | undefined> = {}): NodeJS.ProcessEnv {
   const out: Record<string, string | undefined> = {}
