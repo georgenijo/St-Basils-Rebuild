@@ -190,7 +190,7 @@ export default async function HomePage() {
       </section>
 
       {/* ── Announcements ──────────────────────────────────────── */}
-      <section className="bg-sand py-16 md:py-22 lg:py-28">
+      <section className="bg-sand py-10 md:py-14 lg:py-16">
         <ScrollReveal className="mx-auto max-w-[1200px] px-4 sm:px-6 lg:px-8">
           <SectionHeader
             title="Announcements"
@@ -198,7 +198,7 @@ export default async function HomePage() {
           />
           {recent.length > 0 ? (
             <>
-              <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+              <div className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {recent.map((item) => (
                   <Link
                     key={item.id}
@@ -229,14 +229,14 @@ export default async function HomePage() {
                   </Link>
                 ))}
               </div>
-              <div className="mt-10 text-center">
+              <div className="mt-8 text-center">
                 <Button href="/announcements" variant="secondary">
                   View All Announcements
                 </Button>
               </div>
             </>
           ) : (
-            <p className="mt-12 text-center text-wood-800/60">
+            <p className="mt-6 text-center text-wood-800/60">
               No announcements at this time. Check back soon.
             </p>
           )}
