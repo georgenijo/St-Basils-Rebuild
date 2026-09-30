@@ -33,6 +33,15 @@ bounded to roughly 20 minutes by a scheduled GitHub Actions trigger
 "Maintenance under a bounded-trigger dispatch model" section for its
 best-effort/60-day-inactivity limitations and secret provisioning).
 
+Production runs as the `st-basils-change-requests` managed agent on Family
+Host (owner George). One trigger token, created with
+`family-host agent token create`, is provisioned in two places: the Vercel
+Production variable `FAMILY_HOST_AGENT_TRIGGER_TOKEN`, which wakes the agent
+when a request is queued, and the GitHub Actions secret of the same name, used
+by the maintenance workflow. Vercel reads the variable only on a new
+deployment. To rotate, create a new token, update both places, redeploy, then
+revoke the old token with `family-host agent token revoke`.
+
 ## Data contract
 
 All three tables live in `public` and are created by
