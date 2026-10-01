@@ -218,6 +218,7 @@ import {
   closeChangeRequest,
   createChangeRequest,
   prepareChangeRequestUploads,
+  undoChangeRequest,
 } from '@/actions/change-requests'
 import { createUploadSession } from '@/lib/change-request-uploads'
 
@@ -1111,5 +1112,59 @@ describe('approveAndMergeChangeRequest', () => {
     expect(result.success).toBe(true)
     expect(result.message).toMatch(/Recording it here is pending/)
     expect(mockTriggerAgent).toHaveBeenCalledWith(REQUEST_ID)
+  })
+})
+
+// ─── undoChangeRequest ───────────────────────────────────────────────
+
+const UNDO_ID = '88888888-8888-4888-8888-888888888888'
+
+function undoForm() {
+  const formData = new FormData()
+  formData.set('request_id', REQUEST_ID)
+  return formData
+}
+
+describe('undoChangeRequest', () => {
+  it('rejects a non-admin before touching data', async () => {
+    profile = null
+    const result = await undoChangeRequest(INITIAL, undoForm())
+    expect(result.success).toBe(false)
+    expect(mockRpc).not.toHaveBeenCalled()
+  })
+
+  it('creates the undo request as the signed-in admin, wakes the agent and opens it', async () => {
+    mockRpc.mockResolvedValue({
+      data: [{ outcome: 'created', undo_request_id: UNDO_ID }],
+      error: null,
+    })
+    const url = await expectRedirect(undoChangeRequest(INITIAL, undoForm()))
+    expect(url).toBe(`/admin/requests/${UNDO_ID}`)
+    expect(mockRpc).toHaveBeenCalledWith('request_change_request_undo', {
+      p_request_id: REQUEST_ID,
+    })
+    expect(mockTriggerAgent).toHaveBeenCalledExactlyOnceWith(UNDO_ID)
+  })
+
+  it('opens the existing undo instead of starting a second one', async () => {
+    mockRpc.mockResolvedValue({
+      data: [{ outcome: 'exists', undo_request_id: UNDO_ID }],
+      error: null,
+    })
+    const url = await expectRedirect(undoChangeRequest(INITIAL, undoForm()))
+    expect(url).toBe(`/admin/requests/${UNDO_ID}`)
+    expect(mockTriggerAgent).not.toHaveBeenCalled()
+  })
+
+  it('refuses a change that is not merged or live', async () => {
+    mockRpc.mockResolvedValue({
+      data: [{ outcome: 'not_undoable', undo_request_id: null }],
+      error: null,
+    })
+    const result = await undoChangeRequest(INITIAL, undoForm())
+    expect(result).toEqual({
+      success: false,
+      message: 'Only a change that is merged or live on the site can be undone.',
+    })
   })
 })

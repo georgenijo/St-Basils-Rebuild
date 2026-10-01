@@ -36,7 +36,7 @@ export function changeRequestThumbnailPath(file: Pick<ChangeRequestFile, 'id' | 
 }
 
 export const CHANGE_REQUEST_DETAIL_COLUMNS =
-  'id, requester_id, title, description, page_path, target_selector, target_text, status, branch_name, pr_number, pr_url, preview_url, verification, attempts, error, live_at, live_check_failed_at, created_at, updated_at'
+  'id, requester_id, title, description, page_path, target_selector, target_text, status, branch_name, pr_number, pr_url, preview_url, verification, attempts, error, merge_commit_sha, live_at, live_check_failed_at, revert_of, created_at, updated_at'
 
 /**
  * In-flight reads for the request detail page. Every query starts at once;
@@ -94,4 +94,23 @@ export function loadChangeRequestDetail(
   for (const promise of [request, messages, files, names]) promise.catch(() => {})
 
   return { request, messages, files, names }
+}
+
+/**
+ * The undo request (#363) for a request, if one is in progress or done (same
+ * rule as request_change_request_undo).
+ */
+export async function findUndoRequestId(
+  supabase: Pick<SupabaseClient, 'from'>,
+  id: string
+): Promise<string | null> {
+  const { data } = await supabase
+    .from('change_requests')
+    .select('id')
+    .eq('revert_of', id)
+    // A closed undo counts until its PR has been closed on GitHub.
+    .or('status.neq.closed,github_cleanup_pending.eq.true')
+    .order('created_at', { ascending: false })
+    .limit(1)
+  return ((data ?? [])[0] as { id: string } | undefined)?.id ?? null
 }

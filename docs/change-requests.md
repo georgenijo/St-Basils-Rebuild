@@ -230,6 +230,52 @@ still deploying. The request page keeps auto-refreshing while a merged
 request awaits its outcome. `merged` can only become `live`, and `live` is
 final.
 
+### Undoing a live change
+
+A `live` (or `merged`) request with a `merge_commit_sha` shows **Undo this
+change…**. After confirmation, `request_change_request_undo` (admins only,
+row-locked) creates a linked **undo request**:
+
+- title "Undo: <original title>", the same page and picked element;
+- `revert_of` set to the original and `revert_commit_sha` set to its merge
+  commit; status `queued`.
+
+It posts a system message in each thread linking the two, and the site wakes
+the agent and opens the undo request. There is only one undo at a time: if
+one is in progress or done, the original links to it instead of offering
+another.
+
+The worker handles an undo request by reverting exactly what `main`
+integrated from the original pull request, instead of running the agent. It
+checks that the PR was merged as the recorded commit, then uses git's
+tree-level, rename-aware three-way revert:
+
+- a merge commit is reverted against main (`-m 1`);
+- a PR integrated commit by commit (GitHub rebase-and-merge, or a
+  fast-forward, detected by matching patch-ids against the PR's commits from
+  `refs/pull/N/head`) has all of its commits reverted;
+- otherwise (a squash) the single merge commit is.
+
+Only the merge's own change is undone, never identical changes that reached
+main through another PR. Edits follow later renames. The result must pass the
+same type/content policy as an agent's edit (no symlinks or special files, no
+`'use server'` modules) and the staged-diff guardrails. Then it publishes as
+usual: a draft PR "Undo website update <id>" whose commit says "This reverts
+commit …", the same CI on the exact commit, the Vercel preview and the
+browser verification. The original thread gets "Undo pull request #N is open"
+with the link. From there it is a normal request: Approve & merge, then the
+live check.
+
+If later changes touched the same lines, nothing is resolved automatically:
+the undo goes to `needs_attention` for a developer. That also happens when
+there is nothing left to undo. A CI failure on an undo is left for a human
+(there is no agent repair round). "Request changes" on an undo goes through
+the agent, on top of the verified undo; if that verified undo is gone from
+its branch, the worker stops and asks for a new undo instead of quietly
+re-undoing. A closed undo still counts as the request's undo until the
+worker has closed its PR, so a replacement cannot race a PR that might still
+be merged.
+
 ### Closing a request
 
 The status card on a `queued`, `ready_for_review` or `needs_attention`

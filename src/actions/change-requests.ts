@@ -35,6 +35,7 @@ import {
   MAX_CHANGE_REQUEST_ATTACHMENT_BYTES,
   attachmentUploadRequestSchema,
   changeRequestCloseSchema,
+  changeRequestIdSchema,
   changeRequestMergeSchema,
   changeRequestMessageSchema,
   changeRequestSchema,
@@ -863,6 +864,54 @@ async function approveAndMergeChangeRequestImpl(
   return { success: true, message: 'Merged. The change goes live in a few minutes.' }
 }
 
+/**
+ * "Undo" a live (or merged) change: `request_change_request_undo` creates a
+ * linked undo request that reverts the original merge commit, and the agent
+ * takes it through the normal review path (CI, preview verification, Approve
+ * & merge, live check). One undo at a time: an existing undo is reused.
+ * Redirects to the undo request.
+ */
+async function undoChangeRequestImpl(
+  prevState: ActionState,
+  formData: FormData
+): Promise<ActionState> {
+  const supabase = await createClient()
+  const { user, error: authError } = await requireAdmin(supabase)
+  if (authError || !user) return { success: false, message: authError ?? 'Unauthorized' }
+
+  const parsed = changeRequestIdSchema.safeParse({ request_id: formData.get('request_id') })
+  if (!parsed.success) return { success: false, message: 'Invalid request' }
+  const requestId = parsed.data.request_id
+
+  const { data, error } = await supabase.rpc('request_change_request_undo', {
+    p_request_id: requestId,
+  })
+  const result = (Array.isArray(data) ? data[0] : data) as
+    | { outcome: string; undo_request_id: string | null }
+    | null
+    | undefined
+  if (error || !result) {
+    log.error('change_request.undo_failed', { error, requestId })
+    return { success: false, message: 'Could not start the undo. Try again.' }
+  }
+  if (result.outcome === 'not_found') return { success: false, message: 'Change request not found' }
+  if (result.outcome === 'not_undoable' || !result.undo_request_id) {
+    return {
+      success: false,
+      message: 'Only a change that is merged or live on the site can be undone.',
+    }
+  }
+
+  const undoId = result.undo_request_id
+  if (result.outcome === 'created') {
+    log.info('change_request.undo_requested', { requestId, undoId })
+    await wakeChangeRequestAgent(undoId)
+  }
+  revalidatePath(`/admin/requests/${requestId}`)
+  revalidatePath('/admin/requests')
+  redirect(`/admin/requests/${undoId}`)
+}
+
 export const prepareChangeRequestUploads = withLogging(
   'prepareChangeRequestUploads',
   prepareChangeRequestUploadsImpl
@@ -877,3 +926,4 @@ export const approveAndMergeChangeRequest = withLogging(
   'approveAndMergeChangeRequest',
   approveAndMergeChangeRequestImpl
 )
+export const undoChangeRequest = withLogging('undoChangeRequest', undoChangeRequestImpl)

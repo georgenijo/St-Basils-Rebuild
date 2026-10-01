@@ -278,6 +278,7 @@ export class GitHub {
     mergeCommitSha: string | null
     headSha: string | null
     mergedAt: string | null
+    commits: number
   }> {
     const pr = await this.request<{
       state: 'open' | 'closed'
@@ -285,6 +286,7 @@ export class GitHub {
       merged_at: string | null
       merge_commit_sha: string | null
       head?: { sha: string }
+      commits?: number
     }>('GET', `/repos/${this.repo}/pulls/${prNumber}`)
     const merged = pr.merged || Boolean(pr.merged_at)
     return {
@@ -293,6 +295,7 @@ export class GitHub {
       mergeCommitSha: merged ? pr.merge_commit_sha : null,
       headSha: pr.head?.sha ?? null,
       mergedAt: pr.merged_at,
+      commits: pr.commits ?? 1,
     }
   }
 

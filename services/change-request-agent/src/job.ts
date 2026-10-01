@@ -28,6 +28,8 @@ import {
   prepareBranch,
   prepareRevisionBranch,
   pushBranch,
+  revertMergedPull,
+  stagedTreeChanges,
   stageAll,
 } from './git'
 import type { GitHub } from './github'
@@ -246,6 +248,59 @@ async function stagedChange(
   }
 }
 
+// ─── undo (#363) ─────────────────────────────────────────────────────────
+
+const FULL_SHA = /^[0-9a-f]{40}$/
+
+const UNDO_CONFLICT =
+  'Later changes touched the same parts of the site, so this change cannot be undone automatically. A developer needs to revert it by hand.'
+
+/**
+ * Undo the original request's merged change in the trusted checkout: exactly
+ * what main integrated from its pull request is reverted (see
+ * revertMergedPull), for squash, rebase and merge commits alike. The PR must be the one that
+ * was merged as `sha`. The result passes the same type/content policy as an
+ * agent's edit (no symlinks or special files, no 'use server' modules) and
+ * then the staged-diff guardrails. Problems become a GuardrailError for a
+ * human.
+ */
+async function revertCommit(
+  ctx: JobContext,
+  request: ChangeRequest,
+  sha: string
+): Promise<GuardedChange> {
+  const dir = ctx.config.workDir
+  if (!FULL_SHA.test(sha) || !request.revert_of) {
+    throw new GuardrailError('The change to undo has no valid commit.')
+  }
+  const original = await getRequest(ctx.db, request.revert_of)
+  if (!original.pr_number) {
+    throw new GuardrailError('The original request has no pull request, so it cannot be undone.')
+  }
+  const pull = await ctx.gh.pullState(original.pr_number)
+  if (!pull.merged || pull.mergeCommitSha !== sha) {
+    throw new GuardrailError(
+      `Pull request #${original.pr_number} was not merged as ${sha.slice(0, 7)}, so it cannot be undone automatically.`
+    )
+  }
+
+  const applied = await revertMergedPull(ctx.config, original.pr_number, sha, pull.commits)
+  if (applied === 'conflict') throw new GuardrailError(UNDO_CONFLICT)
+  const changes = await stagedTreeChanges(dir)
+  if (applied === 'empty' || changes.length === 0) {
+    throw new GuardrailError('There is nothing to undo: the live site no longer has this change.')
+  }
+  const texts = new Map<string, string>()
+  for (const c of changes) {
+    if (c.change !== 'deleted' && c.kind === 'file' && TEXT_EXT.test(c.path)) {
+      texts.set(c.path, await fs.readFile(path.join(dir, c.path), 'utf8'))
+    }
+  }
+  const verdict = evaluateChangeSet(changes, texts)
+  if (!verdict.ok) throw new GuardrailError(verdict.reason)
+  return stagedChange(ctx, [])
+}
+
 // ─── status helpers ─────────────────────────────────────────────────────
 
 async function needsAttention(
@@ -440,7 +495,9 @@ async function runPipeline(ctx: JobContext, claimed: ChangeRequest): Promise<voi
   const request = claimed
   const messages = await getMessages(db, request.id)
   // Reuse existing branches, but never publish private titles in new names.
-  const branch = request.branch_name || branchName(request.id, 'website-update')
+  const branch =
+    request.branch_name ||
+    branchName(request.id, request.revert_commit_sha ? 'website-undo' : 'website-update')
   // "Request changes" on a ready request: revise the verified commit on the same branch and PR.
   const revisionBase =
     request.revision_base_sha && request.branch_name && request.pr_number
@@ -475,13 +532,25 @@ async function runPipeline(ctx: JobContext, claimed: ChangeRequest): Promise<voi
     db,
     request.id,
     'system',
-    revisionBase
-      ? `The worker picked up the requested changes and is revising pull request #${request.pr_number}.`
-      : 'The worker picked up this request and is preparing a change.'
+    request.revert_commit_sha && !revisionBase
+      ? `The worker picked up this undo and is reverting merge commit ${request.revert_commit_sha.slice(0, 7)}.`
+      : revisionBase
+        ? `The worker picked up the requested changes and is revising pull request #${request.pr_number}.`
+        : 'The worker picked up this request and is preparing a change.'
   )
   await ensureClone(config)
   let baseSha = revisionBase ? await prepareRevisionBranch(config, branch, revisionBase) : null
   const revising = baseSha !== null
+  if (revisionBase && !revising && request.revert_commit_sha) {
+    // Rebuilding would mean a plain revert that ignores the requested changes.
+    await needsAttention(
+      ctx,
+      request.id,
+      'The verified undo is no longer on its branch',
+      'The verified undo is no longer on its branch, so the requested changes cannot be applied to it. Close this undo request and start a new undo from the original request.'
+    )
+    throw new Stop('undo revision base missing')
+  }
   if (revisionBase && !revising) {
     await postMessage(
       db,
@@ -493,68 +562,118 @@ async function runPipeline(ctx: JobContext, claimed: ChangeRequest): Promise<voi
   baseSha ??= await prepareBranch(config, branch)
   await ensureDependencies(config)
 
-  // Agent sandbox: plain export of the base commit, no .git, no node_modules.
-  const agentDir = agentCheckoutDir(config, shortId(request.id))
-  await createAgentCheckout(config, agentDir, baseSha)
-  const baseSnapshot = await snapshotTree(agentDir)
-  const attachments = await placeAttachments(ctx, request, agentDir)
-  const ws: Workspace = { agentDir, baseSha, baseSnapshot, attachments }
-  log.info('checkouts ready', { requestId: request.id, branch, baseSha, agentDir, revising })
-  checkpoint(ctx)
-
-  // 3. Agent (sandbox only)
-  const prompt = buildAgentPrompt({ request, messages, attachments, revision: revising })
-  const first = await runClaude(config, {
-    cwd: agentDir,
-    prompt,
-    tools: EDIT_TOOLS,
-    label: 'edit',
-  })
-  const outcome = parseAgentResult(first.result)
-  checkpoint(ctx)
-
-  if (outcome.kind === 'clarification') {
-    await postMessage(db, request.id, 'agent', outcome.question)
-    await needsAttention(
-      ctx,
-      request.id,
-      'Clarification needed',
-      'The agent needs more information before making this change. Reply in the thread to send it back to the queue.'
-    )
-    throw new Stop('clarification requested')
-  }
-  let summary = outcome.text
-
-  const rejectChange = async (error: GuardrailError, prefix: string, stop: string) => {
+  const rejectChange = async (
+    error: GuardrailError,
+    summary: string,
+    prefix: string,
+    stop: string
+  ): Promise<never> => {
     await discardWorkingTree(ctx)
     await postMessageSafe(db, request.id, 'agent', summary)
     await needsAttention(ctx, request.id, error.message, `${prefix}: ${error.message}`)
     throw new Stop(stop)
   }
 
-  // 4. Guardrails, then copy validated files into the trusted checkout
-  let change: GuardedChange
-  try {
-    change = await syncValidatedChanges(ctx, ws)
-  } catch (error) {
-    if (!(error instanceof GuardrailError)) throw error
-    return rejectChange(error, 'The change was not submitted', 'guardrail rejected')
+  // Steps 3-5 for an ordinary request: the agent edits a sandbox, and only
+  // validated, formatted files reach the trusted checkout.
+  const runAgent = async () => {
+    // Agent sandbox: plain export of the base commit, no .git, no node_modules.
+    const agentDir = agentCheckoutDir(config, shortId(request.id))
+    await createAgentCheckout(config, agentDir, baseSha)
+    const baseSnapshot = await snapshotTree(agentDir)
+    const attachments = await placeAttachments(ctx, request, agentDir)
+    const ws: Workspace = { agentDir, baseSha, baseSnapshot, attachments }
+    log.info('checkouts ready', { requestId: request.id, branch, baseSha, agentDir, revising })
+    checkpoint(ctx)
+
+    // 3. Agent (sandbox only)
+    const prompt = buildAgentPrompt({ request, messages, attachments, revision: revising })
+    const first = await runClaude(config, {
+      cwd: agentDir,
+      prompt,
+      tools: EDIT_TOOLS,
+      label: 'edit',
+    })
+    const outcome = parseAgentResult(first.result)
+    checkpoint(ctx)
+
+    if (outcome.kind === 'clarification') {
+      await postMessage(db, request.id, 'agent', outcome.question)
+      await needsAttention(
+        ctx,
+        request.id,
+        'Clarification needed',
+        'The agent needs more information before making this change. Reply in the thread to send it back to the queue.'
+      )
+      throw new Stop('clarification requested')
+    }
+    const summary = outcome.text
+
+    // 4. Guardrails, then copy validated files into the trusted checkout
+    let change: GuardedChange
+    try {
+      change = await syncValidatedChanges(ctx, ws)
+    } catch (error) {
+      if (!(error instanceof GuardrailError)) throw error
+      return rejectChange(error, summary, 'The change was not submitted', 'guardrail rejected')
+    }
+
+    // 5. Prettier only (a trusted, deterministic formatting pass — see checks.ts).
+    await formatFiles(config, change.files)
+    // Formatting may have changed the diff: final guardrail pass on exactly what gets committed.
+    try {
+      change = await stagedChange(ctx, attachments)
+    } catch (error) {
+      if (!(error instanceof GuardrailError)) throw error
+      return rejectChange(
+        error,
+        summary,
+        'The formatted change was not submitted',
+        'guardrail rejected'
+      )
+    }
+    checkpoint(ctx)
+    return { change, summary, agent: { ws, prompt, attachments } }
   }
 
-  // 5. Prettier only (a trusted, deterministic formatting pass — see checks.ts).
-  await formatFiles(config, change.files)
-  // Formatting may have changed the diff: final guardrail pass on exactly what gets committed.
-  try {
-    change = await stagedChange(ctx, attachments)
-  } catch (error) {
-    if (!(error instanceof GuardrailError)) throw error
-    return rejectChange(error, 'The formatted change was not submitted', 'guardrail rejected')
+  // An undo request (#363) reverts the original merge commit in the trusted
+  // checkout instead of running the agent, under the same guardrails.
+  const runRevert = async (sha: string) => {
+    const summary = `Undid the earlier website change by reverting merge commit ${sha.slice(0, 7)}, so the page goes back to how it was before.`
+    let change: GuardedChange
+    try {
+      change = await revertCommit(ctx, request, sha)
+    } catch (error) {
+      if (!(error instanceof GuardrailError)) throw error
+      return rejectChange(
+        error,
+        'The undo could not be prepared.',
+        'The change could not be undone',
+        'revert rejected'
+      )
+    }
+    checkpoint(ctx)
+    return { change, summary, agent: null }
   }
-  checkpoint(ctx)
+
+  // Revising an undo goes through the agent, on top of the verified revert.
+  const revertSha = revising ? null : (request.revert_commit_sha ?? null)
+  const produced = revertSha ? await runRevert(revertSha) : await runAgent()
+  let { change, summary } = produced
+  const agentRun = produced.agent
 
   // 6. Commit (trusted checkout) / PR. Commit messages are public.
+  // Titles and commit messages are public: generic labels plus request ids only.
+  const publicTitle = prTitle(
+    revertSha
+      ? `Undo website update ${shortId(request.revert_of ?? request.id)}`
+      : `Website update ${shortId(request.id)}`,
+    ctx.secrets
+  )
   const commitMessage = redactPublic(
-    `${prTitle(`Website update ${shortId(request.id)}`, ctx.secrets)}\n\n${revising ? 'Revision requested' : 'Submitted'} via /admin/requests (request ${request.id}).`,
+    revertSha
+      ? `${publicTitle}\n\nThis reverts commit ${revertSha}.\n\nUndo requested via /admin/requests (request ${request.id}).`
+      : `${publicTitle}\n\n${revising ? 'Revision requested' : 'Submitted'} via /admin/requests (request ${request.id}).`,
     ctx.secrets
   )
   let headSha = await commit(config, commitMessage)
@@ -589,7 +708,7 @@ async function runPipeline(ctx: JobContext, claimed: ChangeRequest): Promise<voi
     existingNumber: recordedPr,
     branch,
     base: config.baseBranch,
-    title: prTitle(`Website update ${shortId(request.id)}`, ctx.secrets),
+    title: publicTitle,
     body: buildPrBody({
       request,
       siteUrl: config.siteUrl,
@@ -619,6 +738,15 @@ async function runPipeline(ctx: JobContext, claimed: ChangeRequest): Promise<voi
       : `${pr.created ? 'Opened pull request' : 'Updated pull request'} #${pr.number}: ${pr.html_url}\n${pr.created ? 'It opens as a draft and is' : 'It is'} marked ready for review automatically once CI checks and the Vercel preview verification both pass.`
   )
   log.info('pull request ready', { requestId: request.id, pr: pr.number, created: pr.created })
+  if (revertSha && request.revert_of && pr.created) {
+    // Link the undo from the original request's thread.
+    await postMessageSafe(
+      db,
+      request.revert_of,
+      'system',
+      `Undo pull request #${pr.number} is open: ${pr.html_url}\nIt goes through the same checks and preview verification. Follow it at ${config.siteUrl}/admin/requests/${request.id}`
+    )
+  }
 
   // 7. CI on the exact pushed commit (+ one repair round if it fails). The PR
   // is already open (as a draft, see openOrUpdatePull) at this point: unlike
@@ -640,7 +768,18 @@ async function runPipeline(ctx: JobContext, claimed: ChangeRequest): Promise<voi
     )
     throw new Stop('CI unavailable')
   }
-  if (ciFailure) {
+  if (ciFailure && !agentRun) {
+    // A revert restores code that already passed CI; there is no agent to repair it.
+    await needsAttention(
+      ctx,
+      request.id,
+      'CI checks failed on the undo',
+      `Pull request #${pr.number} reverts the earlier change, but its CI checks failed, so it was left open for a human to look at.`
+    )
+    throw new Stop('CI failed on revert')
+  }
+  if (ciFailure && agentRun) {
+    const { ws, prompt, attachments } = agentRun
     checkpoint(ctx)
     log.info('CI failed; running repair round', {
       requestId: request.id,
@@ -648,7 +787,7 @@ async function runPipeline(ctx: JobContext, claimed: ChangeRequest): Promise<voi
     })
     const excerpt = await ciFailureExcerpt(ctx, ciFailure)
     const repair = await runClaude(config, {
-      cwd: agentDir,
+      cwd: ws.agentDir,
       prompt: buildRepairPrompt(prompt, change.patch, excerpt),
       tools: EDIT_TOOLS,
       label: 'repair',

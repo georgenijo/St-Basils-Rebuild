@@ -4,7 +4,11 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
 import { getDataClient } from '@/lib/supabase/auth'
-import { UUID_PATTERN, loadChangeRequestDetail } from '@/lib/change-request-detail'
+import {
+  UUID_PATTERN,
+  findUndoRequestId,
+  loadChangeRequestDetail,
+} from '@/lib/change-request-detail'
 import { isChangeRequestMergeConfigured } from '@/lib/change-request-github'
 import { signChangeRequestFiles } from '@/lib/change-request-storage'
 import {
@@ -24,6 +28,7 @@ import { ChangeRequestHeader } from '@/components/features/ChangeRequestHeader'
 import { ChangeRequestActions } from '@/components/features/ChangeRequestActions'
 import { ChangeRequestMergePanel } from '@/components/features/ChangeRequestMergePanel'
 import { ChangeRequestReplyForm } from '@/components/features/ChangeRequestReplyForm'
+import { ChangeRequestUndo } from '@/components/features/ChangeRequestUndo'
 import {
   ChangeRequestAttachmentsSkeleton,
   ChangeRequestGallerySkeleton,
@@ -84,6 +89,9 @@ export default async function ChangeRequestDetailPage({ params }: PageProps) {
 
   // Keep refreshing until a merged change is confirmed live (or reported).
   const active = isActiveChangeRequestStatus(request.status) || isAwaitingLiveCheck(request)
+  const undoable =
+    (request.status === 'live' || request.status === 'merged') && Boolean(request.merge_commit_sha)
+  const undoRequestId = undoable ? await findUndoRequestId(supabase, request.id) : null
   const prUrl = safeExternalUrl(request.pr_url)
   const previewUrl = safeExternalUrl(request.preview_url)
   // Only link to the preview if the page path stays on the preview's origin.
@@ -116,6 +124,12 @@ export default async function ChangeRequestDetailPage({ params }: PageProps) {
                   />
                 </Suspense>
               )}
+            <ChangeRequestUndo
+              requestId={request.id}
+              canUndo={undoable}
+              undoRequestId={undoRequestId}
+              revertOf={request.revert_of ?? null}
+            />
             <ChangeRequestActions
               requestId={request.id}
               canClose={isClosableChangeRequestStatus(request.status)}

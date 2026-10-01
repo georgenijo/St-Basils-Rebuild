@@ -857,4 +857,77 @@ test.describe('CI admin website change requests', () => {
       .eq('id', failedId)
     expect(reopen?.message).toContain('is merged')
   })
+
+  test('admin undoes a live change through a linked revert request', async ({ page }) => {
+    test.setTimeout(60_000)
+    const supabase = getAdminClient()
+    const { data: admin } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('email', 'admin@stbasilsboston.org')
+      .single()
+    const title = `CI undo request ${Date.now()}-${Math.round(Math.random() * 1000)}`
+    const mergeSha = 'ef'.repeat(20)
+    const { data: row, error } = await supabase
+      .from('change_requests')
+      .insert({
+        requester_id: admin!.id,
+        title,
+        description: 'Please change the giving page heading.',
+        page_path: '/giving',
+        status: 'live',
+        pr_number: 9996,
+        merge_commit_sha: mergeSha,
+        merged_at: new Date().toISOString(),
+        live_at: new Date().toISOString(),
+      })
+      .select('id')
+      .single()
+    expect(error).toBeNull()
+    const requestId = row!.id as string
+    createdIds.push(requestId)
+
+    await loginAsSeedAdmin(page)
+    await page.waitForURL('**/admin/**')
+    await page.goto(`/admin/requests/${requestId}`, { waitUntil: 'domcontentloaded' })
+    const undo = page.getByRole('button', { name: 'Undo this change…' })
+    await waitForReactHydration(undo)
+    await undo.click()
+    await expect(page.getByRole('form', { name: 'Undo this change' })).toContainText(
+      'reverts this change'
+    )
+    await page.getByRole('button', { name: 'Start undo' }).click()
+
+    // Lands on the new undo request, queued for the agent and linked back.
+    await page.waitForURL((url) => !url.pathname.endsWith(requestId), { timeout: 30_000 })
+    const undoId = page.url().split('/').pop()!
+    createdIds.push(undoId)
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(`Undo: ${title}`)
+    await expect(page.getByTestId('change-request-status')).toContainText('Queued')
+    await expect(page.getByRole('link', { name: 'View the original request' })).toHaveAttribute(
+      'href',
+      `/admin/requests/${requestId}`
+    )
+    const { data: undoRow } = await supabase
+      .from('change_requests')
+      .select('status, revert_of, revert_commit_sha, page_path, requester_id')
+      .eq('id', undoId)
+      .single()
+    expect(undoRow).toEqual({
+      status: 'queued',
+      revert_of: requestId,
+      revert_commit_sha: mergeSha,
+      page_path: '/giving',
+      requester_id: admin!.id,
+    })
+
+    // The original links to the undo and does not offer a second one.
+    await page.goto(`/admin/requests/${requestId}`, { waitUntil: 'domcontentloaded' })
+    await expect(page.getByRole('link', { name: 'View the undo request' })).toHaveAttribute(
+      'href',
+      `/admin/requests/${undoId}`
+    )
+    await expect(page.getByRole('button', { name: 'Undo this change…' })).toHaveCount(0)
+    await expect(page.getByTestId('change-request-thread')).toContainText('Undo requested by')
+  })
 })

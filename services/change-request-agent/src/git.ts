@@ -5,7 +5,13 @@ import path from 'node:path'
 
 import type { Config } from './config'
 import { childEnv, ExecError, runChecked } from './exec'
-import { parseNumstat, parsePorcelainZ, type ChangedFile, type NumstatEntry } from './guardrails'
+import {
+  parseNumstat,
+  parsePorcelainZ,
+  type ChangedFile,
+  type NumstatEntry,
+  type TreeChange,
+} from './guardrails'
 import { log } from './log'
 
 const LOCK_MARKER = path.join('node_modules', '.change-request-agent-lock-sha256')
@@ -242,4 +248,100 @@ export async function pushBranch(config: Config, branch: string): Promise<void> 
     env: gitAuthEnv(config.githubToken),
     timeoutMs: 5 * 60_000,
   })
+}
+
+/** `git patch-id --stable` of a commit's own change (same id for a rebased copy). */
+async function commitPatchId(dir: string, sha: string): Promise<string> {
+  const diff = await git(dir, ['show', '--no-color', '--format=', sha])
+  const result = await runChecked('git', ['patch-id', '--stable'], {
+    cwd: dir,
+    env: gitEnv(),
+    input: diff,
+    timeoutMs: 60_000,
+  })
+  return result.stdout.trim().split(/\s+/)[0] ?? ''
+}
+
+/**
+ * Whether main integrated the PR's commits one by one (GitHub rebase-and-merge
+ * or a fast-forward): the last `count` first-parent commits ending at
+ * `mergeSha` carry the same changes, in order, as the PR's last `count`.
+ */
+async function integratedCommitByCommit(
+  dir: string,
+  mergeSha: string,
+  prRef: string,
+  count: number
+): Promise<boolean> {
+  const list = async (ref: string) =>
+    (await git(dir, ['rev-list', '--reverse', '--first-parent', '-n', String(count), ref]))
+      .split('\n')
+      .filter(Boolean)
+  const [onMain, inPull] = [await list(mergeSha), await list(prRef)]
+  if (onMain.length !== count || inPull.length !== count) return false
+  for (let i = 0; i < count; i++) {
+    if ((await commitPatchId(dir, onMain[i])) !== (await commitPatchId(dir, inPull[i])))
+      return false
+  }
+  return true
+}
+
+/**
+ * Undo (#363): revert exactly what main integrated from a merged pull request
+ * in the working tree and index, with git's tree-level (rename-aware)
+ * three-way revert. A merge commit is reverted against main (`-m 1`); a PR
+ * integrated commit by commit (rebase-and-merge or fast-forward) has all of
+ * its commits reverted; otherwise (a squash) the single merge commit is.
+ * Only the merge's own delta is undone, never changes that reached main
+ * through other PRs. Returns 'conflict' when later changes touched the same
+ * lines and 'empty' when nothing is left to undo.
+ */
+export async function revertMergedPull(
+  config: Config,
+  prNumber: number,
+  mergeSha: string,
+  prCommitCount: number
+): Promise<'applied' | 'conflict' | 'empty'> {
+  if (!FULL_SHA.test(mergeSha) || !Number.isInteger(prNumber) || prNumber <= 0) {
+    throw new Error('Invalid pull request or merge commit to undo')
+  }
+  const dir = config.workDir
+  const prRef = `refs/remotes/origin/pr-${prNumber}`
+  await git(dir, ['fetch', '--no-tags', 'origin', `+refs/pull/${prNumber}/head:${prRef}`], {
+    env: gitAuthEnv(config.githubToken),
+  })
+  const parents = (await git(dir, ['rev-list', '--parents', '-n', '1', mergeSha])).trim().split(' ')
+  let target: string[]
+  if (parents.length > 2) target = ['-m', '1', mergeSha]
+  else if (
+    prCommitCount > 1 &&
+    (await integratedCommitByCommit(dir, mergeSha, prRef, prCommitCount))
+  ) {
+    target = [`${mergeSha}~${prCommitCount}..${mergeSha}`]
+  } else target = [mergeSha]
+
+  const code = await gitExitCode(dir, ['revert', '--no-commit', '--no-edit', ...target])
+  if (code !== 0) {
+    await gitExitCode(dir, ['revert', '--abort'])
+    return 'conflict'
+  }
+  // --quiet exits 0 when nothing is staged.
+  return (await gitExitCode(dir, ['diff', '--cached', '--quiet'])) === 0 ? 'empty' : 'applied'
+}
+
+/** Staged changes as a tree change set (for the same type/content policy as agent edits). */
+export async function stagedTreeChanges(dir: string): Promise<TreeChange[]> {
+  const raw = await git(dir, ['diff', '--cached', '--raw', '--no-renames', '-z'])
+  const parts = raw.split('\0').filter((part) => part !== '')
+  const changes: TreeChange[] = []
+  for (let i = 0; i + 1 < parts.length; i += 2) {
+    const [oldMode, newMode, , , status] = parts[i].replace(/^:/, '').split(' ')
+    const mode = status === 'D' ? oldMode : newMode
+    changes.push({
+      path: parts[i + 1],
+      change: status === 'A' ? 'added' : status === 'D' ? 'deleted' : 'modified',
+      kind: mode === '120000' ? 'symlink' : mode.startsWith('100') ? 'file' : 'other',
+    })
+  }
+  return changes
 }
