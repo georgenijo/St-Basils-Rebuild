@@ -9,6 +9,7 @@ import { isChangeRequestMergeConfigured } from '@/lib/change-request-github'
 import { signChangeRequestFiles } from '@/lib/change-request-storage'
 import {
   isActiveChangeRequestStatus,
+  isAwaitingLiveCheck,
   isClosableChangeRequestStatus,
   safeExternalUrl,
   sameOriginUrl,
@@ -81,7 +82,8 @@ export default async function ChangeRequestDetailPage({ params }: PageProps) {
   const request = await detail.request
   if (!request) notFound()
 
-  const active = isActiveChangeRequestStatus(request.status)
+  // Keep refreshing until a merged change is confirmed live (or reported).
+  const active = isActiveChangeRequestStatus(request.status) || isAwaitingLiveCheck(request)
   const prUrl = safeExternalUrl(request.pr_url)
   const previewUrl = safeExternalUrl(request.preview_url)
   // Only link to the preview if the page path stays on the preview's origin.

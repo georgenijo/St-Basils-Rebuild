@@ -5,6 +5,8 @@
 -- on the live domain, and moves the request to the new final status `live`.
 -- A failed or missing deployment keeps it `merged` with `error` set and
 -- `live_check_failed_at` stamped, so it is reported once and not retried.
+-- `record_change_request_live_check` writes either outcome together with its
+-- thread entry.
 
 ALTER TABLE public.change_requests DROP CONSTRAINT IF EXISTS change_requests_status_check;
 ALTER TABLE public.change_requests
@@ -68,3 +70,45 @@ CREATE POLICY "Admins can submit change requests"
     AND merge_commit_sha IS NULL AND merged_at IS NULL
     AND live_at IS NULL AND live_check_failed_at IS NULL
   );
+
+-- Record the live check's outcome and its thread entry in one transaction.
+-- Only the first outcome for a merged request counts (status still merged and
+-- not yet reported), so concurrent workers or retries can never post twice.
+-- p_outcome: 'live' (status live, live_at) or 'failed' (error,
+-- live_check_failed_at; status stays merged).
+CREATE OR REPLACE FUNCTION public.record_change_request_live_check(
+  p_request_id UUID,
+  p_outcome TEXT,
+  p_message TEXT,
+  p_error TEXT DEFAULT NULL
+)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+BEGIN
+  IF p_outcome = 'live' THEN
+    UPDATE public.change_requests
+    SET status = 'live', live_at = now(), error = NULL
+    WHERE id = p_request_id AND status = 'merged' AND live_check_failed_at IS NULL;
+  ELSIF p_outcome = 'failed' THEN
+    UPDATE public.change_requests
+    SET live_check_failed_at = now(), error = left(coalesce(p_error, p_message), 1000)
+    WHERE id = p_request_id AND status = 'merged' AND live_check_failed_at IS NULL;
+  ELSE
+    RAISE EXCEPTION 'invalid live check outcome' USING ERRCODE = '22023';
+  END IF;
+  IF NOT FOUND THEN
+    RETURN false;
+  END IF;
+  INSERT INTO public.change_request_messages (request_id, author_kind, author_id, body)
+  VALUES (p_request_id, 'system', NULL, left(p_message, 5000));
+  RETURN true;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.record_change_request_live_check(UUID, TEXT, TEXT, TEXT)
+  FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.record_change_request_live_check(UUID, TEXT, TEXT, TEXT)
+  TO service_role;

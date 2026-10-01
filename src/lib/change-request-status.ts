@@ -88,6 +88,14 @@ export function isClosableChangeRequestStatus(status: string): boolean {
   return (CLOSABLE_CHANGE_REQUEST_STATUSES as readonly string[]).includes(status)
 }
 
+/** Merged, and the agent has not yet confirmed it live or reported a problem. */
+export function isAwaitingLiveCheck(request: {
+  status: string
+  live_check_failed_at?: string | null
+}): boolean {
+  return request.status === 'merged' && !request.live_check_failed_at
+}
+
 export function isActiveChangeRequestStatus(status: string): boolean {
   return (ACTIVE_CHANGE_REQUEST_STATUSES as readonly string[]).includes(status)
 }

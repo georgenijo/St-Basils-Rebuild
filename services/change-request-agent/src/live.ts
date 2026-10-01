@@ -1,17 +1,16 @@
 import type { Config } from './config'
-import { listMergedAwaitingLive, postMessageSafe, updateIfStatus, type Db } from './db'
+import { listMergedAwaitingLive, recordLiveCheck, updateIfStatus, type Db } from './db'
 import type { GitHub } from './github'
 import { log } from './log'
 import type { DeploymentWithStatuses } from './preview'
 import type { ChangeRequest } from './types'
 
-/** A merge without a successful production deployment after this long is reported. */
+/**
+ * Every merged request gets an outcome within this long of its merge: live,
+ * or a visible failure (failed or missing deployment, a page that does not
+ * load, or GitHub lookups that keep failing).
+ */
 export const LIVE_DEPLOY_TIMEOUT_MS = 30 * 60_000
-
-export type ProductionState =
-  | { state: 'ready'; sha: string }
-  | { state: 'failed'; detail: string }
-  | { state: 'pending' }
 
 const PRODUCTION = /^production$/i
 
@@ -21,49 +20,59 @@ function latestStatus(deployment: DeploymentWithStatuses) {
   )[0]
 }
 
-/**
- * The newest production deployment's outcome, or null if there is none.
- * `inactive` means it went live and was later replaced, so it counts as ready.
- */
-export function selectProductionDeployment(
-  deployments: DeploymentWithStatuses[]
-): ProductionState | null {
-  const newest = deployments
+function newestFirst(deployments: DeploymentWithStatuses[]) {
+  return deployments
     .filter((d) => PRODUCTION.test(d.environment))
-    .sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at))[0]
-  if (!newest) return null
-  const status = latestStatus(newest)
-  if (!status) return { state: 'pending' }
-  if (status.state === 'success' || status.state === 'inactive') {
-    return { state: 'ready', sha: newest.sha }
+    .sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at))
+}
+
+/**
+ * What production is serving now: the newest production deployment whose
+ * latest status is `success`. (GitHub marks a replaced or rolled-back
+ * deployment `inactive`, so an inactive deployment is never current.)
+ */
+export function currentProduction(deployments: DeploymentWithStatuses[]): string | null {
+  return newestFirst(deployments).find((d) => latestStatus(d)?.state === 'success')?.sha ?? null
+}
+
+/** Whether the merge commit's own newest production deployment failed. */
+export function ownDeploymentFailed(deployments: DeploymentWithStatuses[]): string | null {
+  const newest = newestFirst(deployments)[0]
+  const state = newest ? latestStatus(newest)?.state : undefined
+  return state === 'failure' || state === 'error' ? state : null
+}
+
+export type ProductionState =
+  | { state: 'ready'; sha: string }
+  | { state: 'failed'; detail: string }
+  | { state: 'pending' }
+
+/**
+ * Live means production currently serves the merge commit or a descendant of
+ * it (Vercel may skip or never finish the merge's own build when a newer push
+ * supersedes it). Otherwise the merge's own failed deployment is a failure,
+ * and anything else is still pending.
+ */
+async function productionStateFor(gh: GitHub, sha: string): Promise<ProductionState> {
+  const current = currentProduction(await gh.latestProductionDeployments())
+  if (current && (current === sha || (await gh.commitContains(current, sha)))) {
+    return { state: 'ready', sha: current }
   }
-  if (status.state === 'failure' || status.state === 'error') {
-    return { state: 'failed', detail: `the production deployment reported "${status.state}"` }
-  }
+  const failed = ownDeploymentFailed(await gh.deploymentsForSha(sha))
+  if (failed) return { state: 'failed', detail: `the production deployment reported "${failed}"` }
   return { state: 'pending' }
 }
 
-/**
- * Production state for a merge commit. Vercel can skip or cancel the build of
- * a commit that a newer push supersedes, so with no deployment of its own the
- * commit counts as deployed once a newer successful production deployment
- * contains it.
- */
-async function productionStateFor(gh: GitHub, sha: string): Promise<ProductionState> {
-  const own = selectProductionDeployment(await gh.deploymentsForSha(sha))
-  if (own && own.state !== 'failed') return own
-  const latest = (await gh.latestProductionDeployments())
-    .filter((d) => latestStatus(d)?.state === 'success')
-    .sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at))[0]
-  if (latest && latest.sha !== sha && (await gh.commitContains(latest.sha, sha))) {
-    return { state: 'ready', sha: latest.sha }
-  }
-  return own ?? { state: 'pending' }
-}
-
-export interface LiveCheckDeps {
+export interface LiveCheckOptions {
   fetchPage?: (url: string) => Promise<number>
   now?: () => Date
+  /** One-shot runs: keep polling pending requests for up to this long. */
+  waitMs?: number
+  pollMs?: number
+  /** Interruptible sleep (the worker's, so shutdown wakes it). */
+  sleep?: (ms: number) => Promise<void>
+  isShuttingDown?: () => boolean
+  dryRun?: boolean
 }
 
 async function defaultFetchPage(url: string): Promise<number> {
@@ -77,112 +86,137 @@ async function defaultFetchPage(url: string): Promise<number> {
   return response.status
 }
 
-type RowOutcome = 'live' | 'failed' | 'pending'
+type RowOutcome = 'done' | 'pending'
 
-async function reportFailure(db: Db, row: ChangeRequest, now: Date, message: string) {
-  const recorded = await updateIfStatus(db, row.id, 'merged', {
-    live_check_failed_at: now.toISOString(),
-    error: message,
+/** Fill in a merge commit (and merge time) missing from the request, from its PR. */
+async function ensureMergeCommit(
+  db: Db,
+  gh: GitHub,
+  row: ChangeRequest
+): Promise<ChangeRequest | null> {
+  if (row.merge_commit_sha && row.merged_at) return row
+  if (!row.pr_number) return row.merge_commit_sha ? row : null
+  const pr = await gh.pullState(row.pr_number)
+  const mergeCommitSha = row.merge_commit_sha ?? pr.mergeCommitSha
+  if (!mergeCommitSha) return null
+  const mergedAt = row.merged_at ?? pr.mergedAt ?? row.updated_at
+  await updateIfStatus(db, row.id, 'merged', {
+    merge_commit_sha: mergeCommitSha,
+    merged_at: mergedAt,
   })
-  if (!recorded) return
-  log.warn('live check failed', { requestId: row.id, message })
-  await postMessageSafe(db, row.id, 'system', `Not confirmed live: ${message}`)
+  return { ...row, merge_commit_sha: mergeCommitSha, merged_at: mergedAt }
+}
+
+function pastDeadline(row: ChangeRequest, now: Date): boolean {
+  const since = Date.parse(row.merged_at ?? row.updated_at)
+  return now.getTime() - since >= LIVE_DEPLOY_TIMEOUT_MS
+}
+
+async function fail(db: Db, row: ChangeRequest, problem: string): Promise<RowOutcome> {
+  if (await recordLiveCheck(db, row.id, 'failed', `Not confirmed live: ${problem}`, problem)) {
+    log.warn('live check failed', { requestId: row.id, problem })
+  }
+  return 'done'
 }
 
 async function checkRow(
   db: Db,
   gh: GitHub,
   config: Config,
-  row: ChangeRequest,
-  deps: Required<LiveCheckDeps>
+  original: ChangeRequest,
+  fetchPage: (url: string) => Promise<number>,
+  now: Date
 ): Promise<RowOutcome> {
+  const row = await ensureMergeCommit(db, gh, original)
+  if (!row) {
+    return fail(
+      db,
+      original,
+      'the merge commit could not be found on GitHub, so the live site could not be checked.'
+    )
+  }
   const sha = row.merge_commit_sha as string
-  const now = deps.now()
   const production = await productionStateFor(gh, sha)
   if (production.state === 'failed') {
-    await reportFailure(
+    return fail(
       db,
       row,
-      now,
       `${production.detail} for merge commit ${sha.slice(0, 7)}. Check Vercel; the live site still shows the previous version.`
     )
-    return 'failed'
   }
   if (production.state === 'pending') {
-    const mergedAt = row.merged_at ? Date.parse(row.merged_at) : now.getTime()
-    if (now.getTime() - mergedAt < LIVE_DEPLOY_TIMEOUT_MS) return 'pending'
-    await reportFailure(
+    if (!pastDeadline(row, now)) return 'pending'
+    return fail(
       db,
       row,
-      now,
-      `no successful Vercel production deployment of merge commit ${sha.slice(0, 7)} appeared within ${LIVE_DEPLOY_TIMEOUT_MS / 60_000} minutes. Check Vercel.`
+      `no Vercel production deployment containing merge commit ${sha.slice(0, 7)} went live within ${LIVE_DEPLOY_TIMEOUT_MS / 60_000} minutes. Check Vercel.`
     )
-    return 'failed'
   }
 
   const url = new URL(row.page_path, config.siteUrl).toString()
   let status: number
   try {
-    status = await deps.fetchPage(url)
-  } catch (error) {
-    log.warn('live page check failed; will retry', { requestId: row.id, error: String(error) })
-    return 'pending'
+    status = await fetchPage(url)
+  } catch {
+    if (!pastDeadline(row, now)) return 'pending'
+    return fail(db, row, `the production deployment finished, but ${url} could not be loaded.`)
   }
   if (status < 200 || status >= 300) {
-    await reportFailure(
-      db,
-      row,
-      now,
-      `the production deployment finished, but ${url} returned HTTP ${status}.`
-    )
-    return 'failed'
+    if (!pastDeadline(row, now)) return 'pending'
+    return fail(db, row, `the production deployment finished, but ${url} returned HTTP ${status}.`)
   }
-  if (
-    await updateIfStatus(db, row.id, 'merged', {
-      status: 'live',
-      live_at: now.toISOString(),
-      error: null,
-    })
-  ) {
+  if (await recordLiveCheck(db, row.id, 'live', `Live on site ↗ ${url}`)) {
     log.info('change is live', { requestId: row.id, sha, deployedSha: production.sha })
-    await postMessageSafe(db, row.id, 'system', `Live on site ↗ ${url}`)
   }
-  return 'live'
+  return 'done'
 }
 
 /**
- * Confirm merged requests are live (#362): wait for the Vercel production
- * deployment of the merge commit, check the request's page on the live
- * domain, then mark the request `live` and post "Live on site ↗". A failed
- * deployment, a missing one after LIVE_DEPLOY_TIMEOUT_MS, or a non-2xx page is
- * reported once in the thread and on the request. With `waitMs`, pending
- * deployments are polled until they settle or the wait ends (used by one-shot
- * runs, which have no later sweep).
+ * Confirm merged requests are live (#362): once production serves the merge
+ * commit (or a descendant) and the request's page loads on the live domain,
+ * the request becomes `live` with "Live on site ↗" in the thread. Anything
+ * still unresolved LIVE_DEPLOY_TIMEOUT_MS after the merge (failed or missing
+ * deployment, page errors, repeated lookup errors) is reported once instead.
+ * Outcomes and their thread entries are written together, first one wins.
+ * With `waitMs`, pending requests (including ones whose lookup errored) are
+ * polled until they settle, the wait ends, or the worker shuts down.
  */
 export async function confirmLiveDeployments(
   db: Db,
   gh: GitHub,
   config: Config,
-  options: LiveCheckDeps & { waitMs?: number; pollMs?: number; dryRun?: boolean } = {}
+  options: LiveCheckOptions = {}
 ): Promise<void> {
   if (options.dryRun) return
-  const deps: Required<LiveCheckDeps> = {
-    fetchPage: options.fetchPage ?? defaultFetchPage,
-    now: options.now ?? (() => new Date()),
-  }
-  const deadline = deps.now().getTime() + (options.waitMs ?? 0)
+  const now = options.now ?? (() => new Date())
+  const fetchPage = options.fetchPage ?? defaultFetchPage
+  const sleep =
+    options.sleep ?? ((ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms)))
+  const stopping = options.isShuttingDown ?? (() => false)
+  const deadline = now().getTime() + (options.waitMs ?? 0)
+
   let rows = await listMergedAwaitingLive(db)
-  while (rows.length > 0) {
+  while (rows.length > 0 && !stopping()) {
     const pending: ChangeRequest[] = []
     for (const row of rows) {
+      if (stopping()) return
       try {
-        if ((await checkRow(db, gh, config, row, deps)) === 'pending') pending.push(row)
+        if ((await checkRow(db, gh, config, row, fetchPage, now())) === 'pending') pending.push(row)
       } catch (error) {
         log.warn('live check error; will retry', { requestId: row.id, error: String(error) })
+        if (pastDeadline(row, now())) {
+          await fail(
+            db,
+            row,
+            `the live check kept failing (${String(error).slice(0, 200)}). Check Vercel and GitHub.`
+          ).catch((e) => log.warn('live check failure not recorded', { error: String(e) }))
+        } else {
+          pending.push(row)
+        }
       }
     }
-    if (pending.length === 0 || deps.now().getTime() >= deadline) return
-    await new Promise((resolve) => setTimeout(resolve, options.pollMs ?? 30_000))
+    if (pending.length === 0 || now().getTime() >= deadline || stopping()) return
+    await sleep(options.pollMs ?? 30_000)
     rows = pending
   }
 }

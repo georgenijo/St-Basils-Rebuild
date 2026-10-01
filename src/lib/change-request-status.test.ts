@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   getChangeRequestStatusInfo,
   isActiveChangeRequestStatus,
+  isAwaitingLiveCheck,
   normalizeVerificationChecks,
   safeExternalUrl,
   sameOriginUrl,
@@ -113,5 +114,16 @@ describe('shortCommitSha', () => {
     expect(shortCommitSha('abc')).toBeNull()
     expect(shortCommitSha('<script>')).toBeNull()
     expect(shortCommitSha(null)).toBeNull()
+  })
+})
+
+describe('isAwaitingLiveCheck', () => {
+  it('is true only for merged requests without a live check outcome', () => {
+    expect(isAwaitingLiveCheck({ status: 'merged', live_check_failed_at: null })).toBe(true)
+    expect(isAwaitingLiveCheck({ status: 'merged', live_check_failed_at: '2026-10-01' })).toBe(
+      false
+    )
+    expect(isAwaitingLiveCheck({ status: 'live' })).toBe(false)
+    expect(isAwaitingLiveCheck({ status: 'ready_for_review' })).toBe(false)
   })
 })

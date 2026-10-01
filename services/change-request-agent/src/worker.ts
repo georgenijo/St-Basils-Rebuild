@@ -131,9 +131,10 @@ async function main(): Promise<void> {
         await cleanupClosedRequests(db, gh, { dryRun: config.dryRun }).catch((error) =>
           log.error('closed request cleanup failed', { error })
         )
-        await confirmLiveDeployments(db, gh, config, { dryRun: config.dryRun }).catch((error) =>
-          log.error('live check failed', { error })
-        )
+        await confirmLiveDeployments(db, gh, config, {
+          dryRun: config.dryRun,
+          isShuttingDown: () => shuttingDown,
+        }).catch((error) => log.error('live check failed', { error }))
         await cleanupStorage(db, config).catch((error) =>
           log.error('storage cleanup failed', { error })
         )
@@ -162,6 +163,8 @@ async function main(): Promise<void> {
       await confirmLiveDeployments(db, gh, config, {
         dryRun: config.dryRun,
         waitMs: config.liveWaitMs,
+        sleep,
+        isShuttingDown: () => shuttingDown,
       }).catch((error) => log.error('live check failed', { error }))
     }
   } finally {
