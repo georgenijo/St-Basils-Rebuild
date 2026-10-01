@@ -340,21 +340,27 @@ export async function processRequest(ctx: JobContext, claimed: ChangeRequest): P
       log.warn('job interrupted by shutdown', { requestId: claimed.id })
       const requeue = claimed.attempts < ctx.config.maxAttempts
       try {
-        await updateRequest(
-          ctx.db,
-          claimed.id,
-          requeue
-            ? { status: 'queued', claimed_by: null, claimed_at: null, error: null }
-            : { status: 'needs_attention', error: 'Worker restarted while processing this request' }
-        )
-        await postMessageSafe(
-          ctx.db,
-          claimed.id,
-          'system',
-          requeue
-            ? 'The worker restarted while processing this request; it has been queued again.'
-            : 'The worker restarted while processing this request and it has used all its attempts.'
-        )
+        if (requeue) {
+          await updateRequest(ctx.db, claimed.id, {
+            status: 'queued',
+            claimed_by: null,
+            claimed_at: null,
+            error: null,
+          })
+          await postMessageSafe(
+            ctx.db,
+            claimed.id,
+            'system',
+            'The worker restarted while processing this request; it has been queued again.'
+          )
+        } else {
+          await needsAttention(
+            ctx,
+            claimed.id,
+            'Worker restarted while processing this request',
+            'The worker restarted while processing this request and it has used all its attempts.'
+          )
+        }
       } catch (e) {
         log.error('failed to release request on shutdown', { requestId: claimed.id, error: e })
       }

@@ -352,6 +352,12 @@ describe('processRequest: happy path', () => {
       .mock.calls.find(([, , patch]) => patch?.status === 'ready_for_review')
     expect(readyCall).toBeTruthy()
     expect(readyCall?.[2].error).toBeNull()
+
+    expect(notify).toHaveBeenCalledTimes(1)
+    expect(vi.mocked(notify).mock.calls[0][1]).toMatchObject({
+      status: 'ready_for_review',
+      headline: expect.stringContaining('Preview verified (pass)'),
+    })
   })
 })
 
@@ -435,6 +441,9 @@ describe('processRequest: CI repair round', () => {
       .mock.calls.find(([, , patch]) => patch?.status === 'needs_attention')
     expect(attentionCall).toBeTruthy()
     expect(attentionCall?.[2].error).toBe('CI checks failed after one repair attempt')
+
+    expect(notify).toHaveBeenCalledTimes(1)
+    expect(vi.mocked(notify).mock.calls[0][1].status).toBe('needs_attention')
   })
 })
 
@@ -478,6 +487,29 @@ describe('processRequest: shutdown mid-CI-wait', () => {
     // Cleanup still ran even though the job never finished.
     expect(vi.mocked(git).mock.calls.some(([, args]) => args[0] === 'reset')).toBe(true)
     expect(removeAgentCheckout).toHaveBeenCalledTimes(1)
+  })
+
+  it('reports needs_attention and emails when shutdown interrupts the last attempt', async () => {
+    let calls = 0
+    const isShuttingDown = vi.fn(() => {
+      calls += 1
+      return calls > 3
+    })
+    const { ctx } = makeCtx({ isShuttingDown })
+
+    await processRequest(ctx, fakeRequest({ attempts: 3 }))
+
+    const patches = vi.mocked(updateRequest).mock.calls.map(([, , patch]) => patch)
+    expect(patches.some((patch) => patch.status === 'queued')).toBe(false)
+    expect(patches).toContainEqual({
+      status: 'needs_attention',
+      error: 'Worker restarted while processing this request',
+    })
+    expect(notify).toHaveBeenCalledTimes(1)
+    expect(vi.mocked(notify).mock.calls[0][1]).toMatchObject({
+      status: 'needs_attention',
+      headline: expect.stringContaining('used all its attempts'),
+    })
   })
 })
 
