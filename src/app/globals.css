@@ -52,6 +52,7 @@
   @keyframes removeCursor {
     to {
       border-right-color: transparent;
+      overflow: visible;
     }
   }
 
