@@ -2243,7 +2243,7 @@
 /* Keep the Evidence jump target clear of the sticky top bar + request header
    (ChangeRequestHeaderOffset measures the header into --cr-header-height). */
 .cr-evidence {
-  scroll-margin-top: 16px;
+  scroll-margin-top: calc(54px + 16px);
 }
 
 @media (min-width: 921px) {

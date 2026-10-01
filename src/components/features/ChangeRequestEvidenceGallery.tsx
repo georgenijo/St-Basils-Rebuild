@@ -231,7 +231,7 @@ export function ChangeRequestEvidenceGallery({
                   </>
                 )}
                 <a
-                  href={selected.src}
+                  href={current.fullSrc ?? selected.src}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="admin-button admin-button-quiet"
@@ -261,7 +261,12 @@ export function ChangeRequestEvidenceGallery({
                   <button
                     type="button"
                     className="admin-button admin-button-quiet"
-                    onClick={() => router.refresh()}
+                    onClick={() => {
+                      // Retry right away (even if the URL is unchanged) and
+                      // fetch fresh signed URLs; a new URL is adopted above.
+                      setSelected((value) => (value ? { ...value, failed: false } : value))
+                      router.refresh()
+                    }}
                   >
                     Reload screenshots
                   </button>
