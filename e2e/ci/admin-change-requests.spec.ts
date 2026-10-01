@@ -451,4 +451,114 @@ test.describe('CI admin website change requests', () => {
       { body: 'Make the heading a little bigger.', intent: 'revision' },
     ])
   })
+
+  test('conversation reads as a timeline with clickable PR and preview links', async ({ page }) => {
+    const supabase = getAdminClient()
+    const { data: admin } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('email', 'admin@stbasilsboston.org')
+      .single()
+    const prUrl = 'https://github.com/georgenijo/St-Basils-Rebuild/pull/4242'
+    const previewUrl = 'https://st-basils-ci-preview.vercel.app'
+    const title = `CI timeline request ${Date.now()}-${Math.round(Math.random() * 1000)}`
+    const { data: seeded, error } = await supabase
+      .from('change_requests')
+      .insert({
+        requester_id: admin!.id,
+        title,
+        description: 'Fix the footer link.',
+        page_path: '/',
+        status: 'ready_for_review',
+        pr_number: 4242,
+        pr_url: prUrl,
+        preview_url: previewUrl,
+      })
+      .select('id')
+      .single()
+    expect(error).toBeNull()
+    const requestId = seeded!.id as string
+    createdIds.push(requestId)
+
+    const at = (minute: number) => new Date(Date.UTC(2026, 8, 30, 12, minute)).toISOString()
+    await supabase.from('change_request_messages').insert([
+      {
+        request_id: requestId,
+        author_kind: 'requester',
+        author_id: admin!.id,
+        body: 'Please see https://example.org/footer-spec. Thanks!',
+        created_at: at(0),
+      },
+      {
+        request_id: requestId,
+        author_kind: 'system',
+        body: 'The worker picked up this request and is preparing a change.',
+        created_at: at(1),
+      },
+      {
+        request_id: requestId,
+        author_kind: 'agent',
+        body: 'Updated the footer:\n- changed `Footer.tsx`\n- kept the layout\n\n<script>alert(1)</script>',
+        created_at: at(2),
+      },
+      {
+        request_id: requestId,
+        author_kind: 'system',
+        body: `Opened pull request #4242: ${prUrl}\nIt opens as a draft and is marked ready for review automatically once CI checks and the Vercel preview verification both pass.`,
+        created_at: at(3),
+      },
+      {
+        request_id: requestId,
+        author_kind: 'system',
+        body: 'CI checks passed on pull request #4242 (commit abc1234); verifying the preview next.',
+        created_at: at(4),
+      },
+      {
+        request_id: requestId,
+        author_kind: 'system',
+        body: `Preview verified (pass): The footer link works.\nPreview: ${previewUrl}/`,
+        created_at: at(5),
+      },
+    ])
+
+    await loginAsSeedAdmin(page)
+    await page.waitForURL('**/admin/**')
+    await page.goto(`/admin/requests/${requestId}`, { waitUntil: 'domcontentloaded' })
+
+    const thread = page.getByRole('list', { name: 'Request timeline' })
+    await expect(thread).toBeVisible()
+
+    // Requester and agent messages are distinct bubbles.
+    await expect(thread.locator('.cr-message[data-kind="requester"]')).toContainText('Please see')
+    const agent = thread.locator('.cr-message[data-kind="agent"]')
+    await expect(agent).toContainText('Website agent')
+    await expect(agent.locator('li')).toHaveText(['changed Footer.tsx', 'kept the layout'])
+    await expect(agent.locator('code')).toHaveText('Footer.tsx')
+    // Message text is escaped, never interpreted as markup.
+    await expect(agent).toContainText('<script>alert(1)</script>')
+
+    // Plain URLs are clickable and open in a new tab.
+    const specLink = thread.getByRole('link', { name: /example\.org\/footer-spec/ })
+    await expect(specLink).toHaveAttribute('href', 'https://example.org/footer-spec')
+    await expect(specLink).toHaveAttribute('target', '_blank')
+    await expect(specLink).toHaveAttribute('rel', 'noopener noreferrer')
+
+    // System events are compact rows with PR / preview buttons.
+    await expect(thread.locator('.cr-event[data-event="picked_up"]')).toContainText(
+      'Picked up by the website agent'
+    )
+    const opened = thread.locator('.cr-event[data-event="pr_opened"]')
+    await expect(opened).toContainText('PR #4242 opened')
+    await expect(opened.getByRole('link', { name: /View PR #4242/ })).toHaveAttribute('href', prUrl)
+    await expect(thread.locator('.cr-event[data-event="ci_passed"]')).toContainText(
+      'CI passed (abc1234)'
+    )
+    const verified = thread.locator('.cr-event[data-event="verified"]')
+    await expect(verified).toContainText('Preview verified')
+    await expect(verified).toContainText('The footer link works.')
+    await expect(verified.getByRole('link', { name: /Open preview/ })).toHaveAttribute(
+      'href',
+      `${previewUrl}/`
+    )
+  })
 })

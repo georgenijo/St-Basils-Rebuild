@@ -356,6 +356,14 @@ describe('processRequest: happy path', () => {
     expect(gh.markReadyForReview).toHaveBeenCalledTimes(1)
     expect(gh.markReadyForReview).toHaveBeenCalledWith(12)
 
+    // The admin timeline gets a "CI passed" event for the exact commit.
+    expect(postMessageSafe).toHaveBeenCalledWith(
+      ctx.db,
+      request.id,
+      'system',
+      `CI checks passed on pull request #12 (commit ${headSha.slice(0, 7)}); verifying the preview next.`
+    )
+
     const readyCall = vi
       .mocked(updateRequest)
       .mock.calls.find(([, , patch]) => patch?.status === 'ready_for_review')
