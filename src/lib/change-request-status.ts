@@ -50,7 +50,8 @@ export const CHANGE_REQUEST_STATUS_INFO: Record<ChangeRequestStatus, StatusInfo>
   },
   closed: {
     label: 'Closed',
-    description: 'The pull request was closed without merging. Nothing changed on the site.',
+    description:
+      'The request was closed without merging, so nothing changed on the live site. It will not be worked on again.',
     tone: 'neutral',
   },
 }
@@ -62,6 +63,17 @@ export const ACTIVE_CHANGE_REQUEST_STATUSES: readonly ChangeRequestStatus[] = [
   'in_progress',
   'verifying',
 ]
+
+/** Statuses an admin can close: no worker is running on them (see close_change_request). */
+export const CLOSABLE_CHANGE_REQUEST_STATUSES: readonly ChangeRequestStatus[] = [
+  'queued',
+  'ready_for_review',
+  'needs_attention',
+]
+
+export function isClosableChangeRequestStatus(status: string): boolean {
+  return (CLOSABLE_CHANGE_REQUEST_STATUSES as readonly string[]).includes(status)
+}
 
 export function isActiveChangeRequestStatus(status: string): boolean {
   return (ACTIVE_CHANGE_REQUEST_STATUSES as readonly string[]).includes(status)

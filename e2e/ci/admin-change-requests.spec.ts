@@ -561,4 +561,78 @@ test.describe('CI admin website change requests', () => {
       `${previewUrl}/`
     )
   })
+
+  test('admin closes a request with a reason; closed requests are final', async ({ page }) => {
+    const supabase = getAdminClient()
+    const { data: admin } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('email', 'admin@stbasilsboston.org')
+      .single()
+    const title = `CI close request ${Date.now()}-${Math.round(Math.random() * 1000)}`
+    const { data: row, error } = await supabase
+      .from('change_requests')
+      .insert({
+        requester_id: admin!.id,
+        title,
+        description: 'Please change the footer colour to green.',
+        page_path: '/',
+        status: 'ready_for_review',
+        branch_name: 'change-request/ci000001-website-update',
+        pr_number: 9998,
+        pr_url: 'https://github.com/georgenijo/St-Basils-Rebuild/pull/9998',
+        verification: { verdict: 'pass', summary: 'Footer is green.', checks: [] },
+      })
+      .select('id')
+      .single()
+    expect(error).toBeNull()
+    const requestId = row!.id as string
+    createdIds.push(requestId)
+
+    await loginAsSeedAdmin(page)
+    await page.waitForURL('**/admin/**')
+    await page.goto(`/admin/requests/${requestId}`, { waitUntil: 'domcontentloaded' })
+    const open = page.getByRole('button', { name: 'Close request…' })
+    await waitForReactHydration(open)
+    await open.click()
+
+    const form = page.getByRole('form', { name: 'Close request' })
+    await expect(form).toContainText('closes any open pull request and deletes its branch')
+    const confirm = form.getByRole('button', { name: 'Close request' })
+    await expect(confirm).toBeDisabled()
+    await page.locator('textarea#close-reason').fill('We decided to keep the current colours.')
+    await confirm.click()
+
+    await expect(page.getByTestId('change-request-status')).toContainText('Closed')
+    await expect(page.getByTestId('change-request-actions')).toHaveCount(0)
+    await expect(page.getByTestId('change-request-thread')).toContainText(
+      'Closed this request: We decided to keep the current colours.'
+    )
+    await expect(page.getByTestId('change-request-thread')).toContainText(
+      'The agent will close any open pull request and delete its branch'
+    )
+
+    const { data: closed } = await supabase
+      .from('change_requests')
+      .select('status, github_cleanup_pending')
+      .eq('id', requestId)
+      .single()
+    expect(closed).toEqual({ status: 'closed', github_cleanup_pending: true })
+
+    // A later reply is only saved, and the database refuses to reopen it.
+    await page.locator('textarea#reply-body').fill('Thanks anyway.')
+    await page.getByRole('button', { name: 'Send reply' }).click()
+    await expect(page.locator('.cr-reply [role="status"]')).toContainText('Reply posted.')
+    const { error: reopenError } = await supabase
+      .from('change_requests')
+      .update({ status: 'queued' })
+      .eq('id', requestId)
+    expect(reopenError?.message).toContain('is closed')
+    const { data: after } = await supabase
+      .from('change_requests')
+      .select('status')
+      .eq('id', requestId)
+      .single()
+    expect(after?.status).toBe('closed')
+  })
 })

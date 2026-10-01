@@ -108,14 +108,19 @@ Each maintenance cycle also deletes `submitting` rows older than 1 h (row first,
 conditionally on still being `submitting`, then its objects) and sweeps
 `requests/<uuid>/` Storage folders with no request row, removing objects older
 than `ORPHAN_MIN_AGE_MINUTES` (max 50 folders per cycle; any listing/query
-error skips the folder until the next cycle).
+error skips the folder until the next cycle). It also finishes requests an
+admin closed from the site (`status = 'closed'`, `github_cleanup_pending`):
+closes the still-open PR with a generic public comment (never the private
+reason), deletes the `change-request/*` branch, and clears the flag; a PR that
+was already merged moves the request to `merged` instead. GitHub failures
+leave the flag set for the next cycle.
 The worker only ever claims `queued` requests; `submitting` rows (still being
 written by the admin UI) are left alone.
 
 **Maintenance under a bounded-trigger dispatch model** — a long-poll deploy
 (`main()` looping with `POLL_INTERVAL_MS`, e.g. the persistent Coolify mode)
 runs the maintenance cycle above (`recoverStaleClaims`, `syncPullRequests`,
-`cleanupStorage`) every `PR_SYNC_INTERVAL_MS` regardless of whether a request
+`cleanupClosedRequests`, `cleanupStorage`) every `PR_SYNC_INTERVAL_MS` regardless of whether a request
 is queued. A Family Host managed-agent run (`--once`) only runs the process at
 all when something dispatches it, and only runs maintenance once, at startup,
 before claiming — there is no idle-period loop to run it again later. This is

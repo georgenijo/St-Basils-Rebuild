@@ -1815,6 +1815,32 @@
   resize: vertical;
 }
 
+.cr-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.cr-close-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  max-width: 560px;
+}
+
+.cr-close-form label {
+  font-weight: 600;
+}
+
+.cr-close-form textarea {
+  width: 100%;
+  min-height: 72px;
+  padding: 7px 10px !important;
+  resize: vertical;
+}
+
 .cr-reply-intent {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));

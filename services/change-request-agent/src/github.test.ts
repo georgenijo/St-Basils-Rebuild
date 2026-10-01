@@ -246,3 +246,46 @@ describe('markReadyForReview', () => {
     await expect(gh.markReadyForReview(12)).rejects.toThrow(/GraphQL errors/)
   })
 })
+
+describe('closePull and deleteBranch', () => {
+  it('closes by PATCHing state and treats an already-deleted branch as done', async () => {
+    const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
+      if (init?.method === 'DELETE') {
+        return new Response('{"message":"Reference does not exist"}', { status: 422 })
+      }
+      return new Response('{}', { status: 200 })
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    const gh = configuredGitHub()
+
+    await gh.closePull(12)
+    expect(JSON.parse(String(fetchMock.mock.calls[0][1]?.body))).toEqual({ state: 'closed' })
+    expect(await gh.deleteBranch('change-request/abcd1234-x')).toBe(false)
+    expect(String(fetchMock.mock.calls[1][0])).toMatch(
+      /\/git\/refs\/heads\/change-request\/abcd1234-x$/
+    )
+  })
+
+  it('surfaces other branch deletion failures', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response('denied', { status: 403 }))
+    )
+    await expect(configuredGitHub().deleteBranch('change-request/x')).rejects.toThrow('403')
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response('{"message":"Validation Failed"}', { status: 422 }))
+    )
+    await expect(configuredGitHub().deleteBranch('change-request/x')).rejects.toThrow('422')
+  })
+
+  it('recognises a missing ref even in pretty-printed JSON', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(
+        async () => new Response('{\n  "message": "Reference does not exist"\n}', { status: 422 })
+      )
+    )
+    expect(await configuredGitHub().deleteBranch('change-request/x')).toBe(false)
+  })
+})

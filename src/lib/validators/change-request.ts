@@ -84,6 +84,20 @@ export const changeRequestSchema = z.object({
 
 export type ChangeRequestFormData = z.infer<typeof changeRequestSchema>
 
+export const CHANGE_REQUEST_CLOSE_REASON_MAX = 1000
+
+export const changeRequestCloseSchema = z.object({
+  request_id: z.uuid('Invalid request'),
+  reason: z
+    .string({ error: 'Give a short reason' })
+    .trim()
+    .min(3, 'Give a short reason')
+    .max(
+      CHANGE_REQUEST_CLOSE_REASON_MAX,
+      `Reason must be ${CHANGE_REQUEST_CLOSE_REASON_MAX} characters or less`
+    ),
+})
+
 /**
  * What a reply is for. `reply` is a plain reply; `requeue` answers a
  * needs_attention request and sends it back to the queue. On a request that

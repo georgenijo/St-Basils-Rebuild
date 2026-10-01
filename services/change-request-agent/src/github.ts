@@ -143,6 +143,15 @@ export class GitHub {
     return pulls[0] ?? null
   }
 
+  /** Newest PR for the branch in any state (open, closed or merged), if any. */
+  async findLatestPullForBranch(branch: string): Promise<{ number: number } | null> {
+    const pulls = await this.request<{ number: number }[]>(
+      'GET',
+      `/repos/${this.repo}/pulls?state=all&sort=created&direction=desc&per_page=1&head=${encodeURIComponent(`${this.owner}:${branch}`)}`
+    )
+    return pulls[0] ?? null
+  }
+
   /** Remove stale readiness before editing or pushing another revision. */
   async markDraftForBranch(branch: string): Promise<void> {
     const existing = await this.findOpenPullForBranch(branch)
@@ -234,6 +243,27 @@ export class GitHub {
       }`,
       { id: pr.node_id }
     )
+  }
+
+  async closePull(prNumber: number): Promise<void> {
+    await this.request('PATCH', `/repos/${this.repo}/pulls/${prNumber}`, { state: 'closed' })
+  }
+
+  /** Delete a branch; false if it was already gone. */
+  async deleteBranch(branch: string): Promise<boolean> {
+    try {
+      await this.request(
+        'DELETE',
+        `/repos/${this.repo}/git/refs/heads/${branch.split('/').map(encodeURIComponent).join('/')}`
+      )
+      return true
+    } catch (error) {
+      // Only a confirmed missing ref means there is nothing left to delete;
+      // any other failure (including other 422s) is retried next sweep.
+      const text = String(error)
+      if (/→ 404:/.test(text) || /→ 422:[\s\S]*Reference does not exist/.test(text)) return false
+      throw error
+    }
   }
 
   async comment(prNumber: number, body: string): Promise<void> {
