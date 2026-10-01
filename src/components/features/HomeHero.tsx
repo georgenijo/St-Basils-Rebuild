@@ -92,7 +92,7 @@ export function HomeHero() {
 
           {/* Typewriter heading */}
           <div className="mt-2 min-h-[40px] text-center sm:min-h-[55px] md:min-h-[75px] lg:min-h-[90px]">
-            <h1 className="typewriter-text font-heading text-[2.25rem] font-bold text-cream-50 sm:text-[3.125rem] md:text-[4.375rem] lg:text-[5.5rem]">
+            <h1 className="typewriter-text font-heading text-[clamp(1.5rem,8.5vw,2.25rem)] font-bold text-cream-50 sm:text-[3.125rem] md:text-[4.375rem] lg:text-[4.5rem]">
               Come As You Are
             </h1>
           </div>
