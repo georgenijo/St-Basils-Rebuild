@@ -1080,6 +1080,8 @@ describe('approveAndMergeChangeRequest', () => {
       { p_request_id: REQUEST_ID, p_merge_sha: MERGED, p_head_sha: VERIFIED },
     ])
     expect(adminRpcCalls('release_change_request_merge')).toHaveLength(0)
+    // The agent is woken to confirm the production deployment.
+    expect(mockTriggerAgent).toHaveBeenCalledWith(REQUEST_ID)
   })
 
   it('releases the reservation when GitHub refuses the merge', async () => {

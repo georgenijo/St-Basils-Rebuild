@@ -7,6 +7,7 @@ export type ChangeRequestStatus =
   | 'needs_attention'
   | 'merging'
   | 'merged'
+  | 'live'
   | 'closed'
 
 export type Verdict = 'pass' | 'fail' | 'unsure'
@@ -37,6 +38,9 @@ export interface ChangeRequest {
   /** Commit the PR was merged as on main. */
   merge_commit_sha?: string | null
   merged_at?: string | null
+  /** When the change was confirmed on the live site, or reported as not deployed. */
+  live_at?: string | null
+  live_check_failed_at?: string | null
   claimed_by: string | null
   claimed_at: string | null
   attempts: number

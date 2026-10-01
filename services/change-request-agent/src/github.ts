@@ -295,9 +295,27 @@ export class GitHub {
   }
 
   async deploymentsForSha(sha: string): Promise<DeploymentWithStatuses[]> {
+    return this.deploymentsWithStatuses(`sha=${sha}&per_page=20`)
+  }
+
+  /** The newest production deployments (any commit), newest first. */
+  async latestProductionDeployments(): Promise<DeploymentWithStatuses[]> {
+    return this.deploymentsWithStatuses('environment=Production&per_page=5')
+  }
+
+  /** Whether `head` contains `base` (GitHub compare: ahead or identical). */
+  async commitContains(head: string, base: string): Promise<boolean> {
+    const result = await this.request<{ status: string }>(
+      'GET',
+      `/repos/${this.repo}/compare/${base}...${head}`
+    )
+    return result.status === 'ahead' || result.status === 'identical'
+  }
+
+  private async deploymentsWithStatuses(query: string): Promise<DeploymentWithStatuses[]> {
     const deployments = await this.request<Omit<DeploymentWithStatuses, 'statuses'>[]>(
       'GET',
-      `/repos/${this.repo}/deployments?sha=${sha}&per_page=20`
+      `/repos/${this.repo}/deployments?${query}`
     )
     return Promise.all(
       deployments.map(async (d) => ({

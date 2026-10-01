@@ -51,7 +51,13 @@ export const CHANGE_REQUEST_STATUS_INFO: Record<ChangeRequestStatus, StatusInfo>
   },
   merged: {
     label: 'Merged',
-    description: 'The pull request was merged. The change goes live with the next deployment.',
+    description:
+      'The pull request was merged. Vercel deploys it to stbasilsboston.org in a few minutes, and the agent confirms here when the change is live.',
+    tone: 'ok',
+  },
+  live: {
+    label: 'Live',
+    description: 'The change is live on stbasilsboston.org.',
     tone: 'ok',
   },
   closed: {

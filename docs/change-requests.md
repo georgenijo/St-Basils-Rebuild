@@ -94,6 +94,7 @@ submitting → queued → in_progress → verifying → ready_for_review → mer
 - `needs_attention` — something needs a human (see `error` and the thread).
 - `merging` — an admin chose **Approve & merge**; the merge is in progress
   (see "Approving and merging").
+- `live` — the merged change is confirmed on stbasilsboston.org (final).
 - `merged` / `closed` — worker syncs PR state after review, or an admin
   closed the request (see "Closing a request" below). `closed` is final.
 
@@ -193,6 +194,31 @@ merge too) and belongs in the account and secret register (#334).
 work but needs token minting code; the fine-grained token is the smaller
 change. To rotate: create a new token, update Vercel, redeploy, then revoke
 the old one.
+
+### Confirming the change is live
+
+After a merge (from the request page or on GitHub) the request is `merged`
+with its `merge_commit_sha`. The worker then confirms the change reached
+stbasilsboston.org, with no Vercel credential:
+
+1. It waits for the Vercel **Production** deployment of the merge commit, as
+   GitHub deployments (Vercel's GitHub integration reports them). If Vercel
+   skipped or cancelled that build because a newer push superseded it, a
+   newer successful production deployment that contains the merge commit (by
+   GitHub compare) counts.
+2. It requests the request's page on the live domain (`SITE_URL` +
+   `page_path`) and needs a 2xx response.
+3. It moves the request to the final status **`live`** (`live_at`) and posts
+   "Live on site ↗ <url>" to the thread.
+
+A failed production deployment, no successful one within 30 minutes of the
+merge, or a non-2xx live page is reported once instead. The request stays
+`merged` with `error` (shown on the request page) and
+`live_check_failed_at` set, and the thread gets "Not confirmed live: …".
+Approve & merge wakes the agent. Every maintenance sweep checks without
+waiting, and a one-shot run waits up to `LIVE_WAIT_MS` (default 10 minutes)
+before exiting for just-merged changes still deploying. `merged` can only
+become `live`, and `live` is final.
 
 ### Closing a request
 

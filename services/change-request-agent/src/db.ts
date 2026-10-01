@@ -71,6 +71,8 @@ export interface RequestPatch {
   claimed_at?: string | null
   error?: string | null
   github_cleanup_pending?: boolean
+  live_at?: string | null
+  live_check_failed_at?: string | null
 }
 
 export async function updateRequest(db: Db, id: string, patch: RequestPatch): Promise<void> {
@@ -202,6 +204,20 @@ export async function releaseMerge(
   })
   if (error) throw new Error(`Releasing the merge of ${id} failed: ${error.message}`)
   return data === true
+}
+
+/** Merged requests whose live deployment has not been confirmed or reported yet. */
+export async function listMergedAwaitingLive(db: Db): Promise<ChangeRequest[]> {
+  const { data, error } = await db
+    .from('change_requests')
+    .select('*')
+    .eq('status', 'merged')
+    .not('merge_commit_sha', 'is', null)
+    .is('live_check_failed_at', null)
+    .order('merged_at', { ascending: true })
+    .limit(20)
+  if (error) throw new Error(`Listing merged requests failed: ${error.message}`)
+  return (data ?? []) as ChangeRequest[]
 }
 
 /** Requests an admin closed whose pull request and branch still need closing on GitHub. */

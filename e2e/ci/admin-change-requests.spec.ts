@@ -772,4 +772,65 @@ test.describe('CI admin website change requests', () => {
     await page.keyboard.press('Escape')
     expect(page.url()).toContain(`/admin/requests/${requestId}`)
   })
+
+  test('merged requests show a failed live check, and live is final', async ({ page }) => {
+    const supabase = getAdminClient()
+    const { data: admin } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('email', 'admin@stbasilsboston.org')
+      .single()
+    const title = `CI live request ${Date.now()}-${Math.round(Math.random() * 1000)}`
+    const { data: row, error } = await supabase
+      .from('change_requests')
+      .insert({
+        requester_id: admin!.id,
+        title,
+        description: 'Please update the giving page heading.',
+        page_path: '/giving',
+        status: 'merged',
+        pr_number: 9997,
+        pr_url: 'https://github.com/georgenijo/St-Basils-Rebuild/pull/9997',
+        merge_commit_sha: 'cd'.repeat(20),
+        merged_at: new Date().toISOString(),
+        live_check_failed_at: new Date().toISOString(),
+        error:
+          'no successful Vercel production deployment of merge commit cdcdcdc appeared within 30 minutes. Check Vercel.',
+      })
+      .select('id')
+      .single()
+    expect(error).toBeNull()
+    const requestId = row!.id as string
+    createdIds.push(requestId)
+
+    await loginAsSeedAdmin(page)
+    await page.waitForURL('**/admin/**')
+    await page.goto(`/admin/requests/${requestId}`, { waitUntil: 'domcontentloaded' })
+    const status = page.getByTestId('change-request-status')
+    const statusCard = page.getByRole('region', { name: 'Request status' })
+    await expect(status).toContainText('Merged')
+    await expect(statusCard).toContainText('no successful Vercel production deployment')
+
+    // merged may only become live, and live is final.
+    const { error: reopen } = await supabase
+      .from('change_requests')
+      .update({ status: 'needs_attention' })
+      .eq('id', requestId)
+    expect(reopen?.message).toContain('is merged')
+    const { error: toLive } = await supabase
+      .from('change_requests')
+      .update({ status: 'live', live_at: new Date().toISOString(), error: null })
+      .eq('id', requestId)
+    expect(toLive).toBeNull()
+    const { error: fromLive } = await supabase
+      .from('change_requests')
+      .update({ status: 'merged' })
+      .eq('id', requestId)
+    expect(fromLive?.message).toContain('is live')
+
+    await page.reload({ waitUntil: 'domcontentloaded' })
+    await expect(status).toContainText('Live')
+    await expect(statusCard).toContainText('The change is live on stbasilsboston.org.')
+    await expect(statusCard).not.toContainText('no successful Vercel production deployment')
+  })
 })
