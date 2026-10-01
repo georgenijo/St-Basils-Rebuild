@@ -122,8 +122,10 @@ production). Paths:
 The admin UI shows files through short-lived signed URLs. Image tiles
 (screenshots and image attachments) render from
 `/admin/requests/<id>/files/<file_id>/thumbnail`, an admin-only route that
-shrinks the stored image to a small WebP with `sharp` and lets the browser cache
-it privately; clicking a tile opens the full-size signed URL.
+shrinks the stored image to a small WebP with `sharp`. It is sent with
+`Cache-Control: private, no-cache` and an ETag, so the browser keeps the bytes
+but revalidates (authorized, usually a cheap 304) on every use; clicking a tile
+opens the full-size signed URL.
 
 ### Access
 

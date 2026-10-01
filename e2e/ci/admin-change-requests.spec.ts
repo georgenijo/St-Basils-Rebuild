@@ -312,14 +312,25 @@ test.describe('CI admin website change requests', () => {
     const thumbnail = await page.request.get(thumbnailUrl)
     expect(thumbnail.status()).toBe(200)
     expect(thumbnail.headers()['content-type']).toBe('image/webp')
-    expect(thumbnail.headers()['cache-control']).toContain('private')
+    expect(thumbnail.headers()['cache-control']).toBe('private, no-cache')
+    const etag = thumbnail.headers()['etag']
+    expect(etag).toBeTruthy()
+    // Revalidation is authorized and cheap: same session gets a 304.
+    const revalidated = await page.request.get(thumbnailUrl, {
+      headers: { 'If-None-Match': etag },
+    })
+    expect(revalidated.status()).toBe(304)
 
     // Without an admin session the thumbnail route reveals nothing.
     const anonymous = await playwright.request.newContext({
       baseURL: new URL(page.url()).origin,
     })
     try {
-      const denied = await anonymous.get(thumbnailUrl, { maxRedirects: 0 })
+      // Even with a cached copy's ETag, a signed-out browser gets no 304.
+      const denied = await anonymous.get(thumbnailUrl, {
+        maxRedirects: 0,
+        headers: { 'If-None-Match': etag },
+      })
       expect([302, 303, 307, 404]).toContain(denied.status())
       expect(denied.headers()['content-type'] ?? '').not.toContain('image/')
     } finally {

@@ -16,6 +16,18 @@ interface RouteContext {
   params: Promise<{ id: string; fileId: string }>
 }
 
+/**
+ * Bump when renderThumbnail's output changes so browsers refetch. File rows
+ * are immutable (a re-uploaded screenshot gets a new row id), so the row id
+ * plus this version identifies the bytes.
+ */
+const THUMBNAIL_VERSION = 'v2'
+
+// `no-cache` (not max-age): the browser keeps the bytes but must revalidate
+// every use, so the auth + RLS checks below run before any 304, and a logged
+// out or demoted user can no longer see a cached private image.
+const CACHE_CONTROL = 'private, no-cache'
+
 function notFound() {
   return new NextResponse('Not found', { status: 404, headers: { 'Cache-Control': 'no-store' } })
 }
@@ -24,10 +36,10 @@ function notFound() {
  * Small WebP preview of a private request image (agent screenshot or admin
  * attachment). The detail page renders these in its galleries and links the
  * tile to the full-size signed URL. The URL is stable per file row, so the
- * browser caches it across the page's auto-refreshes, unlike signed URLs,
- * which change on every render.
+ * browser keeps it across the page's auto-refreshes (revalidating with a
+ * cheap 304), unlike signed URLs, which change on every render.
  */
-async function getImpl(_request: Request, { params }: RouteContext) {
+async function getImpl(request: Request, { params }: RouteContext) {
   const { id, fileId } = await params
   if (!UUID_PATTERN.test(id) || !UUID_PATTERN.test(fileId)) return notFound()
 
@@ -45,6 +57,15 @@ async function getImpl(_request: Request, { params }: RouteContext) {
     .maybeSingle()
   if (!file || !THUMBNAIL_CONTENT_TYPES.has(file.content_type)) return notFound()
 
+  const etag = `"${fileId}-${THUMBNAIL_VERSION}"`
+  const ifNoneMatch = request.headers.get('if-none-match')
+  if (ifNoneMatch?.split(',').some((tag) => tag.trim().replace(/^W\//, '') === etag)) {
+    return new NextResponse(null, {
+      status: 304,
+      headers: { ETag: etag, 'Cache-Control': CACHE_CONTROL },
+    })
+  }
+
   const storage = createAdminClient().storage.from(CHANGE_REQUESTS_BUCKET)
   const { data: blob, error } = await storage.download(file.storage_path)
   if (error || !blob) {
@@ -57,8 +78,8 @@ async function getImpl(_request: Request, { params }: RouteContext) {
     return new NextResponse(new Uint8Array(thumbnail), {
       headers: {
         'Content-Type': 'image/webp',
-        // File rows are immutable: a re-uploaded screenshot gets a new row id.
-        'Cache-Control': 'private, max-age=86400, immutable',
+        ETag: etag,
+        'Cache-Control': CACHE_CONTROL,
         'X-Content-Type-Options': 'nosniff',
       },
     })
