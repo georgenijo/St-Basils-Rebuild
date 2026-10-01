@@ -119,7 +119,11 @@ production). Paths:
   Never linked or embedded anywhere public — the PR only ever gets the
   verdict comment (`buildVerdictComment`) and the `/admin/requests/<id>` link.
 
-The admin UI shows files through short-lived signed URLs.
+The admin UI shows files through short-lived signed URLs. Image tiles
+(screenshots and image attachments) render from
+`/admin/requests/<id>/files/<file_id>/thumbnail`, an admin-only route that
+shrinks the stored image to a small WebP with `sharp` and lets the browser cache
+it privately; clicking a tile opens the full-size signed URL.
 
 ### Access
 

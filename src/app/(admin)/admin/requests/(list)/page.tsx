@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 
-import { createClient } from '@/lib/supabase/server'
+import { getDataClient } from '@/lib/supabase/auth'
 import { fetchPeopleNames } from '@/lib/change-request-people'
 import { safeExternalUrl } from '@/lib/change-request-status'
 import { paginationRange, parsePageParam, totalPageCount } from '@/lib/pagination'
@@ -32,8 +32,7 @@ function formatDate(iso: string): string {
 }
 
 export default async function ChangeRequestsPage({ searchParams }: { searchParams: SearchParams }) {
-  const supabase = await createClient()
-  const params = await searchParams
+  const [supabase, params] = await Promise.all([getDataClient(), searchParams])
   const page = parsePageParam(params.page)
   const { from, to } = paginationRange(page)
 
