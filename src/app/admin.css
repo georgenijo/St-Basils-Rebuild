@@ -2072,3 +2072,198 @@
     animation: none;
   }
 }
+
+.cr-header {
+  position: sticky;
+  z-index: 10;
+  top: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  margin: 0 -12px 12px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: color-mix(in oklch, var(--surface) 94%, transparent);
+  box-shadow: 0 6px 18px -14px color-mix(in oklch, var(--fg) 45%, transparent);
+  backdrop-filter: blur(10px);
+}
+
+.cr-header-heading {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 320px;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cr-header h1 {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.cr-header-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.cr-header + .cr-status-card .admin-page-subtitle {
+  margin-top: 0 !important;
+}
+
+@media (max-width: 920px) {
+  .cr-header {
+    position: static;
+    margin-inline: 0;
+  }
+}
+
+.cr-evidence {
+  margin-bottom: 8px;
+}
+
+.cr-evidence-empty {
+  margin-top: 12px !important;
+}
+
+.cr-compare {
+  margin-top: 16px;
+}
+
+.cr-compare-title {
+  margin-bottom: 8px !important;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.cr-compare-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.cr-compare[data-viewport='mobile'] .cr-compare-grid {
+  max-width: 560px;
+}
+
+.cr-compare-others {
+  margin-top: 16px;
+}
+
+.cr-shot-link {
+  display: block;
+  cursor: zoom-in;
+}
+
+.cr-shot-placeholder {
+  display: flex;
+  min-height: 160px;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: var(--fg-soft);
+  color: var(--muted);
+  font-size: 12.5px;
+  text-align: center;
+}
+
+.cr-shot-video {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 520px) {
+  .cr-compare-grid {
+    gap: 8px;
+  }
+}
+
+/* Outranks the generic `.admin-shell dialog` size. */
+.admin-shell .cr-lightbox {
+  width: min(1100px, calc(100vw - 32px));
+  max-width: none;
+  height: calc(100dvh - 32px);
+  max-height: none;
+  margin: auto;
+  border-radius: 10px !important;
+}
+
+.admin-shell .cr-lightbox::backdrop {
+  background: color-mix(in oklch, var(--side-bg) 70%, transparent);
+}
+
+.cr-lightbox-panel {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+}
+
+.cr-lightbox-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.cr-lightbox-caption {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+}
+
+.cr-lightbox-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.cr-lightbox-image {
+  flex: 1;
+  overflow: auto;
+  background: var(--fg-soft);
+}
+
+.cr-lightbox-image img {
+  display: block;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+/* Keep the Evidence jump target clear of the sticky top bar + request header
+   (ChangeRequestHeaderOffset measures the header into --cr-header-height). */
+.cr-evidence {
+  scroll-margin-top: calc(54px + 16px);
+}
+
+@media (min-width: 921px) {
+  .cr-evidence {
+    scroll-margin-top: calc(54px + var(--cr-header-height, 96px) + 16px);
+  }
+}
+
+.cr-shot-note {
+  padding: 6px 8px 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.cr-lightbox-image:focus-visible {
+  outline-offset: -3px;
+}
+
+.cr-lightbox-error {
+  height: 100%;
+  flex-direction: column;
+  gap: 10px;
+}

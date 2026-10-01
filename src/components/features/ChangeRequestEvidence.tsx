@@ -1,11 +1,17 @@
 import { THUMBNAIL_CONTENT_TYPES, changeRequestThumbnailPath } from '@/lib/change-request-detail'
+import { groupEvidenceShots } from '@/lib/change-request-evidence'
 import {
   VERDICT_INFO,
+  isActiveChangeRequestStatus,
   normalizeVerificationChecks,
   shortCommitSha,
 } from '@/lib/change-request-status'
 import { formatBytes } from '@/lib/validators/change-request'
 import { cn } from '@/lib/utils'
+import {
+  ChangeRequestEvidenceGallery,
+  type GalleryItem,
+} from '@/components/features/ChangeRequestEvidenceGallery'
 import { toneClass } from '@/components/features/ChangeRequestStatusBadge'
 import type {
   ChangeRequest,
@@ -40,7 +46,45 @@ function FileLink({ file }: { file: ChangeRequestFileWithUrl }) {
   )
 }
 
-/** Verification summary, checks, screenshots and the preview recording. */
+function galleryItem(file: ChangeRequestFileWithUrl): GalleryItem {
+  return {
+    id: file.id,
+    label: file.label ?? file.filename,
+    thumbnailSrc: THUMBNAIL_CONTENT_TYPES.has(file.content_type)
+      ? changeRequestThumbnailPath(file)
+      : null,
+    fullSrc: file.url,
+  }
+}
+
+/** Shared frame for the evidence panel (also used by its loading fallback). */
+export function EvidenceSection({
+  children,
+  meta,
+}: {
+  children: React.ReactNode
+  meta?: React.ReactNode
+}) {
+  return (
+    <section
+      id="evidence"
+      className="admin-section cr-evidence"
+      aria-label="Evidence"
+      data-testid="change-request-evidence"
+    >
+      <div className="admin-section-head">
+        <h2>Evidence</h2>
+        {meta && <div className="cr-status-row">{meta}</div>}
+      </div>
+      {children}
+    </section>
+  )
+}
+
+/**
+ * Verification verdict, checks, before/after screenshots (with a lightbox)
+ * and the private preview recording, all in one panel.
+ */
 export async function ChangeRequestVerification({
   request,
   files: filesPromise,
@@ -68,8 +112,17 @@ export async function ChangeRequestVerification({
     !Array.isArray(request.verification)
       ? request.verification
       : null
+
   if (!verification && verificationShots.length === 0 && verificationVideos.length === 0) {
-    return null
+    return (
+      <EvidenceSection>
+        <p className="cr-help cr-evidence-empty" data-testid="change-request-evidence-empty">
+          {isActiveChangeRequestStatus(request.status)
+            ? 'Screenshots and a recording of the preview appear here once the agent has verified the change.'
+            : 'No screenshots or recordings for this request.'}
+        </p>
+      </EvidenceSection>
+    )
   }
 
   const verdict =
@@ -79,12 +132,12 @@ export async function ChangeRequestVerification({
   const commitSha = shortCommitSha(verification?.commit_sha)
   const summary = typeof verification?.summary === 'string' ? verification.summary : null
   const checks = normalizeVerificationChecks(verification?.checks)
+  const groups = groupEvidenceShots(verificationShots)
 
   return (
-    <section className="admin-section" aria-label="Verification">
-      <div className="admin-section-head">
-        <h2>Verification</h2>
-        <div className="cr-status-row">
+    <EvidenceSection
+      meta={
+        <>
           {commitSha && (
             <code className="admin-meta" title="Verified commit">
               {commitSha}
@@ -98,8 +151,9 @@ export async function ChangeRequestVerification({
               {verdict.label}
             </span>
           )}
-        </div>
-      </div>
+        </>
+      }
+    >
       {!verification && (
         <p className="cr-help" style={{ marginTop: 12 }}>
           Screenshots below are from a previous attempt.
@@ -125,39 +179,36 @@ export async function ChangeRequestVerification({
         </ul>
       )}
       {verificationShots.length > 0 && (
-        <ul className="cr-shots">
-          {verificationShots.map((shot) => (
-            <li key={shot.id}>
-              <figure className="cr-shot">
-                {THUMBNAIL_CONTENT_TYPES.has(shot.content_type) ? (
-                  <Thumbnail file={shot} alt={shot.label ?? shot.filename} />
-                ) : (
-                  <div className="cr-file-thumb">Unavailable</div>
-                )}
-                <figcaption>{shot.label ?? shot.filename}</figcaption>
-              </figure>
-            </li>
-          ))}
-        </ul>
+        <ChangeRequestEvidenceGallery
+          comparisons={groups.comparisons.map((comparison) => ({
+            viewport: comparison.viewport,
+            before: comparison.before && galleryItem(comparison.before),
+            after: comparison.after && galleryItem(comparison.after),
+          }))}
+          others={groups.others.map(galleryItem)}
+        />
       )}
       {verificationVideos.length > 0 && (
-        <ul className="cr-shots" aria-label="Preview recordings (admin-only)">
-          {verificationVideos.map((video) => (
-            <li key={video.id}>
-              <figure className="cr-shot">
+        <div className="cr-compare" aria-label="Preview recordings (admin-only)">
+          <h3 className="cr-compare-title">Recording</h3>
+          <div className="cr-compare-grid">
+            {verificationVideos.map((video) => (
+              <figure key={video.id} className="cr-shot cr-shot-video">
                 {video.url ? (
                   // eslint-disable-next-line jsx-a11y/media-has-caption -- private admin evidence, no spoken audio track
                   <video src={video.url} controls preload="metadata" />
                 ) : (
-                  <div className="cr-file-thumb">Unavailable</div>
+                  <div className="cr-shot-placeholder" role="note">
+                    Couldn’t load this recording. Refresh the page to try again.
+                  </div>
                 )}
                 <figcaption>{video.label ?? video.filename}</figcaption>
               </figure>
-            </li>
-          ))}
-        </ul>
+            ))}
+          </div>
+        </div>
       )}
-    </section>
+    </EvidenceSection>
   )
 }
 

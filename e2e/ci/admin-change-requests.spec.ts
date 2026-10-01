@@ -115,6 +115,10 @@ test.describe('CI admin website change requests', () => {
 
     await expect(page.getByRole('heading', { name: title, level: 1 })).toBeVisible()
     await expect(page.getByTestId('change-request-status')).toContainText('Queued')
+    // No verification yet: the evidence panel explains what will appear.
+    await expect(page.getByTestId('change-request-evidence-empty')).toContainText(
+      'once the agent has verified the change'
+    )
     await expect(page.getByRole('link', { name: 'new-flyer.png', exact: true })).toBeVisible()
     await expect(
       page.getByRole('link', { name: 'Order-of-service.pdf', exact: true })
@@ -634,5 +638,136 @@ test.describe('CI admin website change requests', () => {
       .eq('id', requestId)
       .single()
     expect(after?.status).toBe('closed')
+  })
+
+  test('header links to the PR and preview, and evidence pairs before/after with a lightbox', async ({
+    page,
+  }) => {
+    const supabase = getAdminClient()
+    const { data: admin } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('email', 'admin@stbasilsboston.org')
+      .single()
+    const prUrl = 'https://github.com/georgenijo/St-Basils-Rebuild/pull/4343'
+    const previewUrl = 'https://st-basils-ci-preview.vercel.app'
+    const title = `CI header request ${Date.now()}-${Math.round(Math.random() * 1000)}`
+    const { data: seeded, error } = await supabase
+      .from('change_requests')
+      .insert({
+        requester_id: admin!.id,
+        title,
+        description: 'Fix the about page heading.',
+        page_path: '/about',
+        status: 'ready_for_review',
+        attempts: 2,
+        pr_number: 4343,
+        pr_url: prUrl,
+        preview_url: previewUrl,
+        verification: { verdict: 'pass', summary: 'Heading fixed.', commit_sha: 'abcdef1234' },
+      })
+      .select('id')
+      .single()
+    expect(error).toBeNull()
+    const requestId = seeded!.id as string
+    createdIds.push(requestId)
+
+    const shots = ['before · desktop', 'after · desktop', 'before · mobile', 'after · mobile']
+    for (const [index, label] of shots.entries()) {
+      const path = `requests/${requestId}/verification/${label.replace(' · ', '-')}.png`
+      await supabase.storage
+        .from('change-requests')
+        .upload(path, PNG_BYTES, { contentType: 'image/png', upsert: true })
+      await supabase.from('change_request_files').insert({
+        request_id: requestId,
+        kind: 'verification',
+        storage_path: path,
+        filename: path.split('/').pop(),
+        content_type: 'image/png',
+        size_bytes: PNG_BYTES.byteLength,
+        label,
+        created_at: new Date(Date.UTC(2026, 8, 30, 12, index)).toISOString(),
+      })
+    }
+    const webm = Buffer.from([0x1a, 0x45, 0xdf, 0xa3, 0, 0, 0, 0])
+    const videoPath = `requests/${requestId}/verification/after-desktop.webm`
+    await supabase.storage
+      .from('change-requests')
+      .upload(videoPath, webm, { contentType: 'video/webm', upsert: true })
+    await supabase.from('change_request_files').insert({
+      request_id: requestId,
+      kind: 'verification',
+      storage_path: videoPath,
+      filename: 'after-desktop.webm',
+      content_type: 'video/webm',
+      size_bytes: webm.byteLength,
+      label: 'after · desktop (recording)',
+    })
+
+    await loginAsSeedAdmin(page)
+    await page.waitForURL('**/admin/**')
+    await page.goto(`/admin/requests/${requestId}`, { waitUntil: 'domcontentloaded' })
+
+    const header = page.getByTestId('change-request-header')
+    await expect(header.getByRole('heading', { level: 1 })).toHaveText(title)
+    await expect(header.getByTestId('change-request-status')).toContainText('Ready for review')
+    await expect(header).toContainText('Attempt 2')
+    await expect(header.getByRole('link', { name: /View PR #4343/ })).toHaveAttribute('href', prUrl)
+    await expect(header.getByRole('link', { name: /Open preview/ })).toHaveAttribute(
+      'href',
+      `${previewUrl}/about`
+    )
+    await expect(header.getByRole('link', { name: 'Evidence' })).toHaveAttribute(
+      'href',
+      '#evidence'
+    )
+
+    const evidence = page.getByTestId('change-request-evidence')
+    await expect(evidence.getByTestId('verification-verdict')).toBeVisible()
+    for (const viewport of ['desktop', 'mobile']) {
+      const row = evidence.locator(`.cr-compare[data-viewport="${viewport}"] img`)
+      await expect(row).toHaveCount(2)
+      await expect(row.nth(0)).toHaveAttribute('alt', `before · ${viewport}`)
+      await expect(row.nth(1)).toHaveAttribute('alt', `after · ${viewport}`)
+    }
+    await expect(evidence.locator('video')).toHaveCount(1)
+
+    // Wait for hydration before using the lightbox.
+    const afterDesktop = evidence.getByRole('link', { name: /after · desktop/ })
+    await waitForReactHydration(afterDesktop)
+    await afterDesktop.click()
+    const dialog = page.getByRole('dialog', { name: 'Screenshot: after · desktop' })
+    await expect(dialog).toBeVisible()
+    await expect(dialog.getByRole('img', { name: 'after · desktop' })).toHaveAttribute(
+      'src',
+      /\/storage\/v1\/object\/sign\/change-requests\//
+    )
+    // Tall screenshots scroll in a keyboard-focusable region.
+    await expect(
+      dialog.getByRole('region', { name: 'after · desktop, scrollable' })
+    ).toHaveAttribute('tabindex', '0')
+    await page.keyboard.press('ArrowRight')
+    await expect(page.getByRole('dialog', { name: 'Screenshot: before · mobile' })).toBeVisible()
+    await page.keyboard.press('Escape')
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+
+    // An expired / failing full-size link shows a recovery action instead of
+    // a broken image, and reloading mints fresh signed URLs.
+    await page.route('**/storage/v1/object/sign/**', (route) => route.abort())
+    await evidence.getByRole('link', { name: /before · desktop/ }).click()
+    const failing = page.getByRole('dialog', { name: 'Screenshot: before · desktop' })
+    await expect(failing.getByRole('alert')).toContainText('could not load')
+    await page.unroute('**/storage/v1/object/sign/**')
+    await failing.getByRole('button', { name: 'Reload screenshots' }).click()
+    await expect
+      .poll(() =>
+        failing
+          .getByRole('img', { name: 'before · desktop' })
+          .evaluate((img) => (img as HTMLImageElement).naturalWidth)
+          .catch(() => 0)
+      )
+      .toBeGreaterThan(0)
+    await page.keyboard.press('Escape')
+    expect(page.url()).toContain(`/admin/requests/${requestId}`)
   })
 })
