@@ -1,7 +1,6 @@
 import { createHash } from 'node:crypto'
 import { existsSync } from 'node:fs'
 import fs from 'node:fs/promises'
-import os from 'node:os'
 import path from 'node:path'
 
 import type { Config } from './config'
@@ -251,19 +250,57 @@ export async function pushBranch(config: Config, branch: string): Promise<void> 
   })
 }
 
+/** `git patch-id --stable` of a commit's own change (same id for a rebased copy). */
+async function commitPatchId(dir: string, sha: string): Promise<string> {
+  const diff = await git(dir, ['show', '--no-color', '--format=', sha])
+  const result = await runChecked('git', ['patch-id', '--stable'], {
+    cwd: dir,
+    env: gitEnv(),
+    input: diff,
+    timeoutMs: 60_000,
+  })
+  return result.stdout.trim().split(/\s+/)[0] ?? ''
+}
+
 /**
- * Undo (#363): reverse-apply a merged pull request's whole change onto the
- * working tree and index. The change is the PR's diff from its fork point to
- * its head (refs/pull/N/head), which is the same for squash, rebase and merge
- * commits, so a multi-commit rebase merge is undone completely. The fork
- * point is the merge base of the PR head and main just before the merge
- * (`mergeSha^1`). Returns 'conflict' when later changes touched the same
- * lines and 'empty' when the PR changed nothing.
+ * Whether main integrated the PR's commits one by one (GitHub rebase-and-merge
+ * or a fast-forward): the last `count` first-parent commits ending at
+ * `mergeSha` carry the same changes, in order, as the PR's last `count`.
  */
-export async function reverseApplyPull(
+async function integratedCommitByCommit(
+  dir: string,
+  mergeSha: string,
+  prRef: string,
+  count: number
+): Promise<boolean> {
+  const list = async (ref: string) =>
+    (await git(dir, ['rev-list', '--reverse', '--first-parent', '-n', String(count), ref]))
+      .split('\n')
+      .filter(Boolean)
+  const [onMain, inPull] = [await list(mergeSha), await list(prRef)]
+  if (onMain.length !== count || inPull.length !== count) return false
+  for (let i = 0; i < count; i++) {
+    if ((await commitPatchId(dir, onMain[i])) !== (await commitPatchId(dir, inPull[i])))
+      return false
+  }
+  return true
+}
+
+/**
+ * Undo (#363): revert exactly what main integrated from a merged pull request
+ * in the working tree and index, with git's tree-level (rename-aware)
+ * three-way revert. A merge commit is reverted against main (`-m 1`); a PR
+ * integrated commit by commit (rebase-and-merge or fast-forward) has all of
+ * its commits reverted; otherwise (a squash) the single merge commit is.
+ * Only the merge's own delta is undone, never changes that reached main
+ * through other PRs. Returns 'conflict' when later changes touched the same
+ * lines and 'empty' when nothing is left to undo.
+ */
+export async function revertMergedPull(
   config: Config,
   prNumber: number,
-  mergeSha: string
+  mergeSha: string,
+  prCommitCount: number
 ): Promise<'applied' | 'conflict' | 'empty'> {
   if (!FULL_SHA.test(mergeSha) || !Number.isInteger(prNumber) || prNumber <= 0) {
     throw new Error('Invalid pull request or merge commit to undo')
@@ -273,17 +310,23 @@ export async function reverseApplyPull(
   await git(dir, ['fetch', '--no-tags', 'origin', `+refs/pull/${prNumber}/head:${prRef}`], {
     env: gitAuthEnv(config.githubToken),
   })
-  const forkPoint = (await git(dir, ['merge-base', `${mergeSha}^1`, prRef])).trim()
-  const patchFile = path.join(os.tmpdir(), `cra-undo-${process.pid}-${Date.now()}.patch`)
-  try {
-    // --output: binary attachments can be larger than captured stdout allows.
-    await git(dir, ['diff', '--binary', '--no-renames', `--output=${patchFile}`, forkPoint, prRef])
-    if ((await fs.stat(patchFile)).size === 0) return 'empty'
-    const code = await gitExitCode(dir, ['apply', '-R', '--3way', '--index', patchFile])
-    return code === 0 ? 'applied' : 'conflict'
-  } finally {
-    await fs.rm(patchFile, { force: true })
+  const parents = (await git(dir, ['rev-list', '--parents', '-n', '1', mergeSha])).trim().split(' ')
+  let target: string[]
+  if (parents.length > 2) target = ['-m', '1', mergeSha]
+  else if (
+    prCommitCount > 1 &&
+    (await integratedCommitByCommit(dir, mergeSha, prRef, prCommitCount))
+  ) {
+    target = [`${mergeSha}~${prCommitCount}..${mergeSha}`]
+  } else target = [mergeSha]
+
+  const code = await gitExitCode(dir, ['revert', '--no-commit', '--no-edit', ...target])
+  if (code !== 0) {
+    await gitExitCode(dir, ['revert', '--abort'])
+    return 'conflict'
   }
+  // --quiet exits 0 when nothing is staged.
+  return (await gitExitCode(dir, ['diff', '--cached', '--quiet'])) === 0 ? 'empty' : 'applied'
 }
 
 /** Staged changes as a tree change set (for the same type/content policy as agent edits). */

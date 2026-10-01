@@ -9,7 +9,7 @@ import type { Config } from './config'
 import {
   branchDiffNumstat,
   prepareRevisionBranch,
-  reverseApplyPull,
+  revertMergedPull,
   stagedTreeChanges,
 } from './git'
 
@@ -107,8 +107,8 @@ describe('prepareRevisionBranch', () => {
   })
 })
 
-describe('reverseApplyPull (undo)', () => {
-  // A PR with two commits: adds a page note, then changes the home text.
+describe('revertMergedPull (undo)', () => {
+  // A two-commit PR: adds a note component, then changes the home text.
   async function openPull(): Promise<string> {
     sh(seed, 'checkout', '-q', 'main')
     sh(seed, 'checkout', '-q', '-b', 'pr-branch')
@@ -119,7 +119,14 @@ describe('reverseApplyPull (undo)', () => {
     return head
   }
 
+  function squashMerge(): string {
+    sh(seed, 'merge', '-q', '--squash', 'pr-branch')
+    sh(seed, 'commit', '-q', '-m', 'squash (#7)')
+    return sh(seed, 'rev-parse', 'HEAD')
+  }
+
   async function workOnMain(): Promise<void> {
+    sh(seed, 'push', '-q', 'origin', 'main')
     sh(config.workDir, 'fetch', '-q', 'origin')
     sh(config.workDir, 'checkout', '-q', '-B', 'main', 'origin/main')
   }
@@ -130,13 +137,10 @@ describe('reverseApplyPull (undo)', () => {
 
   it('undoes a squash merge completely', async () => {
     await openPull()
-    sh(seed, 'merge', '-q', '--squash', 'pr-branch')
-    sh(seed, 'commit', '-q', '-m', 'squash (#7)')
-    const merge = sh(seed, 'rev-parse', 'HEAD')
-    sh(seed, 'push', '-q', 'origin', 'main')
+    const merge = squashMerge()
     await workOnMain()
 
-    expect(await reverseApplyPull(config, 7, merge)).toBe('applied')
+    expect(await revertMergedPull(config, 7, merge, 2)).toBe('applied')
     expect(await readWork('src/components/Note.tsx')).toBeNull()
     expect(await readWork('src/app/(public)/page.tsx')).toBe('home\n')
     expect(await stagedTreeChanges(config.workDir)).toEqual([
@@ -145,33 +149,65 @@ describe('reverseApplyPull (undo)', () => {
     ])
   })
 
-  it('undoes every commit of a rebase merge, not just the last one', async () => {
+  it('undoes every commit of a rebase-and-merge, and nothing else', async () => {
     await openPull()
-    // Like GitHub's rebase-and-merge: main moved on, and the PR's commits are
-    // replayed on top as new commits.
+    // Like GitHub: main moved on, and the PR's commits are replayed as new commits.
     await commitFile(seed, 'public/other.txt', 'unrelated\n')
     sh(seed, 'rebase', '-q', 'main', 'pr-branch')
     const merge = sh(seed, 'rev-parse', 'pr-branch')
     sh(seed, 'checkout', '-q', 'main')
     sh(seed, 'merge', '-q', '--ff-only', merge)
-    sh(seed, 'push', '-q', 'origin', 'main')
     await workOnMain()
 
-    expect(await reverseApplyPull(config, 7, merge)).toBe('applied')
+    expect(await revertMergedPull(config, 7, merge, 2)).toBe('applied')
     expect(await readWork('src/components/Note.tsx')).toBeNull()
     expect(await readWork('src/app/(public)/page.tsx')).toBe('home\n')
     expect(await readWork('public/other.txt')).toBe('unrelated\n')
   })
 
-  it('reports a conflict when a later change touched the same lines', async () => {
-    await openPull()
-    sh(seed, 'merge', '-q', '--squash', 'pr-branch')
-    sh(seed, 'commit', '-q', '-m', 'squash (#7)')
-    const merge = sh(seed, 'rev-parse', 'HEAD')
-    await commitFile(seed, 'src/app/(public)/page.tsx', 'home, edited again later\n')
-    sh(seed, 'push', '-q', 'origin', 'main')
+  it('undoes every commit of a fast-forwarded PR', async () => {
+    const head = await openPull()
+    sh(seed, 'merge', '-q', '--ff-only', head)
     await workOnMain()
 
-    expect(await reverseApplyPull(config, 7, merge)).toBe('conflict')
+    expect(await revertMergedPull(config, 7, head, 2)).toBe('applied')
+    expect(await readWork('src/components/Note.tsx')).toBeNull()
+    expect(await readWork('src/app/(public)/page.tsx')).toBe('home\n')
+  })
+
+  it("keeps a change another PR had already published (only the merge's own delta)", async () => {
+    await openPull()
+    // Another PR lands the same home text change first.
+    await commitFile(seed, 'src/app/(public)/page.tsx', 'home, revised\n')
+    const merge = squashMerge() // so this squash only adds the note
+    await workOnMain()
+
+    expect(await revertMergedPull(config, 7, merge, 2)).toBe('applied')
+    expect(await readWork('src/components/Note.tsx')).toBeNull()
+    expect(await readWork('src/app/(public)/page.tsx')).toBe('home, revised\n')
+  })
+
+  it('follows a later rename of a file the PR edited', async () => {
+    await openPull()
+    const merge = squashMerge()
+    sh(seed, 'mv', 'src/app/(public)/page.tsx', 'src/app/(public)/home.tsx')
+    sh(seed, 'commit', '-q', '-m', 'rename the home page file')
+    await workOnMain()
+
+    // The edit is undone in the renamed file, and the rename is kept.
+    expect(await revertMergedPull(config, 7, merge, 2)).toBe('applied')
+    expect(await readWork('src/app/(public)/home.tsx')).toBe('home\n')
+    expect(await readWork('src/app/(public)/page.tsx')).toBeNull()
+    expect(await readWork('src/components/Note.tsx')).toBeNull()
+  })
+
+  it('reports a conflict when a later change touched the same lines, leaving no half-done revert', async () => {
+    await openPull()
+    const merge = squashMerge()
+    await commitFile(seed, 'src/app/(public)/page.tsx', 'home, edited again later\n')
+    await workOnMain()
+
+    expect(await revertMergedPull(config, 7, merge, 2)).toBe('conflict')
+    expect(sh(config.workDir, 'status', '--porcelain')).toBe('')
   })
 })

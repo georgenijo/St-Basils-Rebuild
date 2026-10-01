@@ -28,7 +28,7 @@ import {
   prepareBranch,
   prepareRevisionBranch,
   pushBranch,
-  reverseApplyPull,
+  revertMergedPull,
   stagedTreeChanges,
   stageAll,
 } from './git'
@@ -256,9 +256,9 @@ const UNDO_CONFLICT =
   'Later changes touched the same parts of the site, so this change cannot be undone automatically. A developer needs to revert it by hand.'
 
 /**
- * Undo the original request's whole merged change in the trusted checkout:
- * its pull request's diff is reverse-applied (see reverseApplyPull), which
- * covers squash, rebase and merge commits alike. The PR must be the one that
+ * Undo the original request's merged change in the trusted checkout: exactly
+ * what main integrated from its pull request is reverted (see
+ * revertMergedPull), for squash, rebase and merge commits alike. The PR must be the one that
  * was merged as `sha`. The result passes the same type/content policy as an
  * agent's edit (no symlinks or special files, no 'use server' modules) and
  * then the staged-diff guardrails. Problems become a GuardrailError for a
@@ -284,7 +284,7 @@ async function revertCommit(
     )
   }
 
-  const applied = await reverseApplyPull(ctx.config, original.pr_number, sha)
+  const applied = await revertMergedPull(ctx.config, original.pr_number, sha, pull.commits)
   if (applied === 'conflict') throw new GuardrailError(UNDO_CONFLICT)
   const changes = await stagedTreeChanges(dir)
   if (applied === 'empty' || changes.length === 0) {

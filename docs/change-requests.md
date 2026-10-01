@@ -245,18 +245,26 @@ the agent and opens the undo request. There is only one undo at a time: if
 one is in progress or done, the original links to it instead of offering
 another.
 
-The worker handles an undo request by undoing the original pull request's
-whole change in the trusted checkout instead of running the agent. It checks
-that the PR was merged as the recorded commit, then reverse-applies the PR's
-diff from its fork point to its head (`refs/pull/N/head`) with a 3-way apply.
-That is the same for squash, rebase-and-merge (every commit, not just the
-last) and merge commits. The result must pass the same type/content policy as
-an agent's edit (no symlinks or special files, no `'use server'` modules) and
-the staged-diff guardrails. Then it publishes as usual: a draft PR "Undo
-website update <id>" whose commit says "This reverts commit …", the same CI on
-the exact commit, the Vercel preview and the browser verification. The
-original thread gets "Undo pull request #N is open" with the link. From there
-it is a normal request: Approve & merge, then the live check.
+The worker handles an undo request by reverting exactly what `main`
+integrated from the original pull request, instead of running the agent. It
+checks that the PR was merged as the recorded commit, then uses git's
+tree-level, rename-aware three-way revert:
+
+- a merge commit is reverted against main (`-m 1`);
+- a PR integrated commit by commit (GitHub rebase-and-merge, or a
+  fast-forward, detected by matching patch-ids against the PR's commits from
+  `refs/pull/N/head`) has all of its commits reverted;
+- otherwise (a squash) the single merge commit is.
+
+Only the merge's own change is undone, never identical changes that reached
+main through another PR. Edits follow later renames. The result must pass the
+same type/content policy as an agent's edit (no symlinks or special files, no
+`'use server'` modules) and the staged-diff guardrails. Then it publishes as
+usual: a draft PR "Undo website update <id>" whose commit says "This reverts
+commit …", the same CI on the exact commit, the Vercel preview and the
+browser verification. The original thread gets "Undo pull request #N is open"
+with the link. From there it is a normal request: Approve & merge, then the
+live check.
 
 If later changes touched the same lines, nothing is resolved automatically:
 the undo goes to `needs_attention` for a developer. That also happens when

@@ -23,7 +23,7 @@ import {
   prepareBranch,
   prepareRevisionBranch,
   pushBranch,
-  reverseApplyPull,
+  revertMergedPull,
   stageAll,
   stagedTreeChanges,
 } from './git'
@@ -72,7 +72,7 @@ vi.mock('./git', () => ({
   prepareBranch: vi.fn(),
   prepareRevisionBranch: vi.fn(),
   pushBranch: vi.fn(),
-  reverseApplyPull: vi.fn(),
+  revertMergedPull: vi.fn(),
   stageAll: vi.fn(),
   stagedTreeChanges: vi.fn(),
 }))
@@ -894,7 +894,7 @@ describe('processRequest: undo (revert) requests', () => {
     vi.mocked(getRequest).mockImplementation(async (_db, id) =>
       id === ORIGINAL ? fakeRequest({ id: ORIGINAL, status: 'live', pr_number: 40 }) : fakeRequest()
     )
-    vi.mocked(reverseApplyPull).mockResolvedValue('applied')
+    vi.mocked(revertMergedPull).mockResolvedValue('applied')
     vi.mocked(stagedTreeChanges).mockResolvedValue([
       { path: 'public/images/requests/abcd1234/flyer.png', change: 'deleted', kind: 'file' },
     ])
@@ -908,6 +908,7 @@ describe('processRequest: undo (revert) requests', () => {
       mergeCommitSha: MERGE,
       headSha: 'a'.repeat(40),
       mergedAt: null,
+      commits: 2,
     })
     return gh
   }
@@ -921,7 +922,7 @@ describe('processRequest: undo (revert) requests', () => {
     expect(runClaude).not.toHaveBeenCalled()
     expect(createAgentCheckout).not.toHaveBeenCalled()
     expect(gh.pullState).toHaveBeenCalledWith(40)
-    expect(reverseApplyPull).toHaveBeenCalledWith(ctx.config, 40, MERGE)
+    expect(revertMergedPull).toHaveBeenCalledWith(ctx.config, 40, MERGE, 2)
     // Same type/content policy as an agent's edit, then the staged guardrails.
     expect(evaluateChangeSet).toHaveBeenCalledWith(
       [{ path: 'public/images/requests/abcd1234/flyer.png', change: 'deleted', kind: 'file' }],
@@ -956,12 +957,12 @@ describe('processRequest: undo (revert) requests', () => {
     })
     const { ctx } = makeCtx({ gh })
     await processRequest(ctx, undoRequest())
-    expect(reverseApplyPull).not.toHaveBeenCalled()
+    expect(revertMergedPull).not.toHaveBeenCalled()
     expect(pushBranch).not.toHaveBeenCalled()
   })
 
   it('asks a human when later changes conflict with the undo, without announcing success', async () => {
-    vi.mocked(reverseApplyPull).mockResolvedValue('conflict')
+    vi.mocked(revertMergedPull).mockResolvedValue('conflict')
     const gh = undoGh()
     const { ctx } = makeCtx({ gh })
 
@@ -991,7 +992,7 @@ describe('processRequest: undo (revert) requests', () => {
   })
 
   it('explains when there is nothing left to undo', async () => {
-    vi.mocked(reverseApplyPull).mockResolvedValue('empty')
+    vi.mocked(revertMergedPull).mockResolvedValue('empty')
     const { ctx } = makeCtx({ gh: undoGh() })
     await processRequest(ctx, undoRequest())
     const attention = vi
@@ -1034,7 +1035,7 @@ describe('processRequest: undo (revert) requests', () => {
       })
     )
     expect(runClaude).toHaveBeenCalled()
-    expect(reverseApplyPull).not.toHaveBeenCalled()
+    expect(revertMergedPull).not.toHaveBeenCalled()
   })
 
   it('stops instead of re-undoing when a revision base of an undo is gone', async () => {
@@ -1057,7 +1058,7 @@ describe('processRequest: undo (revert) requests', () => {
       })
     )
     expect(runClaude).not.toHaveBeenCalled()
-    expect(reverseApplyPull).not.toHaveBeenCalled()
+    expect(revertMergedPull).not.toHaveBeenCalled()
     expect(pushBranch).not.toHaveBeenCalled()
     const attention = vi
       .mocked(updateRequest)
