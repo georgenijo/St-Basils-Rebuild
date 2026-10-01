@@ -272,13 +272,26 @@ export class GitHub {
     })
   }
 
-  async pullState(prNumber: number): Promise<{ state: 'open' | 'closed'; merged: boolean }> {
+  async pullState(prNumber: number): Promise<{
+    state: 'open' | 'closed'
+    merged: boolean
+    mergeCommitSha: string | null
+    headSha: string | null
+  }> {
     const pr = await this.request<{
       state: 'open' | 'closed'
       merged: boolean
       merged_at: string | null
+      merge_commit_sha: string | null
+      head?: { sha: string }
     }>('GET', `/repos/${this.repo}/pulls/${prNumber}`)
-    return { state: pr.state, merged: pr.merged || Boolean(pr.merged_at) }
+    const merged = pr.merged || Boolean(pr.merged_at)
+    return {
+      state: pr.state,
+      merged,
+      mergeCommitSha: merged ? pr.merge_commit_sha : null,
+      headSha: pr.head?.sha ?? null,
+    }
   }
 
   async deploymentsForSha(sha: string): Promise<DeploymentWithStatuses[]> {

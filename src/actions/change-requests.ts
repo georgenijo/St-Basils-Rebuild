@@ -22,6 +22,11 @@ import {
   pendingUploadPath,
   verifyUploadSession,
 } from '@/lib/change-request-uploads'
+import {
+  checkMergeReadiness,
+  isChangeRequestMergeConfigured,
+  mergeChangeRequestPull,
+} from '@/lib/change-request-github'
 import { getSiteUrl } from '@/lib/site-url'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
@@ -30,6 +35,7 @@ import {
   MAX_CHANGE_REQUEST_ATTACHMENT_BYTES,
   attachmentUploadRequestSchema,
   changeRequestCloseSchema,
+  changeRequestMergeSchema,
   changeRequestMessageSchema,
   changeRequestSchema,
   detectAttachmentType,
@@ -724,6 +730,137 @@ async function closeChangeRequestImpl(
   return { success: true, message: 'Request closed.' }
 }
 
+/**
+ * "Approve & merge": squash-merge a verified request's pull request through
+ * the GitHub API. Only available when CHANGE_REQUEST_GITHUB_TOKEN is set.
+ *
+ * 1. `begin_change_request_merge` reserves the request (ready_for_review →
+ *    merging) as the signed-in admin, only if its passing verification is
+ *    for exactly the commit the admin saw (`verified_sha`). Close, revision
+ *    and the worker's claim all refuse a merging request.
+ * 2. GitHub readiness is re-checked (open, not a draft, targets main, head =
+ *    that commit, required checks passed on it); if not ready the
+ *    reservation is released.
+ * 3. The merge is pinned to that commit with GitHub's sha guard.
+ * 4. `record_change_request_merge` records status, merge commit and the
+ *    thread entry in one transaction. If GitHub's answer is uncertain, or
+ *    recording fails, the request stays `merging` and the worker's PR sync
+ *    finishes or releases it.
+ */
+async function approveAndMergeChangeRequestImpl(
+  prevState: ActionState,
+  formData: FormData
+): Promise<ActionState> {
+  const supabase = await createClient()
+  const { user, error: authError } = await requireAdmin(supabase)
+  if (authError || !user) return { success: false, message: authError ?? 'Unauthorized' }
+
+  const parsed = changeRequestMergeSchema.safeParse({
+    request_id: formData.get('request_id'),
+    verified_sha: formData.get('verified_sha'),
+  })
+  if (!parsed.success) return { success: false, message: 'Invalid request' }
+  const { request_id: requestId, verified_sha: approvedSha } = parsed.data
+
+  if (!isChangeRequestMergeConfigured()) {
+    return { success: false, message: 'Merging from the website is not set up.' }
+  }
+
+  // 1. Reserve
+  const { data: reservation, error: reserveError } = await supabase.rpc(
+    'begin_change_request_merge',
+    { p_request_id: requestId, p_sha: approvedSha }
+  )
+  if (reserveError) {
+    log.error('change_request.merge_reserve_failed', { error: reserveError, requestId })
+    return { success: false, message: 'Could not start the merge. Try again.' }
+  }
+  const reserved = (Array.isArray(reservation) ? reservation[0] : reservation) as
+    | { outcome: string; approval_id: string | null }
+    | null
+    | undefined
+  if (reserved?.outcome === 'not_found') {
+    return { success: false, message: 'Change request not found' }
+  }
+  if (reserved?.outcome !== 'reserved' || !reserved.approval_id) {
+    revalidatePath(`/admin/requests/${requestId}`)
+    return {
+      success: false,
+      message:
+        'Not merged: the request changed since you opened it (it is no longer ready, or a newer version was verified). Refresh the page and review it again.',
+    }
+  }
+
+  const admin = createAdminClient()
+  const approvalId = reserved.approval_id
+  const release = async (reason: string) => {
+    const { error } = await admin.rpc('release_change_request_merge', {
+      p_request_id: requestId,
+      p_approval_id: approvalId,
+      p_reason: reason,
+    })
+    if (error) log.error('change_request.merge_release_failed', { error, requestId })
+  }
+
+  const { data: row } = await admin
+    .from('change_requests')
+    .select('pr_number')
+    .eq('id', requestId)
+    .maybeSingle()
+  const prNumber = (row as { pr_number: number | null } | null)?.pr_number
+  if (!prNumber) {
+    await release('The merge was cancelled: the request has no pull request.')
+    revalidatePath(`/admin/requests/${requestId}`)
+    return { success: false, message: 'Not merged: the request has no pull request.' }
+  }
+
+  // 2. Readiness on GitHub, for exactly the approved commit
+  const readiness = await checkMergeReadiness({ prNumber, verifiedSha: approvedSha })
+  if (!readiness.ok) {
+    await release(`Approve & merge did not go ahead: ${readiness.reason}`)
+    revalidatePath(`/admin/requests/${requestId}`)
+    return { success: false, message: `Not merged: ${readiness.reason}` }
+  }
+
+  // 3. Merge, pinned to the approved commit
+  const merge = await mergeChangeRequestPull(prNumber, approvedSha)
+  if (!merge.ok) {
+    if (merge.uncertain) {
+      log.warn('change_request.merge_uncertain', { requestId, prNumber })
+      await wakeChangeRequestAgent(requestId)
+      revalidatePath(`/admin/requests/${requestId}`)
+      return {
+        success: false,
+        message:
+          'GitHub did not confirm the merge. The request stays “Merging” while the agent checks GitHub and records the outcome.',
+      }
+    }
+    await release(`GitHub did not merge the pull request: ${merge.reason}`)
+    revalidatePath(`/admin/requests/${requestId}`)
+    return { success: false, message: `Not merged: ${merge.reason}` }
+  }
+
+  // 4. Record (idempotent; the worker's PR sync finishes it if this fails)
+  const { error: recordError } = await admin.rpc('record_change_request_merge', {
+    p_request_id: requestId,
+    p_merge_sha: merge.mergeCommitSha,
+    // GitHub's sha guard means the merged head is exactly the approved commit.
+    p_head_sha: approvedSha,
+  })
+  revalidatePath(`/admin/requests/${requestId}`)
+  revalidatePath('/admin/requests')
+  if (recordError) {
+    log.error('change_request.merge_record_failed', { error: recordError, requestId })
+    await wakeChangeRequestAgent(requestId)
+    return {
+      success: true,
+      message: 'Merged on GitHub. Recording it here is pending; the agent will finish it shortly.',
+    }
+  }
+  log.info('change_request.merged', { requestId, pr: prNumber })
+  return { success: true, message: 'Merged. The change goes live in a few minutes.' }
+}
+
 export const prepareChangeRequestUploads = withLogging(
   'prepareChangeRequestUploads',
   prepareChangeRequestUploadsImpl
@@ -734,3 +871,7 @@ export const addChangeRequestMessage = withLogging(
   addChangeRequestMessageImpl
 )
 export const closeChangeRequest = withLogging('closeChangeRequest', closeChangeRequestImpl)
+export const approveAndMergeChangeRequest = withLogging(
+  'approveAndMergeChangeRequest',
+  approveAndMergeChangeRequestImpl
+)

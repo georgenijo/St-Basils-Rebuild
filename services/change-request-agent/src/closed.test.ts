@@ -1,15 +1,25 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { cleanupClosedRequests } from './closed'
-import { listClosedPendingCleanup, postMessageSafe, updateIfStatus, type Db } from './db'
+import {
+  listClosedPendingCleanup,
+  postMessageSafe,
+  recordMerge,
+  updateIfStatus,
+  type Db,
+} from './db'
 import type { GitHub } from './github'
 import type { ChangeRequest } from './types'
 
 vi.mock('./db', () => ({
   listClosedPendingCleanup: vi.fn(),
   postMessageSafe: vi.fn(),
+  recordMerge: vi.fn(),
   updateIfStatus: vi.fn(),
 }))
+
+const MERGE_SHA = 'c'.repeat(40)
+const HEAD_SHA = 'a'.repeat(40)
 
 const db = {} as Db
 
@@ -45,8 +55,8 @@ function fakeGh() {
     findLatestPullForBranch: vi.fn().mockResolvedValue(null),
     pullState: vi
       .fn()
-      .mockResolvedValueOnce({ state: 'open', merged: false })
-      .mockResolvedValue({ state: 'closed', merged: false }),
+      .mockResolvedValueOnce({ state: 'open', merged: false, mergeCommitSha: null, headSha: null })
+      .mockResolvedValue({ state: 'closed', merged: false, mergeCommitSha: null, headSha: null }),
     comment: vi.fn().mockResolvedValue(undefined),
     closePull: vi.fn().mockResolvedValue(undefined),
     deleteBranch: vi.fn().mockResolvedValue(true),
@@ -81,16 +91,19 @@ describe('cleanupClosedRequests', () => {
   it('records a PR that was already merged as merged instead of withdrawing it', async () => {
     vi.mocked(listClosedPendingCleanup).mockResolvedValue([closedRequest()])
     const gh = fakeGh()
-    gh.pullState.mockReset().mockResolvedValue({ state: 'closed', merged: true })
+    gh.pullState.mockReset().mockResolvedValue({
+      state: 'closed',
+      merged: true,
+      mergeCommitSha: MERGE_SHA,
+      headSha: HEAD_SHA,
+    })
 
     await cleanupClosedRequests(db, gh as unknown as GitHub)
 
     expect(gh.closePull).not.toHaveBeenCalled()
-    expect(updateIfStatus).toHaveBeenCalledWith(db, expect.any(String), 'closed', {
-      status: 'merged',
-      github_cleanup_pending: false,
-    })
-    expect(vi.mocked(postMessageSafe).mock.calls[0][3]).toMatch(/had already been merged/)
+    // Recorded durably (status, merge commit, explanation) in one transaction.
+    expect(recordMerge).toHaveBeenCalledWith(db, expect.any(String), MERGE_SHA, HEAD_SHA)
+    expect(updateIfStatus).not.toHaveBeenCalled()
   })
 
   it('never deletes a branch the worker did not create', async () => {
@@ -130,15 +143,17 @@ describe('cleanupClosedRequests', () => {
     const gh = fakeGh()
     gh.pullState
       .mockReset()
-      .mockResolvedValueOnce({ state: 'open', merged: false })
-      .mockResolvedValue({ state: 'closed', merged: true })
+      .mockResolvedValueOnce({ state: 'open', merged: false, mergeCommitSha: null, headSha: null })
+      .mockResolvedValue({
+        state: 'closed',
+        merged: true,
+        mergeCommitSha: MERGE_SHA,
+        headSha: HEAD_SHA,
+      })
 
     await cleanupClosedRequests(db, gh as unknown as GitHub)
 
-    expect(updateIfStatus).toHaveBeenCalledWith(db, expect.any(String), 'closed', {
-      status: 'merged',
-      github_cleanup_pending: false,
-    })
+    expect(recordMerge).toHaveBeenCalledWith(db, expect.any(String), MERGE_SHA, HEAD_SHA)
   })
 
   it('does nothing at all in a dry run', async () => {
@@ -175,14 +190,16 @@ describe('cleanupClosedRequests', () => {
     ])
     const gh = fakeGh()
     gh.findLatestPullForBranch.mockResolvedValue({ number: 78 })
-    gh.pullState.mockReset().mockResolvedValue({ state: 'closed', merged: true })
+    gh.pullState.mockReset().mockResolvedValue({
+      state: 'closed',
+      merged: true,
+      mergeCommitSha: MERGE_SHA,
+      headSha: HEAD_SHA,
+    })
 
     await cleanupClosedRequests(db, gh as unknown as GitHub)
 
     expect(gh.closePull).not.toHaveBeenCalled()
-    expect(updateIfStatus).toHaveBeenLastCalledWith(db, expect.any(String), 'closed', {
-      status: 'merged',
-      github_cleanup_pending: false,
-    })
+    expect(recordMerge).toHaveBeenCalledWith(db, expect.any(String), MERGE_SHA, HEAD_SHA)
   })
 })

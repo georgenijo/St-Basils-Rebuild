@@ -5,6 +5,7 @@ export type ChangeRequestStatus =
   | 'verifying'
   | 'ready_for_review'
   | 'needs_attention'
+  | 'merging'
   | 'merged'
   | 'closed'
 
@@ -28,6 +29,14 @@ export interface ChangeRequest {
   revision_base_sha: string | null
   /** Set when an admin closed the request; the worker then closes its PR and branch. */
   github_cleanup_pending?: boolean
+  /** Approve & merge reservation: who approved which verified commit, and when. */
+  approved_by?: string | null
+  approved_at?: string | null
+  approved_sha?: string | null
+  approval_id?: string | null
+  /** Commit the PR was merged as on main. */
+  merge_commit_sha?: string | null
+  merged_at?: string | null
   claimed_by: string | null
   claimed_at: string | null
   attempts: number

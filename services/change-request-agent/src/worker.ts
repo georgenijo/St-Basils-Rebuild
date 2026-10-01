@@ -2,18 +2,11 @@ import { loadConfig, secretValues, type Config } from './config'
 import { cleanupAbandonedSubmissions, sweepOrphanFolders, type SweepState } from './abandoned'
 import { cleanupClosedRequests } from './closed'
 import { startCredentialRefresh, type CredentialRefreshHandle } from './credential-refresh'
-import {
-  cleanupDeps,
-  claimNext,
-  createDb,
-  listByStatus,
-  postMessageSafe,
-  updateIfStatus,
-  type Db,
-} from './db'
+import { cleanupDeps, claimNext, createDb, type Db } from './db'
 import { killAllChildren } from './exec'
-import { createGitHub, type GitHub, resolveGithubToken } from './github'
+import { createGitHub, resolveGithubToken } from './github'
 import { processRequest, type JobContext } from './job'
+import { syncPullRequests } from './pr-sync'
 import { log, registerRedactions } from './log'
 import { recoverStaleClaims } from './stale'
 
@@ -28,39 +21,6 @@ function sleep(ms: number): Promise<void> {
       resolve()
     }
   })
-}
-
-export async function syncPullRequests(db: Db, gh: GitHub): Promise<void> {
-  const rows = await listByStatus(db, ['ready_for_review', 'needs_attention'])
-  for (const row of rows) {
-    if (!row.pr_number) continue
-    try {
-      const pr = await gh.pullState(row.pr_number)
-      if (pr.state !== 'closed') continue
-      const next = pr.merged ? 'merged' : 'closed'
-      if (await updateIfStatus(db, row.id, row.status, { status: next, error: null })) {
-        log.info('pull request state synced', {
-          requestId: row.id,
-          pr: row.pr_number,
-          status: next,
-        })
-        await postMessageSafe(
-          db,
-          row.id,
-          'system',
-          pr.merged
-            ? `Pull request #${row.pr_number} was merged. Vercel deploys it to the live site shortly.`
-            : `Pull request #${row.pr_number} was closed without merging.`
-        )
-      }
-    } catch (error) {
-      log.warn('pull request sync failed', {
-        requestId: row.id,
-        pr: row.pr_number,
-        error: String(error),
-      })
-    }
-  }
 }
 
 /** Rotating orphan-sweep cursor, kept in memory across maintenance cycles. */

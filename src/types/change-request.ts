@@ -8,6 +8,7 @@ export const CHANGE_REQUEST_STATUSES = [
   'verifying',
   'ready_for_review',
   'needs_attention',
+  'merging',
   'merged',
   'closed',
 ] as const
@@ -41,6 +42,15 @@ export interface ChangeRequest {
   verification: ChangeRequestVerification | null
   /** Verified commit a requested revision builds on (set by "Request changes"). */
   revision_base_sha: string | null
+  /** Admin closed it and the worker still has to close its PR/branch. */
+  github_cleanup_pending?: boolean
+  /** Admin who chose Approve & merge, when, and the verified commit they approved. */
+  approved_by?: string | null
+  approved_at?: string | null
+  approved_sha?: string | null
+  /** Commit the PR was merged as on main. */
+  merge_commit_sha?: string | null
+  merged_at?: string | null
   claimed_by: string | null
   claimed_at: string | null
   attempts: number

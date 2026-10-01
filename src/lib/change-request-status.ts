@@ -43,6 +43,12 @@ export const CHANGE_REQUEST_STATUS_INFO: Record<ChangeRequestStatus, StatusInfo>
       'The agent stopped and needs a person. Read the latest messages below; replying sends the request back to the queue.',
     tone: 'warn',
   },
+  merging: {
+    label: 'Merging…',
+    description:
+      'An admin approved this change and it is being merged on GitHub. If GitHub did not confirm the merge, the agent checks and records the outcome.',
+    tone: 'neutral',
+  },
   merged: {
     label: 'Merged',
     description: 'The pull request was merged. The change goes live with the next deployment.',
@@ -62,6 +68,7 @@ export const ACTIVE_CHANGE_REQUEST_STATUSES: readonly ChangeRequestStatus[] = [
   'queued',
   'in_progress',
   'verifying',
+  'merging',
 ]
 
 /** Statuses an admin can close: no worker is running on them (see close_change_request). */

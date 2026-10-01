@@ -1,4 +1,10 @@
-import { listClosedPendingCleanup, postMessageSafe, updateIfStatus, type Db } from './db'
+import {
+  listClosedPendingCleanup,
+  postMessageSafe,
+  recordMerge,
+  updateIfStatus,
+  type Db,
+} from './db'
 import type { GitHub } from './github'
 import { log } from './log'
 import { branchName } from './naming'
@@ -35,10 +41,14 @@ export async function cleanupClosedRequests(
         if (prNumber) await updateIfStatus(db, row.id, 'closed', { pr_number: prNumber })
       }
       let merged = false
+      let mergeCommitSha: string | null = null
+      let headSha: string | null = null
       let closedPr = false
       if (prNumber) {
         const pr = await gh.pullState(prNumber)
         merged = pr.merged
+        mergeCommitSha = pr.mergeCommitSha
+        headSha = pr.headSha
         if (pr.state === 'open') {
           await gh.comment(
             prNumber,
@@ -50,6 +60,8 @@ export async function cleanupClosedRequests(
             // Someone may have merged it meanwhile: the final state decides.
             const final = await gh.pullState(prNumber)
             merged = final.merged
+            mergeCommitSha = final.mergeCommitSha
+            headSha = final.headSha
             closedPr = final.state === 'closed' && !final.merged
           }
         }
@@ -57,6 +69,14 @@ export async function cleanupClosedRequests(
       let deletedBranch = false
       if (WORKER_BRANCH.test(branch)) {
         deletedBranch = await gh.deleteBranch(branch)
+      }
+      // A merge that beat the close is recorded durably (status, merge
+      // commit and thread entry in one transaction; it clears the flag).
+      if (merged && mergeCommitSha) {
+        await recordMerge(db, row.id, mergeCommitSha, headSha)
+        if (deletedBranch) await postMessageSafe(db, row.id, 'system', `Deleted branch ${branch}.`)
+        log.info('closed request was already merged', { requestId: row.id, pr: prNumber })
+        continue
       }
       const done = await updateIfStatus(
         db,

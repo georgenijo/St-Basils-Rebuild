@@ -163,6 +163,47 @@ export async function listByStatus(
   return (data ?? []) as ChangeRequest[]
 }
 
+/**
+ * Record a merged PR (status, merge commit and thread entry in one
+ * transaction; idempotent). Returns false if it was already recorded.
+ */
+export async function recordMerge(
+  db: Db,
+  id: string,
+  mergeCommitSha: string,
+  headSha: string | null
+): Promise<boolean> {
+  const { data, error } = await db.rpc('record_change_request_merge', {
+    p_request_id: id,
+    p_merge_sha: mergeCommitSha,
+    p_head_sha: headSha,
+  })
+  if (error) throw new Error(`Recording the merge of ${id} failed: ${error.message}`)
+  return data === true
+}
+
+/**
+ * Give an unconfirmed Approve & merge reservation back to ready_for_review:
+ * only that reservation (`approvalId`), and with `olderThan` (a Postgres
+ * interval) only if it is at least that old, checked in the same transaction.
+ */
+export async function releaseMerge(
+  db: Db,
+  id: string,
+  approvalId: string,
+  reason: string,
+  olderThan: string | null = null
+): Promise<boolean> {
+  const { data, error } = await db.rpc('release_change_request_merge', {
+    p_request_id: id,
+    p_approval_id: approvalId,
+    p_reason: reason,
+    p_older_than: olderThan,
+  })
+  if (error) throw new Error(`Releasing the merge of ${id} failed: ${error.message}`)
+  return data === true
+}
+
 /** Requests an admin closed whose pull request and branch still need closing on GitHub. */
 export async function listClosedPendingCleanup(db: Db): Promise<ChangeRequest[]> {
   const { data, error } = await db
