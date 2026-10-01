@@ -49,28 +49,29 @@ All three tables live in `public` and are created by
 
 ### `change_requests`
 
-| column              | type        | notes                                                      |
-| ------------------- | ----------- | ---------------------------------------------------------- |
-| `id`                | uuid pk     | `gen_random_uuid()`                                        |
-| `requester_id`      | uuid        | `auth.users(id)`                                           |
-| `title`             | text        | 3–120 chars                                                |
-| `description`       | text        | 10–5000 chars                                              |
-| `page_path`         | text        | site path starting with `/`, e.g. `/` or `/giving`         |
-| `target_selector`   | text null   | CSS selector captured by the element picker                |
-| `target_text`       | text null   | ≤500 chars of the picked element's visible text            |
-| `status`            | text        | see lifecycle below; default `queued`                      |
-| `branch_name`       | text null   | set by worker                                              |
-| `pr_number`         | int null    | set by worker                                              |
-| `pr_url`            | text null   | set by worker                                              |
-| `preview_url`       | text null   | Vercel preview deployment URL (root, no path)              |
-| `verification`      | jsonb null  | `{ verdict: 'pass'\|'fail'\|'unsure', summary, checks }`   |
-| `revision_base_sha` | text null   | verified commit a requested revision builds on (see below) |
-| `claimed_by`        | text null   | worker id                                                  |
-| `claimed_at`        | timestamptz |                                                            |
-| `attempts`          | int         | default 0, incremented on claim                            |
-| `error`             | text null   | last failure, human readable                               |
-| `created_at`        | timestamptz |                                                            |
-| `updated_at`        | timestamptz | trigger-maintained                                         |
+| column                   | type        | notes                                                        |
+| ------------------------ | ----------- | ------------------------------------------------------------ |
+| `id`                     | uuid pk     | `gen_random_uuid()`                                          |
+| `requester_id`           | uuid        | `auth.users(id)`                                             |
+| `title`                  | text        | 3–120 chars                                                  |
+| `description`            | text        | 10–5000 chars                                                |
+| `page_path`              | text        | site path starting with `/`, e.g. `/` or `/giving`           |
+| `target_selector`        | text null   | CSS selector captured by the element picker                  |
+| `target_text`            | text null   | ≤500 chars of the picked element's visible text              |
+| `status`                 | text        | see lifecycle below; default `queued`                        |
+| `branch_name`            | text null   | set by worker                                                |
+| `pr_number`              | int null    | set by worker                                                |
+| `pr_url`                 | text null   | set by worker                                                |
+| `preview_url`            | text null   | Vercel preview deployment URL (root, no path)                |
+| `verification`           | jsonb null  | `{ verdict: 'pass'\|'fail'\|'unsure', summary, checks }`     |
+| `revision_base_sha`      | text null   | verified commit a requested revision builds on (see below)   |
+| `github_cleanup_pending` | bool        | admin closed it; the worker still has to close the PR/branch |
+| `claimed_by`             | text null   | worker id                                                    |
+| `claimed_at`             | timestamptz |                                                              |
+| `attempts`               | int         | default 0, incremented on claim                              |
+| `error`                  | text null   | last failure, human readable                                 |
+| `created_at`             | timestamptz |                                                              |
+| `updated_at`             | timestamptz | trigger-maintained                                           |
 
 **Lifecycle (`status`):**
 
@@ -91,7 +92,8 @@ submitting → queued → in_progress → verifying → ready_for_review → mer
   An admin can reply with **Request changes** to send it back (see
   "Revisions" below); a plain reply is only a note.
 - `needs_attention` — something needs a human (see `error` and the thread).
-- `merged` / `closed` — worker syncs PR state after review.
+- `merged` / `closed` — worker syncs PR state after review, or an admin
+  closed the request (see "Closing a request" below). `closed` is final.
 
 ### Revisions
 
@@ -134,6 +136,25 @@ confirmed to be gone from the branch (deleted or rewritten), the worker says
 so in the thread and rebuilds the whole change from `main`; a network or git
 failure stops the run with an error instead. Replies to a `needs_attention`
 revision requeue it as usual and keep building on the same verified commit.
+
+### Closing a request
+
+The status card on a `queued`, `ready_for_review` or `needs_attention`
+request has **Close request…**, which asks for a reason. Requests the agent
+is working on (`in_progress`, `verifying`) cannot be closed until it stops.
+`public.close_change_request(request_id, reason)` (admins only,
+`SECURITY DEFINER`) locks the row, re-checks the status, flips it to
+`closed`, sets `github_cleanup_pending` when the request has a PR or branch,
+and saves the reason as the admin's message in the private thread, all in
+one transaction. The site then posts a system message and, if there is
+GitHub cleanup to do, wakes the agent. In its maintenance sweep the worker
+closes the PR (with a generic comment, never the reason), deletes the
+`change-request/*` branch and clears the flag.
+
+`closed` is final: the `change_requests_closed_is_final` trigger rejects any
+later status change except to `merged` (a PR merged on GitHub before the
+close was processed). The claim RPC only takes `queued` requests, so a closed
+request is never claimed again, and replies to it are only saved.
 
 ### `change_request_messages`
 

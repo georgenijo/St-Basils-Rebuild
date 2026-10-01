@@ -1,5 +1,6 @@
 import { loadConfig, secretValues, type Config } from './config'
 import { cleanupAbandonedSubmissions, sweepOrphanFolders, type SweepState } from './abandoned'
+import { cleanupClosedRequests } from './closed'
 import { startCredentialRefresh, type CredentialRefreshHandle } from './credential-refresh'
 import {
   cleanupDeps,
@@ -166,6 +167,9 @@ async function main(): Promise<void> {
           log.error('stale recovery failed', { error })
         )
         await syncPullRequests(db, gh).catch((error) => log.error('pr sync failed', { error }))
+        await cleanupClosedRequests(db, gh, { dryRun: config.dryRun }).catch((error) =>
+          log.error('closed request cleanup failed', { error })
+        )
         await cleanupStorage(db, config).catch((error) =>
           log.error('storage cleanup failed', { error })
         )

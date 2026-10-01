@@ -70,6 +70,7 @@ export interface RequestPatch {
   claimed_by?: string | null
   claimed_at?: string | null
   error?: string | null
+  github_cleanup_pending?: boolean
 }
 
 export async function updateRequest(db: Db, id: string, patch: RequestPatch): Promise<void> {
@@ -159,6 +160,19 @@ export async function listByStatus(
 ): Promise<ChangeRequest[]> {
   const { data, error } = await db.from('change_requests').select('*').in('status', statuses)
   if (error) throw new Error(`Listing requests failed: ${error.message}`)
+  return (data ?? []) as ChangeRequest[]
+}
+
+/** Requests an admin closed whose pull request and branch still need closing on GitHub. */
+export async function listClosedPendingCleanup(db: Db): Promise<ChangeRequest[]> {
+  const { data, error } = await db
+    .from('change_requests')
+    .select('*')
+    .eq('status', 'closed')
+    .eq('github_cleanup_pending', true)
+    .order('updated_at', { ascending: true })
+    .limit(50)
+  if (error) throw new Error(`Listing closed requests failed: ${error.message}`)
   return (data ?? []) as ChangeRequest[]
 }
 

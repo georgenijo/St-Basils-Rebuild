@@ -203,6 +203,7 @@ vi.mock('@/lib/logger.server', () => ({
 
 import {
   addChangeRequestMessage,
+  closeChangeRequest,
   createChangeRequest,
   prepareChangeRequestUploads,
 } from '@/actions/change-requests'
@@ -885,5 +886,85 @@ describe('addChangeRequestMessage', () => {
     expect(result.message).toMatch(/no longer ready for review, so nothing was saved/)
     expect(adminInserts).toHaveLength(0)
     expect(mockTriggerAgent).not.toHaveBeenCalled()
+  })
+})
+
+// ─── closeChangeRequest ──────────────────────────────────────────────
+
+function closeForm(reason = 'No longer needed.') {
+  const formData = new FormData()
+  formData.set('request_id', REQUEST_ID)
+  formData.set('reason', reason)
+  return formData
+}
+
+function closeReturns(outcome: string, previousStatus: string | null, cleanupPending = false) {
+  mockRpc.mockResolvedValue({
+    data: [{ outcome, previous_status: previousStatus, cleanup_pending: cleanupPending }],
+    error: null,
+  })
+}
+
+describe('closeChangeRequest', () => {
+  it('rejects a non-admin before touching data', async () => {
+    profile = null
+    const result = await closeChangeRequest(INITIAL, closeForm())
+    expect(result).toEqual({ success: false, message: 'Forbidden: admin access required' })
+    expect(mockRpc).not.toHaveBeenCalled()
+  })
+
+  it('requires a reason', async () => {
+    const result = await closeChangeRequest(INITIAL, closeForm(' x '))
+    expect(result.errors).toHaveProperty('reason')
+    expect(mockRpc).not.toHaveBeenCalled()
+  })
+
+  it('closes atomically as the signed-in admin and wakes the agent to clean up GitHub', async () => {
+    closeReturns('closed', 'ready_for_review', true)
+    const result = await closeChangeRequest(INITIAL, closeForm('Done another way.'))
+    expect(result).toEqual({ success: true, message: 'Request closed.' })
+    expect(mockRpc).toHaveBeenCalledExactlyOnceWith('close_change_request', {
+      p_request_id: REQUEST_ID,
+      p_reason: 'Done another way.',
+    })
+    expect((adminInserts[0].row as { body: string }).body).toBe(
+      'Closed by Fr. Admin. The agent will close any open pull request and delete its branch. Nothing changes on the live site.'
+    )
+    expect(mockTriggerAgent).toHaveBeenCalledExactlyOnceWith(REQUEST_ID)
+  })
+
+  it('does not wake the agent when there is nothing to clean up', async () => {
+    closeReturns('closed', 'queued', false)
+    const result = await closeChangeRequest(INITIAL, closeForm())
+    expect(result.success).toBe(true)
+    expect((adminInserts[0].row as { body: string }).body).toBe(
+      'Closed by Fr. Admin. Nothing changes on the live site.'
+    )
+    expect(mockTriggerAgent).not.toHaveBeenCalled()
+  })
+
+  it('explains that an in-flight request cannot be closed yet', async () => {
+    closeReturns('not_closable', 'in_progress')
+    const result = await closeChangeRequest(INITIAL, closeForm())
+    expect(result.success).toBe(false)
+    expect(result.message).toMatch(/working on this request right now/)
+    expect(adminInserts).toHaveLength(0)
+    expect(mockTriggerAgent).not.toHaveBeenCalled()
+  })
+
+  it('reports a request that is already finished', async () => {
+    closeReturns('not_closable', 'merged')
+    const result = await closeChangeRequest(INITIAL, closeForm())
+    expect(result.message).toMatch(/can no longer be closed/)
+  })
+
+  it('reports not found and failures', async () => {
+    closeReturns('not_found', null)
+    expect(await closeChangeRequest(INITIAL, closeForm())).toEqual({
+      success: false,
+      message: 'Change request not found',
+    })
+    mockRpc.mockResolvedValue({ data: null, error: { message: 'boom' } })
+    expect((await closeChangeRequest(INITIAL, closeForm())).message).toMatch(/Could not close/)
   })
 })

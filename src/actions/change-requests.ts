@@ -29,6 +29,7 @@ import {
   MAX_CHANGE_REQUEST_ATTACHMENTS,
   MAX_CHANGE_REQUEST_ATTACHMENT_BYTES,
   attachmentUploadRequestSchema,
+  changeRequestCloseSchema,
   changeRequestMessageSchema,
   changeRequestSchema,
   detectAttachmentType,
@@ -53,7 +54,13 @@ export type PrepareUploadsResult =
 
 const log = logger.child({ scope: 'change-requests' })
 
-async function wakeChangeRequestAgent(requestId: string): Promise<void> {
+const DEFAULT_DISPATCH_NOTICE =
+  'The request is saved, but the agent launch could not be confirmed. If it stays queued, post a reply to retry launching the agent.'
+
+async function wakeChangeRequestAgent(
+  requestId: string,
+  unavailableNotice = DEFAULT_DISPATCH_NOTICE
+): Promise<void> {
   if ((await triggerChangeRequestAgent(requestId)) !== 'unavailable') return
   // Dispatch failure must not roll back a saved request or change claim ownership.
   try {
@@ -61,7 +68,7 @@ async function wakeChangeRequestAgent(requestId: string): Promise<void> {
       request_id: requestId,
       author_kind: 'system',
       author_id: null,
-      body: 'The request is saved, but the agent launch could not be confirmed. If it stays queued, post a reply to retry launching the agent.',
+      body: unavailableNotice,
     })
     if (error) log.warn('change_request.dispatch_notice_failed', { requestId })
   } catch {
@@ -633,6 +640,90 @@ async function addChangeRequestMessageImpl(
   }
 }
 
+interface CloseResult {
+  outcome: 'closed' | 'not_closable' | 'not_found'
+  previous_status: string | null
+  cleanup_pending: boolean
+}
+
+/**
+ * Close (reject) a request with a private reason. Only requests that no
+ * worker is running on can be closed: queued, ready for review, or needs
+ * attention. `close_change_request` flips the status and records the reason
+ * in one locked transaction; `closed` is final in the database, so the
+ * request is never claimed again. When the request has a pull request or
+ * branch, the agent is woken to close the PR and delete the branch (it holds
+ * the GitHub credential; the site does not).
+ */
+async function closeChangeRequestImpl(
+  prevState: ActionState,
+  formData: FormData
+): Promise<ActionState> {
+  const supabase = await createClient()
+  const { user, profile, error: authError } = await requireAdmin(supabase)
+  if (authError || !user) return { success: false, message: authError ?? 'Unauthorized' }
+
+  const parsed = changeRequestCloseSchema.safeParse({
+    request_id: formData.get('request_id'),
+    reason: formData.get('reason'),
+  })
+  if (!parsed.success) {
+    return {
+      success: false,
+      message: 'Validation failed',
+      errors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
+    }
+  }
+  const { request_id: requestId, reason } = parsed.data
+
+  const { data, error } = await supabase.rpc('close_change_request', {
+    p_request_id: requestId,
+    p_reason: reason,
+  })
+  const result = (Array.isArray(data) ? data[0] : data) as CloseResult | null | undefined
+  if (error || !result) {
+    log.error('change_request.close_failed', { error, requestId })
+    return { success: false, message: 'Could not close the request. Try again.' }
+  }
+  if (result.outcome === 'not_found') return { success: false, message: 'Change request not found' }
+  if (result.outcome === 'not_closable') {
+    revalidatePath(`/admin/requests/${requestId}`)
+    return {
+      success: false,
+      message:
+        result.previous_status === 'in_progress' || result.previous_status === 'verifying'
+          ? 'The agent is working on this request right now. You can close it once it finishes.'
+          : 'This request can no longer be closed. Refresh the page to see its current status.',
+    }
+  }
+
+  const who = profile?.full_name || user.email || 'An administrator'
+  const { error: systemError } = await createAdminClient()
+    .from('change_request_messages')
+    .insert({
+      request_id: requestId,
+      author_kind: 'system',
+      author_id: null,
+      body: result.cleanup_pending
+        ? `Closed by ${who}. The agent will close any open pull request and delete its branch. Nothing changes on the live site.`
+        : `Closed by ${who}. Nothing changes on the live site.`,
+    })
+  if (systemError)
+    log.error('change_request.system_message_failed', { error: systemError, requestId })
+  log.info('change_request.closed', { requestId, cleanupPending: result.cleanup_pending })
+
+  if (result.cleanup_pending) {
+    await wakeChangeRequestAgent(
+      requestId,
+      'The agent could not be woken right now. It closes the pull request and deletes the branch on its next scheduled run.'
+    )
+  }
+
+  revalidatePath(`/admin/requests/${requestId}`)
+  revalidatePath('/admin/requests')
+  return { success: true, message: 'Request closed.' }
+}
+
 export const prepareChangeRequestUploads = withLogging(
   'prepareChangeRequestUploads',
   prepareChangeRequestUploadsImpl
@@ -642,3 +733,4 @@ export const addChangeRequestMessage = withLogging(
   'addChangeRequestMessage',
   addChangeRequestMessageImpl
 )
+export const closeChangeRequest = withLogging('closeChangeRequest', closeChangeRequestImpl)

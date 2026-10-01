@@ -13,6 +13,7 @@ import { signChangeRequestFiles } from '@/lib/change-request-storage'
 import {
   getChangeRequestStatusInfo,
   isActiveChangeRequestStatus,
+  isClosableChangeRequestStatus,
   safeExternalUrl,
   sameOriginUrl,
 } from '@/lib/change-request-status'
@@ -21,6 +22,7 @@ import {
   ChangeRequestAttachments,
   ChangeRequestVerification,
 } from '@/components/features/ChangeRequestEvidence'
+import { ChangeRequestActions } from '@/components/features/ChangeRequestActions'
 import { ChangeRequestReplyForm } from '@/components/features/ChangeRequestReplyForm'
 import {
   ChangeRequestAttachmentsSkeleton,
@@ -144,6 +146,11 @@ export default async function ChangeRequestDetailPage({ params }: PageProps) {
             )}
           </div>
         )}
+        <ChangeRequestActions
+          requestId={request.id}
+          canClose={isClosableChangeRequestStatus(request.status)}
+          hasPullRequest={Boolean(request.pr_number || request.branch_name || request.attempts > 0)}
+        />
       </section>
 
       <div className="cr-detail-grid">

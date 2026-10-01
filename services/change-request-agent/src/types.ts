@@ -26,6 +26,8 @@ export interface ChangeRequest {
   verification: VerificationResult | null
   /** Verified commit a requested revision builds on (set by the site's "Request changes"). */
   revision_base_sha: string | null
+  /** Set when an admin closed the request; the worker then closes its PR and branch. */
+  github_cleanup_pending?: boolean
   claimed_by: string | null
   claimed_at: string | null
   attempts: number
