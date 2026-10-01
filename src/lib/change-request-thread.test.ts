@@ -14,12 +14,28 @@ const context: ThreadContext = { prUrl: PR_URL, prNumber: 351, previewUrl: PREVI
 const noPr: ThreadContext = { prUrl: null, prNumber: null, previewUrl: null }
 
 describe('trimUrlMatch', () => {
-  it('drops sentence punctuation and unbalanced closing parens', () => {
+  it('drops sentence punctuation and unbalanced closing brackets', () => {
     expect(trimUrlMatch('https://example.org/a.')).toBe('https://example.org/a')
     expect(trimUrlMatch('https://example.org/a),')).toBe('https://example.org/a')
+    expect(trimUrlMatch('https://example.org/spec]')).toBe('https://example.org/spec')
     expect(trimUrlMatch('https://en.wikipedia.org/wiki/Foo_(bar)')).toBe(
       'https://en.wikipedia.org/wiki/Foo_(bar)'
     )
+  })
+
+  it('keeps characters that are part of the URL', () => {
+    expect(trimUrlMatch('https://example.org/download?token=abc_')).toBe(
+      'https://example.org/download?token=abc_'
+    )
+    expect(trimUrlMatch('https://example.org/a*')).toBe('https://example.org/a*')
+    expect(trimUrlMatch('https://example.org/q?list=[1]')).toBe('https://example.org/q?list=[1]')
+  })
+
+  it('stays linear on long runs of closing brackets', () => {
+    const input = `https://example.org/a${')'.repeat(50_000)}`
+    const started = performance.now()
+    expect(trimUrlMatch(input)).toBe('https://example.org/a')
+    expect(performance.now() - started).toBeLessThan(50)
   })
 })
 
@@ -97,15 +113,30 @@ describe('parseMessageBlocks', () => {
       {
         type: 'list',
         ordered: false,
-        items: [[{ type: 'text', text: 'one' }], [{ type: 'text', text: 'two' }]],
+        items: [
+          { value: null, tokens: [{ type: 'text', text: 'one' }] },
+          { value: null, tokens: [{ type: 'text', text: 'two' }] },
+        ],
       },
       {
         type: 'list',
         ordered: true,
-        items: [[{ type: 'text', text: 'first' }], [{ type: 'text', text: 'second' }]],
+        items: [
+          { value: 1, tokens: [{ type: 'text', text: 'first' }] },
+          { value: 2, tokens: [{ type: 'text', text: 'second' }] },
+        ],
       },
       { type: 'paragraph', lines: [[{ type: 'text', text: 'Done' }]] },
     ])
+  })
+})
+
+describe('parseMessageBlocks numbering', () => {
+  it('keeps the numbers the author wrote', () => {
+    const blocks = parseMessageBlocks('3. Check footer\n\n4. Check mobile', noPr)
+    expect(blocks.map((block) => block.type === 'list' && block.items.map((i) => i.value))).toEqual(
+      [[3], [4]]
+    )
   })
 })
 
@@ -150,6 +181,11 @@ describe('classifySystemEvent', () => {
       'Pushed a repair for the failing CI checks (commit abc1234); waiting on CI again.',
       'ci_repair',
       'neutral',
+    ],
+    [
+      'CI checks passed on pull request #351 (commit abc1234); verifying the preview next.',
+      'ci_passed',
+      'ok',
     ],
     [
       'The agent needs more information before making this change. Reply in the thread to send it back to the queue.',
@@ -213,6 +249,21 @@ describe('classifySystemEvent', () => {
       kind: 'revision_requested',
       title: 'Changes requested by Dr. Mary Thomas',
       detail: expect.stringMatching(/^The agent will revise pull request #351/),
+    })
+  })
+
+  it('shows CI passing with the commit and a PR button', () => {
+    expect(
+      classifySystemEvent(
+        'CI checks passed on pull request #351 (commit abc1234); verifying the preview next.',
+        context
+      )
+    ).toEqual({
+      kind: 'ci_passed',
+      tone: 'ok',
+      title: 'CI passed (abc1234)',
+      detail: 'Verifying the preview next.',
+      actions: [{ label: 'View PR #351', href: PR_URL, kind: 'pr' }],
     })
   })
 

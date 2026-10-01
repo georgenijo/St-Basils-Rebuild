@@ -73,8 +73,8 @@ function Blocks({ blocks }: { blocks: MessageBlock[] }) {
       return (
         <List key={index}>
           {block.items.map((item, itemIndex) => (
-            <li key={itemIndex}>
-              <Inline tokens={item} />
+            <li key={itemIndex} value={item.value ?? undefined}>
+              <Inline tokens={item.tokens} />
             </li>
           ))}
         </List>
@@ -101,6 +101,7 @@ const EVENT_ICON_PATHS: Record<SystemEventKind, string[]> = {
     'M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z',
   ],
   verified: ['M20 6 9 17l-5-5'],
+  ci_passed: ['M22 11.1V12a10 10 0 1 1-5.9-9.1', 'M22 4 12 14l-3-3'],
   needs_review: [
     'M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z',
     'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z',

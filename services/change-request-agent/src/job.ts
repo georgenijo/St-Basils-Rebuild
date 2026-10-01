@@ -716,6 +716,12 @@ async function runPipeline(ctx: JobContext, claimed: ChangeRequest): Promise<voi
     }
   }
   log.info('CI passed', { requestId: request.id, headSha })
+  await postMessageSafe(
+    db,
+    request.id,
+    'system',
+    `CI checks passed on pull request #${pr.number} (commit ${headSha.slice(0, 7)}); verifying the preview next.`
+  )
 
   // 8. Preview for exactly the pushed (possibly repaired) commit
   let previewUrl: string

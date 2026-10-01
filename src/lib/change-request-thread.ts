@@ -22,29 +22,48 @@ export type InlineToken =
 
 export type MessageBlock =
   | { type: 'paragraph'; lines: InlineToken[][] }
-  | { type: 'list'; ordered: boolean; items: InlineToken[][] }
+  | { type: 'list'; ordered: boolean; items: ListItem[] }
+
+export interface ListItem {
+  /** The number the author wrote, for ordered lists (kept, never renumbered). */
+  value: number | null
+  tokens: InlineToken[]
+}
 
 const URL_PATTERN = /\bhttps?:\/\/[^\s<>"'`]+/gi
 const PR_MENTION_PATTERN = /\b(pull request|PR) #(\d+)\b/gi
 const GITHUB_PR_URL = /^https:\/\/github\.com\/([\w.-]+\/[\w.-]+)\/pull\/(\d+)(?:[/?#].*)?$/i
-const TRAILING_PUNCTUATION = /[.,;:!?'"*_]$/
+const TRAILING_PUNCTUATION = '.,;:!?\'"'
+const OPENER_OF: Record<string, string> = { ')': '(', ']': '[', '}': '{' }
 
-/** Drop sentence punctuation (and an unbalanced closing paren) from a URL match. */
+/**
+ * Drop sentence punctuation and unbalanced closing brackets from the end of
+ * a URL match ("(see https://x.org/a)." → "https://x.org/a"), keeping
+ * balanced ones ("…/Foo_(bar)") and every other URL character. Linear time.
+ */
 export function trimUrlMatch(match: string): string {
-  let url = match
-  for (;;) {
-    if (TRAILING_PUNCTUATION.test(url)) {
-      url = url.slice(0, -1)
-    } else if (url.endsWith(')') && count(url, '(') < count(url, ')')) {
-      url = url.slice(0, -1)
-    } else {
-      return url
+  // Closers minus openers over the whole match, per bracket kind.
+  const excess: Record<string, number> = { ')': 0, ']': 0, '}': 0 }
+  for (const char of match) {
+    if (char in excess) excess[char] += 1
+    else if (char === '(' || char === '[' || char === '{') {
+      const closer = Object.keys(OPENER_OF).find((key) => OPENER_OF[key] === char)!
+      excess[closer] -= 1
     }
   }
-}
-
-function count(text: string, char: string): number {
-  return text.split(char).length - 1
+  let end = match.length
+  while (end > 0) {
+    const char = match[end - 1]
+    if (TRAILING_PUNCTUATION.includes(char)) {
+      end -= 1
+    } else if (char in excess && excess[char] > 0) {
+      excess[char] -= 1
+      end -= 1
+    } else {
+      break
+    }
+  }
+  return match.slice(0, end)
 }
 
 /** `owner/repo` of the request's pull request, used to link bare `#N` mentions. */
@@ -127,7 +146,7 @@ export function tokenizeInline(text: string, context: ThreadContext): InlineToke
 }
 
 const BULLET = /^\s*[-*•]\s+(.*)$/
-const NUMBERED = /^\s*\d{1,3}[.)]\s+(.*)$/
+const NUMBERED = /^\s*(\d{1,3})[.)]\s+(.*)$/
 
 /** Paragraphs (blank-line separated, line breaks kept) and simple lists. */
 export function parseMessageBlocks(body: string, context: ThreadContext): MessageBlock[] {
@@ -143,7 +162,9 @@ export function parseMessageBlocks(body: string, context: ThreadContext): Messag
     const numbered = bullet ? null : NUMBERED.exec(line)
     if (bullet || numbered) {
       const ordered = Boolean(numbered)
-      const item = tokenizeInline((bullet ?? numbered)![1], context)
+      const item: ListItem = numbered
+        ? { value: Number(numbered[1]), tokens: tokenizeInline(numbered[2], context) }
+        : { value: null, tokens: tokenizeInline(bullet![1], context) }
       if (current?.type === 'list' && current.ordered === ordered) {
         current.items.push(item)
       } else {
@@ -168,6 +189,7 @@ export type SystemEventKind =
   | 'pr_opened'
   | 'pr_updated'
   | 'ci_repair'
+  | 'ci_passed'
   | 'verified'
   | 'needs_review'
   | 'needs_input'
@@ -252,6 +274,19 @@ export function classifySystemEvent(body: string, context: ThreadContext): Syste
       title: `Pushed a CI fix (${match[1]})`,
       detail: clean(match[2]),
       actions: [],
+    }
+  }
+  if (
+    (match = /^CI checks passed on pull request #(\d+)(?: \(commit (\w+)\))?;?\s*([\s\S]*)$/.exec(
+      text
+    ))
+  ) {
+    return {
+      kind: 'ci_passed',
+      tone: 'ok',
+      title: match[2] ? `CI passed (${match[2]})` : 'CI passed',
+      detail: clean(match[3]),
+      actions: prAction(match[1], null, context),
     }
   }
   if ((match = /^Preview verified \([^)]*\):\s*([\s\S]*?)\s*\nPreview: (\S+)\s*$/.exec(text))) {

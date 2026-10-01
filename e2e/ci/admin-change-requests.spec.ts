@@ -510,8 +510,14 @@ test.describe('CI admin website change requests', () => {
       {
         request_id: requestId,
         author_kind: 'system',
-        body: `Preview verified (pass): The footer link works.\nPreview: ${previewUrl}/`,
+        body: 'CI checks passed on pull request #4242 (commit abc1234); verifying the preview next.',
         created_at: at(4),
+      },
+      {
+        request_id: requestId,
+        author_kind: 'system',
+        body: `Preview verified (pass): The footer link works.\nPreview: ${previewUrl}/`,
+        created_at: at(5),
       },
     ])
 
@@ -544,6 +550,9 @@ test.describe('CI admin website change requests', () => {
     const opened = thread.locator('.cr-event[data-event="pr_opened"]')
     await expect(opened).toContainText('PR #4242 opened')
     await expect(opened.getByRole('link', { name: /View PR #4242/ })).toHaveAttribute('href', prUrl)
+    await expect(thread.locator('.cr-event[data-event="ci_passed"]')).toContainText(
+      'CI passed (abc1234)'
+    )
     const verified = thread.locator('.cr-event[data-event="verified"]')
     await expect(verified).toContainText('Preview verified')
     await expect(verified).toContainText('The footer link works.')
