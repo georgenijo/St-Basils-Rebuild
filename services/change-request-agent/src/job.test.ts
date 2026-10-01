@@ -446,6 +446,13 @@ describe('processRequest: CI repair round', () => {
 
     // It recovered: CI eventually passed, so the PR should still get promoted.
     expect(gh.markReadyForReview).toHaveBeenCalledTimes(1)
+
+    // The request page shows the repair as editing, then CI again.
+    const statuses = vi
+      .mocked(updateRequest)
+      .mock.calls.map(([, , patch]) => patch.status)
+      .filter(Boolean)
+    expect(statuses).toEqual(['verifying', 'in_progress', 'verifying', 'ready_for_review'])
   })
 
   it('leaves the PR draft and reports needs_attention when CI still fails after one repair attempt', async () => {

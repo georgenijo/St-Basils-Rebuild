@@ -785,6 +785,15 @@ async function runPipeline(ctx: JobContext, claimed: ChangeRequest): Promise<voi
       requestId: request.id,
       checkRunId: ciFailure.checkRunId,
     })
+    // Back to in_progress while the agent edits, so the request page shows
+    // the repair as editing rather than as waiting on CI.
+    await updateRequest(db, request.id, { status: 'in_progress' })
+    await postMessageSafe(
+      db,
+      request.id,
+      'system',
+      'CI checks failed on the pull request; the agent is repairing the change.'
+    )
     const excerpt = await ciFailureExcerpt(ctx, ciFailure)
     const repair = await runClaude(config, {
       cwd: ws.agentDir,
@@ -826,6 +835,7 @@ async function runPipeline(ctx: JobContext, claimed: ChangeRequest): Promise<voi
     log.info('committed CI repair', { requestId: request.id, headSha })
     await stopIfPullClosed(pr.number)
     await pushBranch(config, branch)
+    await updateRequest(db, request.id, { status: 'verifying' })
     await postMessage(db, request.id, 'agent', summary)
     await postMessage(
       db,

@@ -1,4 +1,4 @@
-import { Suspense } from 'react'
+import { Suspense, type ComponentProps } from 'react'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
@@ -18,7 +18,6 @@ import {
   safeExternalUrl,
   sameOriginUrl,
 } from '@/lib/change-request-status'
-import { ChangeRequestAutoRefresh } from '@/components/features/ChangeRequestAutoRefresh'
 import {
   ChangeRequestAttachments,
   ChangeRequestVerification,
@@ -26,6 +25,7 @@ import {
 } from '@/components/features/ChangeRequestEvidence'
 import { ChangeRequestHeader } from '@/components/features/ChangeRequestHeader'
 import { ChangeRequestActions } from '@/components/features/ChangeRequestActions'
+import { ChangeRequestLiveStatus } from '@/components/features/ChangeRequestLiveStatus'
 import { ChangeRequestMergePanel } from '@/components/features/ChangeRequestMergePanel'
 import { ChangeRequestReplyForm } from '@/components/features/ChangeRequestReplyForm'
 import { ChangeRequestUndo } from '@/components/features/ChangeRequestUndo'
@@ -72,6 +72,22 @@ function BackLink() {
   )
 }
 
+type LiveStatusProps = Omit<
+  ComponentProps<typeof ChangeRequestLiveStatus>,
+  'messageCount' | 'fileCount'
+>
+
+/** The live panel with exact thread/file counts, once the streamed reads land. */
+async function LiveStatusWithCounts({
+  detail,
+  ...props
+}: LiveStatusProps & { detail: ReturnType<typeof loadChangeRequestDetail> }) {
+  const [messages, files] = await Promise.all([detail.messages, detail.files])
+  return (
+    <ChangeRequestLiveStatus {...props} messageCount={messages.length} fileCount={files.length} />
+  )
+}
+
 async function PersonName({ id, names }: { id: string; names: Promise<Map<string, string>> }) {
   return <>{(await names).get(id) ?? 'Unknown admin'}</>
 }
@@ -96,6 +112,15 @@ export default async function ChangeRequestDetailPage({ params }: PageProps) {
   const previewUrl = safeExternalUrl(request.preview_url)
   // Only link to the preview if the page path stays on the preview's origin.
   const previewPageUrl = previewUrl ? sameOriginUrl(request.page_path, previewUrl) : null
+  const liveProps: LiveStatusProps = {
+    requestId: request.id,
+    active,
+    status: request.status,
+    previewUrl: request.preview_url,
+    claimedAt: request.claimed_at,
+    createdAt: request.created_at,
+    updatedAt: request.updated_at,
+  }
 
   return (
     <main className="admin-page">
@@ -110,7 +135,12 @@ export default async function ChangeRequestDetailPage({ params }: PageProps) {
         }
         prUrl={prUrl}
         previewPageUrl={previewPageUrl}
-        liveStatus={active ? <ChangeRequestAutoRefresh /> : null}
+        progress={
+          // Shows at once; counts (for change detection) arrive with the thread.
+          <Suspense fallback={<ChangeRequestLiveStatus {...liveProps} />}>
+            <LiveStatusWithCounts {...liveProps} detail={detail} />
+          </Suspense>
+        }
         statusActions={
           <>
             {request.status === 'ready_for_review' &&

@@ -36,7 +36,7 @@ export function changeRequestThumbnailPath(file: Pick<ChangeRequestFile, 'id' | 
 }
 
 export const CHANGE_REQUEST_DETAIL_COLUMNS =
-  'id, requester_id, title, description, page_path, target_selector, target_text, status, branch_name, pr_number, pr_url, preview_url, verification, attempts, error, merge_commit_sha, live_at, live_check_failed_at, revert_of, created_at, updated_at'
+  'id, requester_id, title, description, page_path, target_selector, target_text, status, branch_name, pr_number, pr_url, preview_url, verification, claimed_at, attempts, error, merge_commit_sha, live_at, live_check_failed_at, revert_of, created_at, updated_at'
 
 /**
  * In-flight reads for the request detail page. Every query starts at once;
