@@ -1,5 +1,6 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 export interface GalleryItem {
@@ -37,36 +38,45 @@ function Tile({
   }
 
   const unavailable = failed || !item.thumbnailSrc
+  const image = (
+    // eslint-disable-next-line @next/next/no-img-element -- private, already-resized thumbnail
+    <img
+      src={item.thumbnailSrc!}
+      alt={item.label}
+      loading="lazy"
+      decoding="async"
+      onError={() => setFailed(true)}
+    />
+  )
   return (
     <figure className="cr-shot" data-state={unavailable ? 'error' : 'ready'}>
       {unavailable ? (
         <div className="cr-shot-placeholder" role="note">
           Couldn’t load this screenshot. Refresh the page to try again.
         </div>
-      ) : (
+      ) : item.fullSrc ? (
         <a
-          href={item.fullSrc ?? item.thumbnailSrc!}
+          href={item.fullSrc}
           target="_blank"
           rel="noopener noreferrer"
           className="cr-shot-link"
           onClick={(event) => {
             // Keep new-tab gestures; a plain click opens the lightbox.
-            if (!item.fullSrc || event.metaKey || event.ctrlKey || event.shiftKey) return
-            if (event.button !== 0) return
+            if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return
             event.preventDefault()
             onOpen(item)
           }}
         >
-          {/* eslint-disable-next-line @next/next/no-img-element -- private, already-resized thumbnail */}
-          <img
-            src={item.thumbnailSrc!}
-            alt={item.label}
-            loading="lazy"
-            decoding="async"
-            onError={() => setFailed(true)}
-          />
+          {image}
           <span className="sr-only"> (enlarge)</span>
         </a>
+      ) : (
+        <>
+          {image}
+          <p className="cr-shot-note" role="note">
+            Full size unavailable. Refresh the page to try again.
+          </p>
+        </>
       )}
       <figcaption>{item.label}</figcaption>
     </figure>
@@ -85,6 +95,7 @@ export function ChangeRequestEvidenceGallery({
   comparisons: GalleryComparison[]
   others: GalleryItem[]
 }) {
+  const router = useRouter()
   const dialogRef = useRef<HTMLDialogElement>(null)
   const items = [
     ...comparisons.flatMap((comparison) =>
@@ -92,31 +103,52 @@ export function ChangeRequestEvidenceGallery({
     ),
     ...others,
   ].filter((item) => item.fullSrc)
-  const [openIndex, setOpenIndex] = useState<number | null>(null)
-  const current = openIndex === null ? null : items[openIndex]
 
-  const open = useCallback(
-    (item: GalleryItem) => {
-      const index = items.findIndex((candidate) => candidate.id === item.id)
-      if (index !== -1) setOpenIndex(index)
-    },
-    [items]
-  )
+  // Track the open screenshot by file id (not index), and hold on to the URL
+  // it opened with: the page's auto-refresh mints new signed URLs every few
+  // seconds, which must neither switch the image nor restart its download.
+  const [selected, setSelected] = useState<{
+    id: string
+    src: string
+    failed: boolean
+  } | null>(null)
+  const index = selected ? items.findIndex((item) => item.id === selected.id) : -1
+  const current = index === -1 ? null : items[index]
+  const freshSrc = current?.fullSrc ?? null
+
+  const show = useCallback((item: GalleryItem | undefined) => {
+    setSelected(item?.fullSrc ? { id: item.id, src: item.fullSrc, failed: false } : null)
+  }, [])
+
+  const open = useCallback((item: GalleryItem) => show(item), [show])
 
   const step = useCallback(
-    (delta: number) =>
-      setOpenIndex((index) =>
-        index === null ? index : (index + delta + items.length) % items.length
-      ),
-    [items.length]
+    (delta: number) => {
+      if (index === -1 || items.length === 0) return
+      show(items[(index + delta + items.length) % items.length])
+    },
+    [index, items, show]
   )
 
+  // The screenshot vanished (or lost its URL) after a refresh: close.
+  useEffect(() => {
+    if (selected && index === -1) setSelected(null)
+  }, [selected, index])
+
+  // After a failed load, adopt the refreshed signed URL once one arrives.
+  useEffect(() => {
+    if (selected?.failed && freshSrc && freshSrc !== selected.src) {
+      setSelected({ id: selected.id, src: freshSrc, failed: false })
+    }
+  }, [selected, freshSrc])
+
+  const isOpen = selected !== null && current !== null
   useEffect(() => {
     const dialog = dialogRef.current
     if (!dialog) return
-    if (openIndex !== null && !dialog.open) dialog.showModal()
-    if (openIndex === null && dialog.open) dialog.close()
-  }, [openIndex])
+    if (isOpen && !dialog.open) dialog.showModal()
+    if (!isOpen && dialog.open) dialog.close()
+  }, [isOpen])
 
   // Arrow keys page through screenshots; a click on the backdrop (the dialog
   // element itself, outside the panel) closes it. Escape is native.
@@ -163,9 +195,9 @@ export function ChangeRequestEvidenceGallery({
         ref={dialogRef}
         className="cr-lightbox"
         aria-label={current ? `Screenshot: ${current.label}` : 'Screenshot'}
-        onClose={() => setOpenIndex(null)}
+        onClose={() => setSelected(null)}
       >
-        {current && (
+        {selected && current && (
           <div className="cr-lightbox-panel">
             <div className="cr-lightbox-bar">
               <p className="cr-lightbox-caption">
@@ -173,7 +205,7 @@ export function ChangeRequestEvidenceGallery({
                 {items.length > 1 && (
                   <span className="admin-meta">
                     {' '}
-                    · {openIndex! + 1} of {items.length}
+                    · {index + 1} of {items.length}
                   </span>
                 )}
               </p>
@@ -199,7 +231,7 @@ export function ChangeRequestEvidenceGallery({
                   </>
                 )}
                 <a
-                  href={current.fullSrc!}
+                  href={selected.src}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="admin-button admin-button-quiet"
@@ -215,9 +247,35 @@ export function ChangeRequestEvidenceGallery({
                 </button>
               </div>
             </div>
-            <div className="cr-lightbox-image">
-              {/* eslint-disable-next-line @next/next/no-img-element -- private signed URL */}
-              <img src={current.fullSrc!} alt={current.label} />
+            {/* Focusable so keyboard users can scroll tall screenshots (Safari). */}
+            <div
+              className="cr-lightbox-image"
+              // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- scrollable region
+              tabIndex={0}
+              role="region"
+              aria-label={`${current.label}, scrollable`}
+            >
+              {selected.failed ? (
+                <div className="cr-shot-placeholder cr-lightbox-error" role="alert">
+                  <p>This screenshot link has expired or could not load.</p>
+                  <button
+                    type="button"
+                    className="admin-button admin-button-quiet"
+                    onClick={() => router.refresh()}
+                  >
+                    Reload screenshots
+                  </button>
+                </div>
+              ) : (
+                // eslint-disable-next-line @next/next/no-img-element -- private signed URL
+                <img
+                  src={selected.src}
+                  alt={current.label}
+                  onError={() =>
+                    setSelected((value) => (value ? { ...value, failed: true } : value))
+                  }
+                />
+              )}
             </div>
           </div>
         )}

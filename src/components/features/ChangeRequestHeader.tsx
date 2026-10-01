@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 
 import { formatChangeRequestDateTime } from '@/lib/change-request-detail'
 import { getChangeRequestStatusInfo } from '@/lib/change-request-status'
+import { ChangeRequestHeaderOffset } from '@/components/features/ChangeRequestHeaderOffset'
 import { ChangeRequestStatusBadge } from '@/components/features/ChangeRequestStatusBadge'
 import type { ChangeRequest } from '@/types/change-request'
 
@@ -63,10 +64,12 @@ export function ChangeRequestHeader({
   return (
     <>
       <header
+        id="request-header"
         className="cr-header"
         aria-label="Request summary"
         data-testid="change-request-header"
       >
+        <ChangeRequestHeaderOffset targetId="request-header" />
         <div className="cr-header-heading">
           <h1>{request.title}</h1>
           <div className="cr-status-row" data-testid="change-request-status">

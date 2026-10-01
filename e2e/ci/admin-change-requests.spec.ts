@@ -742,10 +742,32 @@ test.describe('CI admin website change requests', () => {
       'src',
       /\/storage\/v1\/object\/sign\/change-requests\//
     )
+    // Tall screenshots scroll in a keyboard-focusable region.
+    await expect(
+      dialog.getByRole('region', { name: 'after · desktop, scrollable' })
+    ).toHaveAttribute('tabindex', '0')
     await page.keyboard.press('ArrowRight')
     await expect(page.getByRole('dialog', { name: 'Screenshot: before · mobile' })).toBeVisible()
     await page.keyboard.press('Escape')
     await expect(page.getByRole('dialog')).toHaveCount(0)
+
+    // An expired / failing full-size link shows a recovery action instead of
+    // a broken image, and reloading mints fresh signed URLs.
+    await page.route('**/storage/v1/object/sign/**', (route) => route.abort())
+    await evidence.getByRole('link', { name: /before · desktop/ }).click()
+    const failing = page.getByRole('dialog', { name: 'Screenshot: before · desktop' })
+    await expect(failing.getByRole('alert')).toContainText('could not load')
+    await page.unroute('**/storage/v1/object/sign/**')
+    await failing.getByRole('button', { name: 'Reload screenshots' }).click()
+    await expect
+      .poll(() =>
+        failing
+          .getByRole('img', { name: 'before · desktop' })
+          .evaluate((img) => (img as HTMLImageElement).naturalWidth)
+          .catch(() => 0)
+      )
+      .toBeGreaterThan(0)
+    await page.keyboard.press('Escape')
     expect(page.url()).toContain(`/admin/requests/${requestId}`)
   })
 })

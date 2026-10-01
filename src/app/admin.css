@@ -2239,3 +2239,31 @@
   max-width: 100%;
   margin: 0 auto;
 }
+
+/* Keep the Evidence jump target clear of the sticky top bar + request header
+   (ChangeRequestHeaderOffset measures the header into --cr-header-height). */
+.cr-evidence {
+  scroll-margin-top: 16px;
+}
+
+@media (min-width: 921px) {
+  .cr-evidence {
+    scroll-margin-top: calc(54px + var(--cr-header-height, 96px) + 16px);
+  }
+}
+
+.cr-shot-note {
+  padding: 6px 8px 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.cr-lightbox-image:focus-visible {
+  outline-offset: -3px;
+}
+
+.cr-lightbox-error {
+  height: 100%;
+  flex-direction: column;
+  gap: 10px;
+}
