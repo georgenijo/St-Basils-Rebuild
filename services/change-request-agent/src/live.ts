@@ -53,8 +53,22 @@ export type ProductionState =
  * supersedes it). Otherwise the merge's own failed deployment is a failure,
  * and anything else is still pending.
  */
+const PRODUCTION_PAGE_SIZE = 10
+const PRODUCTION_MAX_PAGES = 10
+
+/** Page back through production deployments until the one serving the site is found. */
+async function findCurrentProduction(gh: GitHub): Promise<string | null> {
+  for (let page = 1; page <= PRODUCTION_MAX_PAGES; page++) {
+    const deployments = await gh.latestProductionDeployments(page, PRODUCTION_PAGE_SIZE)
+    const current = currentProduction(deployments)
+    if (current) return current
+    if (deployments.length < PRODUCTION_PAGE_SIZE) return null
+  }
+  return null
+}
+
 async function productionStateFor(gh: GitHub, sha: string): Promise<ProductionState> {
-  const current = currentProduction(await gh.latestProductionDeployments())
+  const current = await findCurrentProduction(gh)
   if (current && (current === sha || (await gh.commitContains(current, sha)))) {
     return { state: 'ready', sha: current }
   }
@@ -86,7 +100,7 @@ async function defaultFetchPage(url: string): Promise<number> {
   return response.status
 }
 
-type RowOutcome = 'done' | 'pending'
+type RowOutcome = { done: boolean }
 
 /** Fill in a merge commit (and merge time) missing from the request, from its PR. */
 async function ensureMergeCommit(
@@ -116,26 +130,19 @@ async function fail(db: Db, row: ChangeRequest, problem: string): Promise<RowOut
   if (await recordLiveCheck(db, row.id, 'failed', `Not confirmed live: ${problem}`, problem)) {
     log.warn('live check failed', { requestId: row.id, problem })
   }
-  return 'done'
+  return { done: true }
 }
 
 async function checkRow(
   db: Db,
   gh: GitHub,
   config: Config,
-  original: ChangeRequest,
+  row: ChangeRequest,
   fetchPage: (url: string) => Promise<number>,
   now: Date
 ): Promise<RowOutcome> {
-  const row = await ensureMergeCommit(db, gh, original)
-  if (!row) {
-    return fail(
-      db,
-      original,
-      'the merge commit could not be found on GitHub, so the live site could not be checked.'
-    )
-  }
   const sha = row.merge_commit_sha as string
+  const pending: RowOutcome = { done: false }
   const production = await productionStateFor(gh, sha)
   if (production.state === 'failed') {
     return fail(
@@ -145,7 +152,7 @@ async function checkRow(
     )
   }
   if (production.state === 'pending') {
-    if (!pastDeadline(row, now)) return 'pending'
+    if (!pastDeadline(row, now)) return pending
     return fail(
       db,
       row,
@@ -158,17 +165,17 @@ async function checkRow(
   try {
     status = await fetchPage(url)
   } catch {
-    if (!pastDeadline(row, now)) return 'pending'
+    if (!pastDeadline(row, now)) return pending
     return fail(db, row, `the production deployment finished, but ${url} could not be loaded.`)
   }
   if (status < 200 || status >= 300) {
-    if (!pastDeadline(row, now)) return 'pending'
+    if (!pastDeadline(row, now)) return pending
     return fail(db, row, `the production deployment finished, but ${url} returned HTTP ${status}.`)
   }
   if (await recordLiveCheck(db, row.id, 'live', `Live on site ↗ ${url}`)) {
     log.info('change is live', { requestId: row.id, sha, deployedSha: production.sha })
   }
-  return 'done'
+  return { done: true }
 }
 
 /**
@@ -198,19 +205,38 @@ export async function confirmLiveDeployments(
   let rows = await listMergedAwaitingLive(db)
   while (rows.length > 0 && !stopping()) {
     const pending: ChangeRequest[] = []
-    for (const row of rows) {
+    for (const original of rows) {
       if (stopping()) return
+      // Carries metadata recovered from the PR into later polls and deadlines.
+      let row = original
       try {
-        if ((await checkRow(db, gh, config, row, fetchPage, now())) === 'pending') pending.push(row)
+        const recovered = await ensureMergeCommit(db, gh, row)
+        if (!recovered) {
+          await fail(
+            db,
+            row,
+            'the merge commit could not be found on GitHub, so the live site could not be checked.'
+          )
+          continue
+        }
+        row = recovered
+        const result = await checkRow(db, gh, config, row, fetchPage, now())
+        if (!result.done) pending.push(row)
       } catch (error) {
         log.warn('live check error; will retry', { requestId: row.id, error: String(error) })
-        if (pastDeadline(row, now())) {
+        if (!pastDeadline(row, now())) {
+          pending.push(row)
+          continue
+        }
+        try {
           await fail(
             db,
             row,
             `the live check kept failing (${String(error).slice(0, 200)}). Check Vercel and GitHub.`
-          ).catch((e) => log.warn('live check failure not recorded', { error: String(e) }))
-        } else {
+          )
+        } catch (recordError) {
+          // Not recorded: keep it so this run (or the next sweep) tries again.
+          log.warn('live check failure not recorded', { error: String(recordError) })
           pending.push(row)
         }
       }

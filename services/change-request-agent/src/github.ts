@@ -300,9 +300,9 @@ export class GitHub {
     return this.deploymentsWithStatuses(`sha=${sha}&per_page=20`)
   }
 
-  /** The newest production deployments (any commit), newest first. */
-  async latestProductionDeployments(): Promise<DeploymentWithStatuses[]> {
-    return this.deploymentsWithStatuses('environment=Production&per_page=5')
+  /** One page of production deployments (any commit), newest first. */
+  async latestProductionDeployments(page = 1, perPage = 10): Promise<DeploymentWithStatuses[]> {
+    return this.deploymentsWithStatuses(`environment=Production&per_page=${perPage}&page=${page}`)
   }
 
   /** Whether `head` contains `base` (GitHub compare: ahead or identical). */

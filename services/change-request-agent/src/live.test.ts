@@ -256,4 +256,70 @@ describe('confirmLiveDeployments', () => {
     await confirmLiveDeployments(db, fakeGh() as unknown as GitHub, config, { dryRun: true })
     expect(listMergedAwaitingLive).not.toHaveBeenCalled()
   })
+
+  it('pages back past newer failed builds to the deployment still serving the site', async () => {
+    const failures = Array.from({ length: 10 }, (_, i) =>
+      deployment(LATER, 'failure', `2026-10-01T11:5${i}:00Z`)
+    )
+    const gh = fakeGh()
+    gh.latestProductionDeployments
+      .mockResolvedValueOnce(failures)
+      .mockResolvedValueOnce([deployment(MERGE, 'success', '2026-10-01T11:00:00Z')])
+    await run(gh)
+    expect(gh.latestProductionDeployments).toHaveBeenNthCalledWith(1, 1, 10)
+    expect(gh.latestProductionDeployments).toHaveBeenNthCalledWith(2, 2, 10)
+    expect(outcome()[0].kind).toBe('live')
+  })
+
+  it('uses recovered merge metadata for later polls and deadlines', async () => {
+    // Legacy row: no merge metadata and an old updated_at.
+    vi.mocked(listMergedAwaitingLive).mockResolvedValue([
+      merged({ merge_commit_sha: null, merged_at: null, updated_at: LATE }),
+    ])
+    const gh = fakeGh()
+    gh.pullState.mockResolvedValue({
+      state: 'closed',
+      merged: true,
+      mergeCommitSha: MERGE,
+      headSha: 'a'.repeat(40),
+      mergedAt: new Date(NOW.getTime() - 60_000).toISOString(),
+    })
+    gh.latestProductionDeployments
+      .mockResolvedValueOnce([]) // first poll: still deploying
+      .mockRejectedValueOnce(new Error('GitHub 502')) // second poll: transient error
+      .mockResolvedValue([deployment(MERGE, 'success')])
+    let polls = 0
+    await confirmLiveDeployments(db, gh as unknown as GitHub, config, {
+      fetchPage: vi.fn().mockResolvedValue(200),
+      now: () => NOW,
+      waitMs: 1,
+      sleep: async () => {
+        polls += 1
+      },
+      isShuttingDown: () => polls >= 3,
+    })
+    expect(gh.pullState).toHaveBeenCalledTimes(1)
+    // Not failed by the stale updated_at deadline; confirmed once production caught up.
+    expect(outcome()).toEqual([{ kind: 'live', message: expect.stringContaining('Live on site') }])
+  })
+
+  it('keeps an overdue request pending when recording its failure fails', async () => {
+    vi.mocked(listMergedAwaitingLive).mockResolvedValue([merged({ merged_at: LATE })])
+    vi.mocked(recordLiveCheck)
+      .mockRejectedValueOnce(new Error('db down'))
+      .mockRejectedValueOnce(new Error('db down'))
+      .mockResolvedValue(true)
+    const gh = fakeGh()
+    let polls = 0
+    await confirmLiveDeployments(db, gh as unknown as GitHub, config, {
+      now: () => NOW,
+      waitMs: 1,
+      sleep: async () => {
+        polls += 1
+      },
+      isShuttingDown: () => polls >= 3,
+    })
+    expect(polls).toBeGreaterThanOrEqual(1)
+    expect(vi.mocked(recordLiveCheck).mock.calls.length).toBeGreaterThanOrEqual(3)
+  })
 })

@@ -118,12 +118,15 @@ describe('shortCommitSha', () => {
 })
 
 describe('isAwaitingLiveCheck', () => {
-  it('is true only for merged requests without a live check outcome', () => {
-    expect(isAwaitingLiveCheck({ status: 'merged', live_check_failed_at: null })).toBe(true)
-    expect(isAwaitingLiveCheck({ status: 'merged', live_check_failed_at: '2026-10-01' })).toBe(
-      false
-    )
-    expect(isAwaitingLiveCheck({ status: 'live' })).toBe(false)
-    expect(isAwaitingLiveCheck({ status: 'ready_for_review' })).toBe(false)
+  it('is true for merged requests without an outcome, and briefly after one lands', () => {
+    const now = Date.parse('2026-10-01T12:00:00Z')
+    const recent = '2026-10-01T11:59:30Z'
+    const old = '2026-10-01T11:00:00Z'
+    expect(isAwaitingLiveCheck({ status: 'merged', live_check_failed_at: null }, now)).toBe(true)
+    expect(isAwaitingLiveCheck({ status: 'merged', live_check_failed_at: recent }, now)).toBe(true)
+    expect(isAwaitingLiveCheck({ status: 'merged', live_check_failed_at: old }, now)).toBe(false)
+    expect(isAwaitingLiveCheck({ status: 'live', live_at: recent }, now)).toBe(true)
+    expect(isAwaitingLiveCheck({ status: 'live', live_at: old }, now)).toBe(false)
+    expect(isAwaitingLiveCheck({ status: 'ready_for_review' }, now)).toBe(false)
   })
 })
