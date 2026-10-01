@@ -212,7 +212,7 @@ and exits successfully (not a broken build) rather than failing CI.
 | `SITE_URL`                                             | no              | Admin links in emails, default `https://stbasilsboston.org`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | `BASELINE_URL`                                         | no              | "Before" site, default `https://stbasilsboston.org`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | `VERCEL_AUTOMATION_BYPASS_SECRET`                      | no              | Sent as `x-vercel-protection-bypass` to previews                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| `RESEND_API_KEY`                                       | no              | Enables email notifications                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `RESEND_API_KEY`                                       | no              | Enables email notifications (see "Email notifications" below)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | `CHANGE_REQUEST_NOTIFY_EMAIL`                          | no              | Recipient(s), comma separated                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | `CHANGE_REQUEST_FROM_EMAIL`                            | no              | Default `St. Basil's Church <noreply@stbasilsboston.org>` (the site's sender)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | `DRY_RUN`                                              | no              | `1`: stop after the local commit — print the diff, no push/PR, status `needs_attention` with error `dry run`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
@@ -305,3 +305,45 @@ The same image supports two deployment modes; `CMD` and the presence of
   bounded-trigger dispatch model" above — `recoverStaleClaims`/
   `syncPullRequests`/`cleanupStorage` only run once, at the start of each
   triggered run, not on an idle-period timer.
+
+### Email notifications
+
+The worker emails the notification recipients through Resend whenever a
+request reaches a state that needs a person:
+
+- `ready_for_review` — CI passed on the exact commit, the preview was
+  verified, and the draft PR was marked ready (subject
+  `Change request ready for review: <title>`).
+- `needs_attention` — guardrail hit, agent or CI failure, failed or unsure
+  verification, a restart during the request's last attempt, or a stale claim
+  that used its last attempt (subject `Change request needs attention: <title>`).
+
+Each email has the request title, status, verdict, what happened, and links to
+the PR, preview, and `/admin/requests/<id>`. Requeues, merges, and closes do not
+email. Sending never fails a job: a Resend error is logged as
+`notification email failed` with the HTTP status.
+
+Email is off unless both of these are set; otherwise each notification is only
+logged as `notification (email not configured)`. The `worker started` log line
+reports `emailNotifications: enabled` or which variable is missing (never the
+values).
+
+| Variable                      | Where (managed agent) | Value                                                                                                                                        |
+| ----------------------------- | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `RESEND_API_KEY`              | sealed agent secret   | A Resend API key with sending access to the `stbasilsboston.org` domain (the website's sender domain). A separate key for the agent is best. |
+| `CHANGE_REQUEST_NOTIFY_EMAIL` | agent env             | Recipient(s), comma separated.                                                                                                               |
+| `CHANGE_REQUEST_FROM_EMAIL`   | agent env, optional   | Sender. Default `St. Basil's Church <noreply@stbasilsboston.org>`, the same sender the website uses; must be on a Resend-verified domain.    |
+| `SITE_URL`                    | agent env, optional   | Base of the admin link in the email. Default `https://stbasilsboston.org`.                                                                   |
+
+For the `st-basils-change-requests` managed agent, the key goes in as a sealed
+secret read from stdin (never on the command line or in shell history):
+
+```sh
+family-host agent secret set st-basils-change-requests RESEND_API_KEY --value-file -
+```
+
+and `CHANGE_REQUEST_NOTIFY_EMAIL` (plus `CHANGE_REQUEST_FROM_EMAIL` if the
+default sender is not wanted) goes in the agent's env. The next triggered run
+picks them up. To check delivery, confirm the next run logs
+`emailNotifications: enabled`, then `notification email sent` for a request
+that ends ready for review and for one that ends needing attention.

@@ -14,7 +14,7 @@ import { killAllChildren } from './exec'
 import { createGitHub, type GitHub, resolveGithubToken } from './github'
 import { processRequest, type JobContext } from './job'
 import { log, registerRedactions } from './log'
-import { staleClaimAction } from './stale'
+import { recoverStaleClaims } from './stale'
 
 let shuttingDown = false
 let wake: (() => void) | null = null
@@ -27,40 +27,6 @@ function sleep(ms: number): Promise<void> {
       resolve()
     }
   })
-}
-
-export async function recoverStaleClaims(db: Db, config: Config): Promise<void> {
-  const rows = await listByStatus(db, ['in_progress', 'verifying'])
-  for (const row of rows) {
-    const action = staleClaimAction(row, {
-      workerId: config.workerId,
-      now: new Date(),
-      staleMinutes: config.staleClaimMinutes,
-      maxAttempts: config.maxAttempts,
-    })
-    if (action === 'skip') continue
-    const changed =
-      action === 'requeue'
-        ? await updateIfStatus(db, row.id, row.status, {
-            status: 'queued',
-            claimed_by: null,
-            claimed_at: null,
-          })
-        : await updateIfStatus(db, row.id, row.status, {
-            status: 'needs_attention',
-            error: `Worker stopped while processing (attempt ${row.attempts} of ${config.maxAttempts})`,
-          })
-    if (!changed) continue
-    log.warn('recovered stale claim', { requestId: row.id, action, attempts: row.attempts })
-    await postMessageSafe(
-      db,
-      row.id,
-      'system',
-      action === 'requeue'
-        ? 'The worker stopped before finishing this request; it has been queued again.'
-        : `The worker stopped before finishing this request and it has used all ${config.maxAttempts} attempts.`
-    )
-  }
 }
 
 export async function syncPullRequests(db: Db, gh: GitHub): Promise<void> {
@@ -158,6 +124,16 @@ async function main(): Promise<void> {
     model: config.claudeModel,
     fhRunId: config.fhRunId,
     fhAgentId: config.fhAgentId,
+    // Which half is missing, never the values: see README "Email notifications".
+    emailNotifications:
+      config.resendApiKey && config.notifyEmail
+        ? 'enabled'
+        : `disabled (missing ${[
+            !config.resendApiKey && 'RESEND_API_KEY',
+            !config.notifyEmail && 'CHANGE_REQUEST_NOTIFY_EMAIL',
+          ]
+            .filter(Boolean)
+            .join(', ')})`,
   })
 
   // Long single-repo runs (Family Host managed agents) can outlive the

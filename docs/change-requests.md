@@ -190,4 +190,8 @@ opens the full-size signed URL.
 ## Environment
 
 Website (Vercel): `CHANGE_REQUEST_NOTIFY_EMAIL` — who is emailed on new
-requests. Worker: see `services/change-request-agent/README.md`.
+requests. Worker: see `services/change-request-agent/README.md`; its "Email
+notifications" section lists what the managed agent needs to email when a
+request is ready for review or needs attention (`RESEND_API_KEY` as a sealed
+agent secret, `CHANGE_REQUEST_NOTIFY_EMAIL`, optional
+`CHANGE_REQUEST_FROM_EMAIL`).
