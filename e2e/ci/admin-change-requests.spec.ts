@@ -237,4 +237,107 @@ test.describe('CI admin website change requests', () => {
       .eq('request_id', requestId)
     expect(files).toHaveLength(0)
   })
+
+  test('request detail streams its thread and evidence and serves cached thumbnails', async ({
+    page,
+    playwright,
+  }) => {
+    const supabase = getAdminClient()
+    const { data: admin } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('email', 'admin@stbasilsboston.org')
+      .single()
+    const title = `CI evidence request ${Date.now()}-${Math.round(Math.random() * 1000)}`
+    const { data: seeded, error } = await supabase
+      .from('change_requests')
+      .insert({
+        requester_id: admin!.id,
+        title,
+        description: 'Update the Sunday service times on the home page.',
+        page_path: '/',
+        status: 'ready_for_review',
+        verification: { verdict: 'pass', summary: 'Service times updated.' },
+      })
+      .select('id')
+      .single()
+    expect(error).toBeNull()
+    const requestId = seeded!.id as string
+    createdIds.push(requestId)
+
+    await supabase.from('change_request_messages').insert([
+      { request_id: requestId, author_kind: 'requester', author_id: admin!.id, body: 'Please.' },
+      { request_id: requestId, author_kind: 'agent', body: 'Preview verified.' },
+    ])
+    const shotPath = `requests/${requestId}/verification/after.png`
+    await supabase.storage
+      .from('change-requests')
+      .upload(shotPath, PNG_BYTES, { contentType: 'image/png', upsert: true })
+    await supabase.from('change_request_files').insert({
+      request_id: requestId,
+      kind: 'verification',
+      storage_path: shotPath,
+      filename: 'after.png',
+      content_type: 'image/png',
+      size_bytes: PNG_BYTES.byteLength,
+      label: 'After: home page',
+    })
+
+    await loginAsSeedAdmin(page)
+    await page.waitForURL('**/admin/**')
+    await page.goto('/admin/requests', { waitUntil: 'domcontentloaded' })
+    await page.getByRole('link', { name: title }).click()
+    await page.waitForURL(`**/admin/requests/${requestId}`)
+
+    await expect(page.getByRole('heading', { name: title, level: 1 })).toBeVisible()
+    await expect(page.getByTestId('change-request-thread')).toContainText('Preview verified.')
+    await expect(page.getByTestId('verification-verdict')).toBeVisible()
+
+    // Screenshots render from the small, stable thumbnail route and link to
+    // the full-size signed Storage URL.
+    const shot = page.getByRole('img', { name: 'After: home page' })
+    await expect(shot).toHaveAttribute(
+      'src',
+      new RegExp(`^/admin/requests/${requestId}/files/[0-9a-f-]{36}/thumbnail$`)
+    )
+    await expect
+      .poll(() => shot.evaluate((img) => (img as HTMLImageElement).naturalWidth))
+      .toBeGreaterThan(0)
+    await expect(page.locator('a', { has: shot })).toHaveAttribute(
+      'href',
+      /\/storage\/v1\/object\/sign\/change-requests\//
+    )
+
+    const thumbnailUrl = (await shot.getAttribute('src'))!
+    const thumbnail = await page.request.get(thumbnailUrl)
+    expect(thumbnail.status()).toBe(200)
+    expect(thumbnail.headers()['content-type']).toBe('image/webp')
+    expect(thumbnail.headers()['cache-control']).toBe('private, no-cache')
+    const etag = thumbnail.headers()['etag']
+    expect(etag).toBeTruthy()
+    // Revalidation is authorized and cheap: same session gets a 304.
+    const revalidated = await page.request.get(thumbnailUrl, {
+      headers: { 'If-None-Match': etag },
+    })
+    expect(revalidated.status()).toBe(304)
+
+    // Without an admin session the thumbnail route reveals nothing.
+    const anonymous = await playwright.request.newContext({
+      baseURL: new URL(page.url()).origin,
+    })
+    try {
+      // Even with a cached copy's ETag, a signed-out browser gets no 304.
+      const denied = await anonymous.get(thumbnailUrl, {
+        maxRedirects: 0,
+        headers: { 'If-None-Match': etag },
+      })
+      expect([302, 303, 307, 404]).toContain(denied.status())
+      expect(denied.headers()['content-type'] ?? '').not.toContain('image/')
+    } finally {
+      await anonymous.dispose()
+    }
+
+    await page.getByRole('link', { name: 'Back to Requests' }).click()
+    await expect(page.getByRole('link', { name: title })).toBeVisible()
+  })
 })

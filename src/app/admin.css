@@ -1727,3 +1727,87 @@
   outline: 2px solid var(--warn);
   outline-offset: 2px;
 }
+
+.cr-skeleton {
+  display: block;
+  width: 100%;
+  height: 12px;
+  border-radius: 4px;
+  background: color-mix(in oklch, var(--fg) 8%, transparent);
+  animation: cr-pulse 1.6s ease-in-out infinite;
+}
+
+.cr-skeleton + .cr-skeleton {
+  margin-top: 8px;
+}
+
+.admin-page-subtitle .cr-skeleton {
+  display: inline-block;
+  height: 10px;
+  vertical-align: middle;
+}
+
+.cr-skeleton-title {
+  height: 26px;
+}
+
+.cr-skeleton-button {
+  height: 30px;
+  border-radius: 6px;
+}
+
+.cr-skeleton-pill {
+  width: 88px;
+  height: 20px;
+  border-radius: 999px;
+}
+
+.cr-skeleton-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cr-skeleton-stack .cr-skeleton + .cr-skeleton {
+  margin-top: 0;
+}
+
+.cr-skeleton-message {
+  display: flex;
+  width: min(420px, 85%);
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.cr-skeleton-message[data-align='end'] {
+  align-self: flex-end;
+}
+
+.cr-skeleton-message .cr-skeleton + .cr-skeleton {
+  margin-top: 0;
+}
+
+.cr-skeleton-tile {
+  height: 220px;
+  border-radius: 6px;
+}
+
+.cr-skeleton-file {
+  height: 140px;
+  border-radius: 6px;
+}
+
+.cr-skeleton-tile + .cr-skeleton-tile {
+  margin-top: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cr-skeleton,
+  .cr-live::before {
+    animation: none;
+  }
+}
