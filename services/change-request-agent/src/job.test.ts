@@ -116,6 +116,7 @@ function fakeConfig(overrides: Partial<Config> = {}): Config {
     workerId: 'test-worker',
     pollIntervalMs: 15_000,
     prSyncIntervalMs: 300_000,
+    liveWaitMs: 600_000,
     staleClaimMinutes: 90,
     orphanMinAgeMinutes: 30,
     maxAttempts: 3,

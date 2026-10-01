@@ -94,6 +94,7 @@ submitting → queued → in_progress → verifying → ready_for_review → mer
 - `needs_attention` — something needs a human (see `error` and the thread).
 - `merging` — an admin chose **Approve & merge**; the merge is in progress
   (see "Approving and merging").
+- `live` — the merged change is confirmed on stbasilsboston.org (final).
 - `merged` / `closed` — worker syncs PR state after review, or an admin
   closed the request (see "Closing a request" below). `closed` is final.
 
@@ -193,6 +194,41 @@ merge too) and belongs in the account and secret register (#334).
 work but needs token minting code; the fine-grained token is the smaller
 change. To rotate: create a new token, update Vercel, redeploy, then revoke
 the old one.
+
+### Confirming the change is live
+
+After a merge (from the request page or on GitHub) the request is `merged`
+with its `merge_commit_sha`. The worker then confirms the change reached
+stbasilsboston.org, with no Vercel credential:
+
+1. It reads production from GitHub deployments, which Vercel's GitHub
+   integration reports in the **Production** environment. Production is
+   currently serving the change when the newest deployment whose latest
+   status is `success` is the merge commit or a descendant of it (checked
+   with GitHub compare). An `inactive` (replaced or rolled back) deployment
+   never counts, and a newer descendant counts even if Vercel skipped or never
+   finished the merge's own build.
+2. It requests the request's page on the live domain (`SITE_URL` +
+   `page_path`) and needs a 2xx response.
+3. `record_change_request_live_check` moves the request to the final status
+   **`live`** (`live_at`) and posts "Live on site ↗ <url>" in one transaction.
+
+Every merged request gets an outcome within 30 minutes of its merge. If it is
+still not confirmed by then, it is reported once instead: the merge's own
+production deployment failed, no deployment went live, the page kept failing
+to load or returned non-2xx, or GitHub lookups kept failing. The request stays
+`merged` with `error` (shown on the request page) and `live_check_failed_at`
+set, and the thread gets "Not confirmed live: …". Both outcomes go through the
+same RPC, and only the first one for a request counts. A merged request
+recorded without a merge commit gets it from its PR; if it cannot be found,
+that is reported too.
+
+Approve & merge wakes the agent. Every maintenance sweep checks without
+waiting. A one-shot run waits up to `LIVE_WAIT_MS` (default 10 minutes, and
+interruptible on shutdown) before exiting, while just-merged changes are
+still deploying. The request page keeps auto-refreshing while a merged
+request awaits its outcome. `merged` can only become `live`, and `live` is
+final.
 
 ### Closing a request
 

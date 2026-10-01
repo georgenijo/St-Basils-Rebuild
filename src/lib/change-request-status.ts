@@ -51,7 +51,13 @@ export const CHANGE_REQUEST_STATUS_INFO: Record<ChangeRequestStatus, StatusInfo>
   },
   merged: {
     label: 'Merged',
-    description: 'The pull request was merged. The change goes live with the next deployment.',
+    description:
+      'The pull request was merged. Vercel deploys it to stbasilsboston.org in a few minutes, and the agent confirms here when the change is live.',
+    tone: 'ok',
+  },
+  live: {
+    label: 'Live',
+    description: 'The change is live on stbasilsboston.org.',
     tone: 'ok',
   },
   closed: {
@@ -80,6 +86,24 @@ export const CLOSABLE_CHANGE_REQUEST_STATUSES: readonly ChangeRequestStatus[] = 
 
 export function isClosableChangeRequestStatus(status: string): boolean {
   return (CLOSABLE_CHANGE_REQUEST_STATUSES as readonly string[]).includes(status)
+}
+
+/** How long the page keeps refreshing after a live check outcome lands. */
+const LIVE_OUTCOME_SETTLE_MS = 60_000
+
+/**
+ * Merged and not yet confirmed live or reported, or the outcome landed within
+ * the last minute. The request and thread are separate reads, so one more
+ * refresh guarantees the outcome's thread entry shows up too.
+ */
+export function isAwaitingLiveCheck(
+  request: { status: string; live_at?: string | null; live_check_failed_at?: string | null },
+  now = Date.now()
+): boolean {
+  if (request.status === 'merged' && !request.live_check_failed_at) return true
+  const settledAt =
+    request.live_check_failed_at ?? (request.status === 'live' ? request.live_at : null)
+  return Boolean(settledAt) && now - Date.parse(settledAt as string) < LIVE_OUTCOME_SETTLE_MS
 }
 
 export function isActiveChangeRequestStatus(status: string): boolean {

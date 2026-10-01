@@ -71,6 +71,10 @@ export interface RequestPatch {
   claimed_at?: string | null
   error?: string | null
   github_cleanup_pending?: boolean
+  live_at?: string | null
+  live_check_failed_at?: string | null
+  merge_commit_sha?: string | null
+  merged_at?: string | null
 }
 
 export async function updateRequest(db: Db, id: string, patch: RequestPatch): Promise<void> {
@@ -201,6 +205,43 @@ export async function releaseMerge(
     p_older_than: olderThan,
   })
   if (error) throw new Error(`Releasing the merge of ${id} failed: ${error.message}`)
+  return data === true
+}
+
+/**
+ * Merged requests whose live deployment has not been confirmed or reported
+ * yet, including ones recorded without a merge commit (recovered from the PR).
+ */
+export async function listMergedAwaitingLive(db: Db): Promise<ChangeRequest[]> {
+  const { data, error } = await db
+    .from('change_requests')
+    .select('*')
+    .eq('status', 'merged')
+    .is('live_check_failed_at', null)
+    .order('merged_at', { ascending: true, nullsFirst: true })
+    .limit(50)
+  if (error) throw new Error(`Listing merged requests failed: ${error.message}`)
+  return (data ?? []) as ChangeRequest[]
+}
+
+/**
+ * Record a live check outcome and its thread entry in one transaction. Only
+ * the first outcome for a merged request counts; returns false otherwise.
+ */
+export async function recordLiveCheck(
+  db: Db,
+  id: string,
+  outcome: 'live' | 'failed',
+  message: string,
+  errorText: string | null = null
+): Promise<boolean> {
+  const { data, error } = await db.rpc('record_change_request_live_check', {
+    p_request_id: id,
+    p_outcome: outcome,
+    p_message: message,
+    p_error: errorText,
+  })
+  if (error) throw new Error(`Recording the live check for ${id} failed: ${error.message}`)
   return data === true
 }
 

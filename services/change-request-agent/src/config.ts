@@ -7,6 +7,8 @@ export interface Config {
   workerId: string
   pollIntervalMs: number
   prSyncIntervalMs: number
+  /** How long a one-shot run waits for just-merged changes to deploy before exiting. */
+  liveWaitMs: number
   staleClaimMinutes: number
   orphanMinAgeMinutes: number
   maxAttempts: number
@@ -107,6 +109,7 @@ export function loadConfig(options: { requireSupabase?: boolean } = {}): Config 
     workerId: env('WORKER_ID') ?? `change-request-agent@${os.hostname()}`,
     pollIntervalMs: int('POLL_INTERVAL_MS', 15_000),
     prSyncIntervalMs: int('PR_SYNC_INTERVAL_MS', 5 * 60_000),
+    liveWaitMs: int('LIVE_WAIT_MS', 10 * 60_000),
     staleClaimMinutes: int('STALE_CLAIM_MINUTES', 90),
     orphanMinAgeMinutes: nonNegativeInt('ORPHAN_MIN_AGE_MINUTES', 30),
     maxAttempts: int('MAX_ATTEMPTS', 3),

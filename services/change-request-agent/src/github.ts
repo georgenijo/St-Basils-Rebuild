@@ -277,6 +277,7 @@ export class GitHub {
     merged: boolean
     mergeCommitSha: string | null
     headSha: string | null
+    mergedAt: string | null
   }> {
     const pr = await this.request<{
       state: 'open' | 'closed'
@@ -291,13 +292,32 @@ export class GitHub {
       merged,
       mergeCommitSha: merged ? pr.merge_commit_sha : null,
       headSha: pr.head?.sha ?? null,
+      mergedAt: pr.merged_at,
     }
   }
 
   async deploymentsForSha(sha: string): Promise<DeploymentWithStatuses[]> {
+    return this.deploymentsWithStatuses(`sha=${sha}&per_page=20`)
+  }
+
+  /** One page of production deployments (any commit), newest first. */
+  async latestProductionDeployments(page = 1, perPage = 10): Promise<DeploymentWithStatuses[]> {
+    return this.deploymentsWithStatuses(`environment=Production&per_page=${perPage}&page=${page}`)
+  }
+
+  /** Whether `head` contains `base` (GitHub compare: ahead or identical). */
+  async commitContains(head: string, base: string): Promise<boolean> {
+    const result = await this.request<{ status: string }>(
+      'GET',
+      `/repos/${this.repo}/compare/${base}...${head}`
+    )
+    return result.status === 'ahead' || result.status === 'identical'
+  }
+
+  private async deploymentsWithStatuses(query: string): Promise<DeploymentWithStatuses[]> {
     const deployments = await this.request<Omit<DeploymentWithStatuses, 'statuses'>[]>(
       'GET',
-      `/repos/${this.repo}/deployments?sha=${sha}&per_page=20`
+      `/repos/${this.repo}/deployments?${query}`
     )
     return Promise.all(
       deployments.map(async (d) => ({

@@ -98,7 +98,7 @@ export function ChangeRequestHeader({
           <code>{request.page_path}</code>
         </p>
         <p className="cr-status-copy">{statusInfo.description}</p>
-        {request.error && request.status === 'needs_attention' && (
+        {request.error && (request.status === 'needs_attention' || request.status === 'merged') && (
           <p className="cr-status-error">{request.error}</p>
         )}
         {statusActions}

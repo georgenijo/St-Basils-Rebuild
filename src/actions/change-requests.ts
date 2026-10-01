@@ -858,6 +858,8 @@ async function approveAndMergeChangeRequestImpl(
     }
   }
   log.info('change_request.merged', { requestId, pr: prNumber })
+  // Wake the agent so it confirms the production deployment ("Live on site").
+  await wakeChangeRequestAgent(requestId)
   return { success: true, message: 'Merged. The change goes live in a few minutes.' }
 }
 

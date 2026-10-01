@@ -1,6 +1,7 @@
 import { loadConfig, secretValues, type Config } from './config'
 import { cleanupAbandonedSubmissions, sweepOrphanFolders, type SweepState } from './abandoned'
 import { cleanupClosedRequests } from './closed'
+import { confirmLiveDeployments } from './live'
 import { startCredentialRefresh, type CredentialRefreshHandle } from './credential-refresh'
 import { cleanupDeps, claimNext, createDb, type Db } from './db'
 import { killAllChildren } from './exec'
@@ -130,6 +131,10 @@ async function main(): Promise<void> {
         await cleanupClosedRequests(db, gh, { dryRun: config.dryRun }).catch((error) =>
           log.error('closed request cleanup failed', { error })
         )
+        await confirmLiveDeployments(db, gh, config, {
+          dryRun: config.dryRun,
+          isShuttingDown: () => shuttingDown,
+        }).catch((error) => log.error('live check failed', { error }))
         await cleanupStorage(db, config).catch((error) =>
           log.error('storage cleanup failed', { error })
         )
@@ -151,6 +156,16 @@ async function main(): Promise<void> {
         break
       }
       await sleep(config.pollIntervalMs)
+    }
+    // A one-shot run has no later sweep: before exiting, wait (bounded) for
+    // just-merged changes to reach production so "Live on site" is posted.
+    if (once && !shuttingDown) {
+      await confirmLiveDeployments(db, gh, config, {
+        dryRun: config.dryRun,
+        waitMs: config.liveWaitMs,
+        sleep,
+        isShuttingDown: () => shuttingDown,
+      }).catch((error) => log.error('live check failed', { error }))
     }
   } finally {
     credentialRefresh?.stop()
