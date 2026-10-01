@@ -227,8 +227,23 @@ describe('findAttachmentMention', () => {
     ['Text only', 'No attachment needed, just update the service time to 9:15 AM.'],
     ['Wording', 'Without an image, reword the heading to "Welcome".'],
     ['Wording', "We don't need a photo here; shorten the paragraph."],
+    ['Heading', 'No attached image is needed; only change the heading.'],
+    ['Heading', 'Without any new photos, just correct the heading.'],
+    ['Heading', 'No image or flyer, just fix the spelling of Qurbono.'],
   ])('ignores %j / %j', (title, description) => {
     expect(findAttachmentMention(title, description)).toBeNull()
+  })
+
+  it('checks the title when the description has no mention', () => {
+    expect(findAttachmentMention('New flyer for the feast', 'Put it on the home page.')).toBe(
+      'flyer'
+    )
+  })
+
+  it('still finds a later mention after a negated phrase', () => {
+    expect(
+      findAttachmentMention('Heading', "We don't need a new photo, but attach the PDF bulletin.")
+    ).toBe('attach')
   })
 
   it('keeps looking after a negated mention', () => {

@@ -198,14 +198,19 @@ export function formatBytes(bytes: number): string {
 }
 
 // Words that usually mean the requester meant to include a file. Matched as
-// whole words so e.g. "imagine" or "pdfs-like" wording does not trigger.
-const ATTACHMENT_MENTION_PATTERN =
-  /\b(attach(?:ed|ment|ments|ing)?|enclosed|images?|photos?|photographs?|pictures?|flyers?|fliers?|posters?|brochures?|screenshots?|pdfs?|files?)\b/i
+// whole words so e.g. "imagine" or "profile" does not trigger.
+const ATTACHMENT_WORDS =
+  'attach(?:ed|ment|ments|ing)?|enclosed|images?|photos?|photographs?|pictures?|flyers?|fliers?|posters?|brochures?|screenshots?|pdfs?|files?'
+const ATTACHMENT_MENTION_PATTERN = new RegExp(`\\b(?:${ATTACHMENT_WORDS})\\b`, 'gi')
 
-// "no attachment", "without a photo", "don't need an image": the requester
-// has said there is no file, so do not nag them.
-const NEGATED_MENTION_PATTERN =
-  /\b(?:no|without|not|don'?t need|doesn'?t need|isn'?t|aren'?t)\s+(?:(?:a|an|any|the|new|separate)\s+)?$/i
+// "no attachment", "without any new photos", "no attached image is needed",
+// "don't need an image": the requester has said there is no file. The whole
+// negated phrase (negation plus any run of qualifiers and attachment words)
+// is ignored, so a later "but use the attached flyer" still counts.
+const NEGATED_MENTION_PATTERN = new RegExp(
+  `\\b(?:no|without|not|don'?t need|doesn'?t need|isn'?t|aren'?t)(?:\\s+(?:a|an|any|the|new|separate|additional|extra|other|or|and|${ATTACHMENT_WORDS})\\b)+`,
+  'gi'
+)
 
 /**
  * The first word in the request text that suggests a file should be attached
@@ -214,12 +219,9 @@ const NEGATED_MENTION_PATTERN =
  */
 export function findAttachmentMention(...texts: string[]): string | null {
   for (const text of texts) {
-    const pattern = new RegExp(ATTACHMENT_MENTION_PATTERN.source, 'gi')
-    for (const match of text.matchAll(pattern)) {
-      const before = text.slice(Math.max(0, match.index - 40), match.index)
-      if (NEGATED_MENTION_PATTERN.test(before)) continue
-      return match[0]
-    }
+    const unnegated = text.replace(NEGATED_MENTION_PATTERN, (phrase) => ' '.repeat(phrase.length))
+    const match = unnegated.match(ATTACHMENT_MENTION_PATTERN)
+    if (match) return match[0]
   }
   return null
 }

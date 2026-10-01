@@ -102,14 +102,16 @@ export function ChangeRequestForm({ initialPath = '/' }: { initialPath?: string 
         setFileError(`${file.name} is larger than 10 MB`)
         continue
       }
-      if (!guessAttachmentType(file.name, file.type)) {
+      const type = guessAttachmentType(file.name, file.type)
+      if (!type) {
         setFileError(`${file.name} is not a PNG, JPEG, WebP, GIF, or PDF file`)
         continue
       }
       next.push({
         id: crypto.randomUUID(),
         file,
-        previewUrl: file.type.startsWith('image/') ? URL.createObjectURL(file) : null,
+        // Use the inferred type: some OSes give image files an empty MIME type.
+        previewUrl: type.startsWith('image/') ? URL.createObjectURL(file) : null,
       })
     }
     setFiles(next)
@@ -310,20 +312,22 @@ export function ChangeRequestForm({ initialPath = '/' }: { initialPath?: string 
           Up to {MAX_CHANGE_REQUEST_ATTACHMENTS} files, 10 MB each. PNG, JPEG, WebP, GIF, or PDF,
           e.g. a new flyer.
         </p>
-        {missingAttachment && (
-          <p
-            ref={attachmentWarningRef}
-            className="cr-attachment-warning"
-            role="status"
-            tabIndex={-1}
-            data-testid="change-request-missing-attachment"
-          >
-            Your request mentions &ldquo;{attachmentMention}&rdquo; but nothing is attached.{' '}
-            {missingAttachmentConfirmed
-              ? 'Add the file above, or submit again to send the request without it.'
-              : 'Add the file above if the website agent needs it.'}
-          </p>
-        )}
+        {/* Always mounted so screen readers announce the warning when it appears. */}
+        <div role="status" aria-live="polite">
+          {missingAttachment && (
+            <p
+              ref={attachmentWarningRef}
+              className="cr-attachment-warning"
+              tabIndex={-1}
+              data-testid="change-request-missing-attachment"
+            >
+              Your request mentions &ldquo;{attachmentMention}&rdquo; but nothing is attached.{' '}
+              {missingAttachmentConfirmed
+                ? 'Add the file above, or submit again to send the request without it.'
+                : 'Add the file above if the website agent needs it.'}
+            </p>
+          )}
+        </div>
         {(uploadError || fileError || errors?.attachments) && (
           <p className="cr-field-error" role="alert">
             {uploadError ?? fileError ?? errors?.attachments?.[0]}

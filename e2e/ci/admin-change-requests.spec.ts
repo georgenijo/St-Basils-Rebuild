@@ -184,7 +184,8 @@ test.describe('CI admin website change requests', () => {
   })
   test('warns before submitting a request that mentions a missing attachment', async ({ page }) => {
     test.setTimeout(60_000)
-    const title = `CI missing attachment ${Date.now()}-${Math.round(Math.random() * 1000)}`
+    // Neutral title, so the warning must come from the description.
+    const title = `CI request ${Date.now()}-${Math.round(Math.random() * 1000)}`
 
     await loginAsSeedAdmin(page)
     await page.waitForURL('**/admin/**')
@@ -213,7 +214,11 @@ test.describe('CI admin website change requests', () => {
       .locator('input#attachments')
       .setInputFiles([{ name: 'feast flyer.png', mimeType: 'image/png', buffer: PNG_BYTES }])
     await expect(warning).toBeHidden()
-    await expect(page.getByRole('img', { name: 'Preview of feast flyer.png' })).toBeVisible()
+    const preview = page.getByRole('img', { name: 'Preview of feast flyer.png' })
+    await expect(preview).toBeVisible()
+    await expect
+      .poll(() => preview.evaluate((img) => (img as HTMLImageElement).naturalWidth))
+      .toBeGreaterThan(0)
     await expect(submit).toBeVisible()
 
     // Removing it brings the warning back; the requester already confirmed,
