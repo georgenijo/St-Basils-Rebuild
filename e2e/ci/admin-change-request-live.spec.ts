@@ -78,7 +78,8 @@ test.describe('CI admin website request live status', () => {
       body: 'The worker picked up this request and is preparing a change.',
     })
     expect(messageError).toBeNull()
-    await expect(page.getByText('The worker picked up this request')).toBeVisible({
+    // The timeline renders the worker's known messages as compact rows.
+    await expect(page.getByText('Picked up by the website agent')).toBeVisible({
       timeout: LIVE_TIMEOUT,
     })
 
@@ -113,10 +114,10 @@ test.describe('CI admin website request live status', () => {
     const { error: closingError } = await supabase.from('change_request_messages').insert({
       request_id: requestId,
       author_kind: 'system',
-      body: 'Preview verified (pass): Heading updated.',
+      body: 'Preview verified (pass): The welcome heading now reads as requested.\nPreview: https://ci-live-preview.vercel.app',
     })
     expect(closingError).toBeNull()
-    await expect(page.getByText('Preview verified (pass): Heading updated.')).toBeVisible({
+    await expect(page.getByText('The welcome heading now reads as requested.')).toBeVisible({
       timeout: LIVE_TIMEOUT,
     })
 
