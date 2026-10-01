@@ -40,6 +40,8 @@ function ExternalButton({
  * - `statusActions`: controls that expand (e.g. close with a reason). Rendered
  *   at the end of the status block below, which scrolls normally.
  * - `liveStatus`: a live/refresh indicator, rendered beside the status badge.
+ * - `progress`: the live step/elapsed panel, rendered in the status block
+ *   under the status description.
  */
 export function ChangeRequestHeader({
   request,
@@ -47,6 +49,7 @@ export function ChangeRequestHeader({
   prUrl,
   previewPageUrl,
   liveStatus,
+  progress,
   actions,
   statusActions,
 }: {
@@ -56,6 +59,7 @@ export function ChangeRequestHeader({
   prUrl: string | null
   previewPageUrl: string | null
   liveStatus?: ReactNode
+  progress?: ReactNode
   actions?: ReactNode
   statusActions?: ReactNode
 }) {
@@ -98,6 +102,7 @@ export function ChangeRequestHeader({
           <code>{request.page_path}</code>
         </p>
         <p className="cr-status-copy">{statusInfo.description}</p>
+        {progress}
         {request.error && (request.status === 'needs_attention' || request.status === 'merged') && (
           <p className="cr-status-error">{request.error}</p>
         )}

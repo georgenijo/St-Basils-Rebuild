@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  formatElapsed,
+  getChangeRequestStep,
   getChangeRequestStatusInfo,
   isActiveChangeRequestStatus,
   isAwaitingLiveCheck,
@@ -128,5 +130,89 @@ describe('isAwaitingLiveCheck', () => {
     expect(isAwaitingLiveCheck({ status: 'live', live_at: recent }, now)).toBe(true)
     expect(isAwaitingLiveCheck({ status: 'live', live_at: old }, now)).toBe(false)
     expect(isAwaitingLiveCheck({ status: 'ready_for_review' }, now)).toBe(false)
+  })
+})
+
+describe('getChangeRequestStep', () => {
+  const base = {
+    preview_url: null,
+    claimed_at: null,
+    created_at: '2026-09-30T10:00:00Z',
+    updated_at: '2026-09-30T10:05:00Z',
+  }
+  const claimed = '2026-09-30T10:10:00Z'
+
+  it('waits in the queue since the last status change', () => {
+    expect(getChangeRequestStep({ ...base, status: 'queued' })).toEqual({
+      key: 'queued',
+      label: 'Waiting for the website agent',
+      since: base.updated_at,
+      startedAt: null,
+    })
+    expect(getChangeRequestStep({ ...base, status: 'submitting' })).toMatchObject({
+      key: 'queued',
+      label: 'Saving attachments',
+      since: base.created_at,
+    })
+  })
+
+  it('counts a CI repair round as editing, from when it started', () => {
+    expect(
+      getChangeRequestStep({
+        ...base,
+        status: 'in_progress',
+        claimed_at: claimed,
+        updated_at: '2026-09-30T10:30:00Z',
+      })
+    ).toMatchObject({ key: 'editing', since: '2026-09-30T10:30:00Z', startedAt: claimed })
+  })
+
+  it('is editing from the moment the agent claimed it', () => {
+    expect(
+      getChangeRequestStep({
+        ...base,
+        status: 'in_progress',
+        claimed_at: claimed,
+        updated_at: claimed,
+      })
+    ).toEqual({ key: 'editing', label: 'Editing the website', since: claimed, startedAt: claimed })
+  })
+
+  it('splits verifying into CI/preview and the browser check', () => {
+    const verifying = {
+      ...base,
+      status: 'verifying',
+      claimed_at: claimed,
+      updated_at: '2026-09-30T10:20:00Z',
+    }
+    expect(getChangeRequestStep(verifying)).toMatchObject({
+      key: 'checks',
+      label: 'Waiting for CI checks and the preview site',
+      since: '2026-09-30T10:20:00Z',
+      startedAt: claimed,
+    })
+    expect(
+      getChangeRequestStep({ ...verifying, preview_url: 'https://preview.vercel.app' })
+    ).toMatchObject({ key: 'browser', label: 'Checking the preview in a browser' })
+  })
+
+  it.each(['ready_for_review', 'needs_attention', 'merged', 'closed', 'mystery'])(
+    'has no live step once %s',
+    (status) => {
+      expect(getChangeRequestStep({ ...base, status })).toBeNull()
+    }
+  )
+})
+
+describe('formatElapsed', () => {
+  it.each([
+    [-5_000, 'less than a minute'],
+    [59_000, 'less than a minute'],
+    [60_000, '1 min'],
+    [59 * 60_000, '59 min'],
+    [60 * 60_000, '1 hr'],
+    [65 * 60_000 + 30_000, '1 hr 5 min'],
+  ])('formats %d ms as %s', (ms, text) => {
+    expect(formatElapsed(ms)).toBe(text)
   })
 })

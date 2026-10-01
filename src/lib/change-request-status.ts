@@ -214,3 +214,96 @@ export function sameOriginUrl(path: string, base: string): string | null {
 export function shortCommitSha(value: unknown): string | null {
   return typeof value === 'string' && /^[0-9a-f]{7,40}$/i.test(value) ? value.slice(0, 7) : null
 }
+
+// ─── Live progress ──────────────────────────────────────────────────────
+
+export type ChangeRequestStepKey = 'queued' | 'editing' | 'checks' | 'browser' | 'review'
+
+/** The stages a request moves through while the website agent works on it. */
+export const CHANGE_REQUEST_STEPS: readonly { key: ChangeRequestStepKey; label: string }[] = [
+  { key: 'queued', label: 'Queued' },
+  { key: 'editing', label: 'Editing' },
+  { key: 'checks', label: 'CI checks & preview' },
+  { key: 'browser', label: 'Browser check' },
+  { key: 'review', label: 'Ready for review' },
+]
+
+export interface ChangeRequestStep {
+  key: ChangeRequestStepKey
+  /** What is happening right now, in plain words. */
+  label: string
+  /** When the current step started (ISO). */
+  since: string
+  /** When the agent started this attempt (ISO), once it has been claimed. */
+  startedAt: string | null
+}
+
+type StepFields = {
+  status: string
+  preview_url: string | null
+  claimed_at: string | null
+  created_at: string
+  updated_at: string
+}
+
+/**
+ * The current step of an active request, derived from the columns the worker
+ * already writes: claiming sets `in_progress` + `claimed_at` (and a CI repair
+ * round goes back to `in_progress`); opening or updating the PR sets
+ * `verifying` and clears `preview_url`; the preview being ready sets
+ * `preview_url`. Each of those writes bumps `updated_at`, which is therefore
+ * when the step began. Returns null once the request is no longer active.
+ */
+export function getChangeRequestStep(request: StepFields): ChangeRequestStep | null {
+  const startedAt = request.claimed_at
+  switch (request.status) {
+    case 'submitting':
+      return {
+        key: 'queued',
+        label: 'Saving attachments',
+        since: request.created_at,
+        startedAt: null,
+      }
+    case 'queued':
+      return {
+        key: 'queued',
+        label: 'Waiting for the website agent',
+        since: request.updated_at,
+        startedAt: null,
+      }
+    case 'in_progress':
+      // Claiming, and the CI repair round, both set in_progress.
+      return {
+        key: 'editing',
+        label: 'Editing the website',
+        since: request.updated_at,
+        startedAt,
+      }
+    case 'verifying':
+      return request.preview_url
+        ? {
+            key: 'browser',
+            label: 'Checking the preview in a browser',
+            since: request.updated_at,
+            startedAt,
+          }
+        : {
+            key: 'checks',
+            label: 'Waiting for CI checks and the preview site',
+            since: request.updated_at,
+            startedAt,
+          }
+    default:
+      return null
+  }
+}
+
+/** "less than a minute", "4 min", "1 hr 5 min". */
+export function formatElapsed(ms: number): string {
+  const minutes = Math.floor(Math.max(0, ms) / 60_000)
+  if (minutes < 1) return 'less than a minute'
+  if (minutes < 60) return `${minutes} min`
+  const hours = Math.floor(minutes / 60)
+  const rest = minutes % 60
+  return rest ? `${hours} hr ${rest} min` : `${hours} hr`
+}
