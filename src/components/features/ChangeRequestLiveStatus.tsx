@@ -181,9 +181,17 @@ export function ChangeRequestLiveStatus({
   if (!active) return null
   // Active without an agent step (e.g. merging, or waiting for the live-site
   // check): just show that the page is updating itself.
-  if (!step) {
-    return paused ? null : <span className="cr-live">Live — updates automatically</span>
-  }
+  const liveIndicator = paused ? (
+    <span>
+      Live updates paused.{' '}
+      <button type="button" className="admin-button admin-button-bare" onClick={resume}>
+        Refresh
+      </button>
+    </span>
+  ) : (
+    <span className="cr-live">Live — updates automatically</span>
+  )
+  if (!step) return <p className="cr-progress-meta">{liveIndicator}</p>
   const currentIndex = CHANGE_REQUEST_STEPS.findIndex((item) => item.key === step.key)
   const since = Date.parse(step.since)
   const started = step.startedAt ? Date.parse(step.startedAt) : NaN
@@ -214,16 +222,7 @@ export function ChangeRequestLiveStatus({
         {now !== null && Number.isFinite(started) && step.key !== 'queued' && (
           <span>Agent working for {formatElapsed(now - started)}</span>
         )}
-        {paused ? (
-          <span>
-            Live updates paused.{' '}
-            <button type="button" className="admin-button admin-button-bare" onClick={resume}>
-              Refresh
-            </button>
-          </span>
-        ) : (
-          <span className="cr-live">Live — updates automatically</span>
-        )}
+        {liveIndicator}
       </p>
     </div>
   )
