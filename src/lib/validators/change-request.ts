@@ -84,6 +84,12 @@ export const changeRequestSchema = z.object({
 
 export type ChangeRequestFormData = z.infer<typeof changeRequestSchema>
 
+/** Approve & merge: the request and the verified commit the admin saw. */
+export const changeRequestMergeSchema = z.object({
+  request_id: z.uuid('Invalid request'),
+  verified_sha: z.string().regex(/^[0-9a-f]{40}$/, 'Invalid commit'),
+})
+
 export const CHANGE_REQUEST_CLOSE_REASON_MAX = 1000
 
 export const changeRequestCloseSchema = z.object({

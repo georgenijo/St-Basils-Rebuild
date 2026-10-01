@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation'
 
 import { getDataClient } from '@/lib/supabase/auth'
 import { UUID_PATTERN, loadChangeRequestDetail } from '@/lib/change-request-detail'
+import { isChangeRequestMergeConfigured } from '@/lib/change-request-github'
 import { signChangeRequestFiles } from '@/lib/change-request-storage'
 import {
   isActiveChangeRequestStatus,
@@ -20,6 +21,7 @@ import {
 } from '@/components/features/ChangeRequestEvidence'
 import { ChangeRequestHeader } from '@/components/features/ChangeRequestHeader'
 import { ChangeRequestActions } from '@/components/features/ChangeRequestActions'
+import { ChangeRequestMergePanel } from '@/components/features/ChangeRequestMergePanel'
 import { ChangeRequestReplyForm } from '@/components/features/ChangeRequestReplyForm'
 import {
   ChangeRequestAttachmentsSkeleton,
@@ -100,13 +102,26 @@ export default async function ChangeRequestDetailPage({ params }: PageProps) {
         previewPageUrl={previewPageUrl}
         liveStatus={active ? <ChangeRequestAutoRefresh /> : null}
         statusActions={
-          <ChangeRequestActions
-            requestId={request.id}
-            canClose={isClosableChangeRequestStatus(request.status)}
-            hasPullRequest={Boolean(
-              request.pr_number || request.branch_name || request.attempts > 0
-            )}
-          />
+          <>
+            {request.status === 'ready_for_review' &&
+              request.pr_number &&
+              isChangeRequestMergeConfigured() && (
+                <Suspense fallback={<p className="cr-help">Checking whether it can be merged…</p>}>
+                  <ChangeRequestMergePanel
+                    requestId={request.id}
+                    prNumber={request.pr_number}
+                    verifiedSha={request.verification?.commit_sha}
+                  />
+                </Suspense>
+              )}
+            <ChangeRequestActions
+              requestId={request.id}
+              canClose={isClosableChangeRequestStatus(request.status)}
+              hasPullRequest={Boolean(
+                request.pr_number || request.branch_name || request.attempts > 0
+              )}
+            />
+          </>
         }
       />
 

@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mockGetUser = vi.fn()
 const mockRpc = vi.fn()
+const mockAdminRpc = vi.fn()
 const userInserts: { table: string; row: unknown }[] = []
 const adminInserts: { table: string; row: unknown }[] = []
 const adminUpdates: { table: string; values: unknown; filters: [string, unknown][] }[] = []
@@ -30,7 +31,7 @@ let requestRow: {
   id: string
   status: string
   pr_number?: number | null
-  verification?: { commit_sha?: string | null } | null
+  verification?: { verdict?: string; commit_sha?: string | null } | null
 } | null = null
 let userInsertError: { message: string } | null = null
 let fileInsertError: { message: string } | null = null
@@ -38,7 +39,7 @@ let moveFailOn: number | null = null
 let requeueMatches = true
 let queueError: { message: string } | null = null
 // Re-read after an unconfirmed queue flip, and the guarded rollback delete.
-let rereadRow: { status: string } | null = { status: 'submitting' }
+let rereadRow: { status?: string; pr_number?: number | null } | null = { status: 'submitting' }
 let rereadError: { message: string } | null = null
 let deleteMatches = true
 let deleteError: { message: string } | null = null
@@ -134,6 +135,7 @@ vi.mock('@/lib/supabase/server', () => ({
 vi.mock('@/lib/supabase/admin', () => ({
   createAdminClient: vi.fn(() => ({
     from: adminFrom,
+    rpc: mockAdminRpc,
     storage: {
       from: () => ({
         createSignedUploadUrl: (path: string) => {
@@ -184,6 +186,15 @@ vi.mock('@/lib/change-request-agent', () => ({
   triggerChangeRequestAgent: (...args: unknown[]) => mockTriggerAgent(...args),
 }))
 
+const mockMergeConfigured = vi.fn(() => true)
+const mockMergeReadiness = vi.fn()
+const mockMergePull = vi.fn()
+vi.mock('@/lib/change-request-github', () => ({
+  isChangeRequestMergeConfigured: () => mockMergeConfigured(),
+  checkMergeReadiness: (...args: unknown[]) => mockMergeReadiness(...args),
+  mergeChangeRequestPull: (...args: unknown[]) => mockMergePull(...args),
+}))
+
 const mockRedirect = vi.fn((url: string) => {
   throw new Error(`NEXT_REDIRECT:${url}`)
 })
@@ -203,6 +214,7 @@ vi.mock('@/lib/logger.server', () => ({
 
 import {
   addChangeRequestMessage,
+  approveAndMergeChangeRequest,
   closeChangeRequest,
   createChangeRequest,
   prepareChangeRequestUploads,
@@ -966,5 +978,136 @@ describe('closeChangeRequest', () => {
     })
     mockRpc.mockResolvedValue({ data: null, error: { message: 'boom' } })
     expect((await closeChangeRequest(INITIAL, closeForm())).message).toMatch(/Could not close/)
+  })
+})
+
+// ─── approveAndMergeChangeRequest ────────────────────────────────────
+
+const VERIFIED = 'a'.repeat(40)
+const MERGED = 'c'.repeat(40)
+
+function mergeForm(sha = VERIFIED) {
+  const formData = new FormData()
+  formData.set('request_id', REQUEST_ID)
+  formData.set('verified_sha', sha)
+  return formData
+}
+
+function adminRpcCalls(name: string) {
+  return mockAdminRpc.mock.calls.filter(([fn]) => fn === name).map(([, args]) => args)
+}
+
+describe('approveAndMergeChangeRequest', () => {
+  beforeEach(() => {
+    mockMergeConfigured.mockReturnValue(true)
+    mockMergeReadiness.mockResolvedValue({ ok: true })
+    mockMergePull.mockResolvedValue({ ok: true, mergeCommitSha: MERGED })
+    mockRpc.mockResolvedValue({
+      data: [{ outcome: 'reserved', approval_id: 'approval-1' }],
+      error: null,
+    })
+    mockAdminRpc.mockResolvedValue({ data: true, error: null })
+    rereadRow = { pr_number: 12 }
+  })
+
+  it('rejects a non-admin before touching anything', async () => {
+    profile = null
+    const result = await approveAndMergeChangeRequest(INITIAL, mergeForm())
+    expect(result.success).toBe(false)
+    expect(mockRpc).not.toHaveBeenCalled()
+    expect(mockMergePull).not.toHaveBeenCalled()
+  })
+
+  it('refuses when merging is not configured', async () => {
+    mockMergeConfigured.mockReturnValue(false)
+    const result = await approveAndMergeChangeRequest(INITIAL, mergeForm())
+    expect(result).toEqual({ success: false, message: 'Merging from the website is not set up.' })
+    expect(mockRpc).not.toHaveBeenCalled()
+  })
+
+  it('requires the verified commit the admin saw', async () => {
+    const result = await approveAndMergeChangeRequest(INITIAL, mergeForm('not-a-sha'))
+    expect(result).toEqual({ success: false, message: 'Invalid request' })
+    expect(mockRpc).not.toHaveBeenCalled()
+  })
+
+  it('reserves the request for that commit before contacting GitHub', async () => {
+    await approveAndMergeChangeRequest(INITIAL, mergeForm())
+    expect(mockRpc).toHaveBeenCalledWith('begin_change_request_merge', {
+      p_request_id: REQUEST_ID,
+      p_sha: VERIFIED,
+    })
+    expect(mockRpc.mock.invocationCallOrder[0]).toBeLessThan(
+      mockMergeReadiness.mock.invocationCallOrder[0]
+    )
+  })
+
+  it('does not merge when the request changed (closed, revised, newer commit verified)', async () => {
+    mockRpc.mockResolvedValue({ data: [{ outcome: 'stale', approval_id: null }], error: null })
+    const result = await approveAndMergeChangeRequest(INITIAL, mergeForm())
+    expect(result.success).toBe(false)
+    expect(result.message).toMatch(/changed since you opened it/)
+    expect(mockMergeReadiness).not.toHaveBeenCalled()
+    expect(mockMergePull).not.toHaveBeenCalled()
+  })
+
+  it('releases the reservation when GitHub says it is not ready', async () => {
+    mockMergeReadiness.mockResolvedValue({
+      ok: false,
+      reason: 'The pull request has changed since it was verified.',
+    })
+    const result = await approveAndMergeChangeRequest(INITIAL, mergeForm())
+    expect(result).toEqual({
+      success: false,
+      message: 'Not merged: The pull request has changed since it was verified.',
+    })
+    expect(mockMergeReadiness).toHaveBeenCalledWith({ prNumber: 12, verifiedSha: VERIFIED })
+    expect(mockMergePull).not.toHaveBeenCalled()
+    // Only this reservation can be released.
+    expect(adminRpcCalls('release_change_request_merge')).toEqual([
+      expect.objectContaining({ p_request_id: REQUEST_ID, p_approval_id: 'approval-1' }),
+    ])
+  })
+
+  it('merges pinned to the approved commit and records it in one call', async () => {
+    const result = await approveAndMergeChangeRequest(INITIAL, mergeForm())
+    expect(result).toEqual({
+      success: true,
+      message: 'Merged. The change goes live in a few minutes.',
+    })
+    expect(mockMergePull).toHaveBeenCalledWith(12, VERIFIED)
+    expect(adminRpcCalls('record_change_request_merge')).toEqual([
+      { p_request_id: REQUEST_ID, p_merge_sha: MERGED, p_head_sha: VERIFIED },
+    ])
+    expect(adminRpcCalls('release_change_request_merge')).toHaveLength(0)
+  })
+
+  it('releases the reservation when GitHub refuses the merge', async () => {
+    mockMergePull.mockResolvedValue({ ok: false, reason: 'GitHub says no.' })
+    const result = await approveAndMergeChangeRequest(INITIAL, mergeForm())
+    expect(result).toEqual({ success: false, message: 'Not merged: GitHub says no.' })
+    expect(adminRpcCalls('release_change_request_merge')).toHaveLength(1)
+    expect(adminRpcCalls('record_change_request_merge')).toHaveLength(0)
+  })
+
+  it('keeps the reservation and wakes the agent when GitHub may have merged it', async () => {
+    mockMergePull.mockResolvedValue({
+      ok: false,
+      reason: 'GitHub did not confirm the merge.',
+      uncertain: true,
+    })
+    const result = await approveAndMergeChangeRequest(INITIAL, mergeForm())
+    expect(result.success).toBe(false)
+    expect(result.message).toMatch(/stays “Merging”/)
+    expect(adminRpcCalls('release_change_request_merge')).toHaveLength(0)
+    expect(mockTriggerAgent).toHaveBeenCalledWith(REQUEST_ID)
+  })
+
+  it('says recording is pending (and wakes the agent) when GitHub merged but recording failed', async () => {
+    mockAdminRpc.mockResolvedValue({ data: null, error: { message: 'db down' } })
+    const result = await approveAndMergeChangeRequest(INITIAL, mergeForm())
+    expect(result.success).toBe(true)
+    expect(result.message).toMatch(/Recording it here is pending/)
+    expect(mockTriggerAgent).toHaveBeenCalledWith(REQUEST_ID)
   })
 })

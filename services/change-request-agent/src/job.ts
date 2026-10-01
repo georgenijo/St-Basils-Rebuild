@@ -14,6 +14,7 @@ import {
   getRequest,
   postMessage,
   postMessageSafe,
+  recordMerge,
   updateRequest,
   type Db,
 } from './db'
@@ -452,7 +453,10 @@ async function runPipeline(ctx: JobContext, claimed: ChangeRequest): Promise<voi
     if (!prNumber || config.dryRun) return
     const pr = await ctx.gh.pullState(prNumber)
     if (pr.state !== 'closed') return
-    await updateRequest(db, request.id, { status: pr.merged ? 'merged' : 'closed', error: null })
+    if (pr.merged && pr.mergeCommitSha) {
+      await recordMerge(db, request.id, pr.mergeCommitSha, pr.headSha)
+    } else
+      await updateRequest(db, request.id, { status: pr.merged ? 'merged' : 'closed', error: null })
     await postMessageSafe(
       db,
       request.id,
@@ -786,7 +790,13 @@ async function runPipeline(ctx: JobContext, claimed: ChangeRequest): Promise<voi
   const headline = passed
     ? `Preview verified (${verification.verdict}): ${verification.summary}`
     : `Preview verification needs a human look (${verification.verdict}${hardChecksPass(verification.checks) ? '' : ', automated checks failed'}): ${verification.summary}`
-  await postMessage(db, request.id, 'system', `${headline}\nPreview: ${previewUrl}`)
-  const fresh = await getRequest(db, request.id)
-  await notify(config, { request: fresh, status: finalStatus, headline })
+  // The final status is published: from here on nothing may change it (an
+  // admin may already be approving it), so follow-up writes are best effort.
+  await postMessageSafe(db, request.id, 'system', `${headline}\nPreview: ${previewUrl}`)
+  try {
+    const fresh = await getRequest(db, request.id)
+    await notify(config, { request: fresh, status: finalStatus, headline })
+  } catch (error) {
+    log.warn('final notification failed', { requestId: request.id, error: String(error) })
+  }
 }

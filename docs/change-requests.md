@@ -92,6 +92,8 @@ submitting → queued → in_progress → verifying → ready_for_review → mer
   An admin can reply with **Request changes** to send it back (see
   "Revisions" below); a plain reply is only a note.
 - `needs_attention` — something needs a human (see `error` and the thread).
+- `merging` — an admin chose **Approve & merge**; the merge is in progress
+  (see "Approving and merging").
 - `merged` / `closed` — worker syncs PR state after review, or an admin
   closed the request (see "Closing a request" below). `closed` is final.
 
@@ -136,6 +138,61 @@ confirmed to be gone from the branch (deleted or rewritten), the worker says
 so in the thread and rebuilds the whole change from `main`; a network or git
 failure stops the run with an error instead. Replies to a `needs_attention`
 revision requeue it as usual and keep building on the same verified commit.
+
+### Approving and merging
+
+With `CHANGE_REQUEST_GITHUB_TOKEN` set on the website, a `ready_for_review`
+request shows **Approve & merge** in its status card. Without it the button
+is hidden and the server action refuses, and merging stays a GitHub step.
+The button is only enabled when a server-side check (streamed in, so the page
+does not wait on GitHub) confirms:
+
+- the PR is open, not a draft, and has no conflicts;
+- its head is exactly the verified commit (`verification.commit_sha`);
+- the newest run of each required check (Validate, Unit Tests, Change Request
+  Agent Service, Browser Flow Tests) succeeded on that commit.
+
+Approving binds to the verified commit shown on the page and goes through a
+reservation first:
+
+1. `begin_change_request_merge(request_id, sha)` (admins only) moves the
+   request from `ready_for_review` to **`merging`** only if its passing
+   verification is for exactly that commit, and records `approved_by`,
+   `approved_at`, `approved_sha` and a reservation id (`approval_id`). Close, "Request changes" and the
+   worker's claim all refuse a `merging` request, and a second approval gets
+   "the request changed", so nothing can be closed or superseded under a
+   merge.
+2. The site re-checks GitHub readiness for that commit, including that the PR
+   still targets `main`. If it is not ready, `release_change_request_merge`
+   puts the request back to `ready_for_review` with a note in the thread.
+3. The PR is squash-merged with GitHub's `sha` guard pinned to the approved
+   commit.
+4. `record_change_request_merge` (service role, idempotent) sets
+   `status = 'merged'`, `merge_commit_sha` and `merged_at`, and posts
+   "Approved and merged by …" in the same transaction.
+
+If GitHub's answer is uncertain (timeout or 5xx), or recording fails, the
+request stays `merging` and the agent is woken. The worker's PR sync records
+the merge once GitHub shows it, closes the request if the PR was closed, or
+releases a reservation still unmerged after 10 minutes. A release must name
+the reservation's `approval_id` (and the age is re-checked in the same
+transaction), so a stale caller can never cancel a newer approval. A merge is
+attributed to the website approval only if the merged head is the approved
+commit. PR sync, the job's "PR merged meanwhile" stop and closed-request
+cleanup all record merges made directly on GitHub the same way. `merged` is
+final, like `closed`, and a `merging` request can only become `merged` or (by
+release) `ready_for_review`, so no other writer can reopen it under a merge.
+
+The token is a **fine-grained personal access token** limited to
+`georgenijo/St-Basils-Rebuild`, with Pull requests: read & write, Contents:
+read & write (merging needs it), and Checks: read-only. It lives only in the
+Vercel environment (Production; add it to Preview only if previews should
+merge too) and belongs in the account and secret register (#334).
+`CHANGE_REQUEST_GITHUB_REPO` overrides the repository (default
+`georgenijo/St-Basils-Rebuild`). A GitHub App installation token would also
+work but needs token minting code; the fine-grained token is the smaller
+change. To rotate: create a new token, update Vercel, redeploy, then revoke
+the old one.
 
 ### Closing a request
 
@@ -258,7 +315,8 @@ opens the full-size signed URL.
 ## Environment
 
 Website (Vercel): `CHANGE_REQUEST_NOTIFY_EMAIL` — who is emailed on new
-requests. Worker: see `services/change-request-agent/README.md`; its "Email
+requests. `CHANGE_REQUEST_GITHUB_TOKEN` (optional) — enables **Approve &
+merge** (see above). Worker: see `services/change-request-agent/README.md`; its "Email
 notifications" section lists what the managed agent needs to email when a
 request is ready for review or needs attention (`RESEND_API_KEY` as a sealed
 agent secret, `CHANGE_REQUEST_NOTIFY_EMAIL`, optional

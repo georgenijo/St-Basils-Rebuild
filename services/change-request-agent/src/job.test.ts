@@ -98,6 +98,7 @@ vi.mock('./db', () => ({
   getRequest: vi.fn(),
   postMessage: vi.fn(),
   postMessageSafe: vi.fn(),
+  recordMerge: vi.fn(),
   updateRequest: vi.fn(),
 }))
 vi.mock('./notify', () => ({ notify: vi.fn() }))

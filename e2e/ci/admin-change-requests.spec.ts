@@ -598,6 +598,8 @@ test.describe('CI admin website change requests', () => {
     await page.goto(`/admin/requests/${requestId}`, { waitUntil: 'domcontentloaded' })
     const open = page.getByRole('button', { name: 'Close request…' })
     await waitForReactHydration(open)
+    // CI has no CHANGE_REQUEST_GITHUB_TOKEN, so merging from the site is hidden.
+    await expect(page.getByRole('button', { name: 'Approve & merge' })).toHaveCount(0)
     await open.click()
 
     const form = page.getByRole('form', { name: 'Close request' })
