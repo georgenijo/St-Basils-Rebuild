@@ -16,6 +16,7 @@ import {
   MAX_CHANGE_REQUEST_ATTACHMENTS,
   MAX_CHANGE_REQUEST_ATTACHMENT_BYTES,
   changeRequestSchema,
+  findAttachmentMention,
   formatBytes,
   guessAttachmentType,
 } from '@/lib/validators/change-request'
@@ -61,7 +62,11 @@ export function ChangeRequestForm({ initialPath = '/' }: { initialPath?: string 
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [progress, setProgress] = useState<Record<string, UploadProgress>>({})
+  // Set after the first submit with a mentioned-but-missing attachment, so a
+  // second submit goes through: a warning, not a hard block.
+  const [missingAttachmentConfirmed, setMissingAttachmentConfirmed] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const attachmentWarningRef = useRef<HTMLParagraphElement>(null)
   const filesRef = useRef(files)
 
   useEffect(() => {
@@ -74,6 +79,9 @@ export function ChangeRequestForm({ initialPath = '/' }: { initialPath?: string 
       filesRef.current.forEach((entry) => entry.previewUrl && URL.revokeObjectURL(entry.previewUrl))
     }
   }, [])
+
+  const attachmentMention = files.length === 0 ? findAttachmentMention(title, description) : null
+  const missingAttachment = attachmentMention !== null
 
   const handlePagePathChange = useCallback((path: string) => {
     setPagePath(path)
@@ -94,14 +102,16 @@ export function ChangeRequestForm({ initialPath = '/' }: { initialPath?: string 
         setFileError(`${file.name} is larger than 10 MB`)
         continue
       }
-      if (!guessAttachmentType(file.name, file.type)) {
+      const type = guessAttachmentType(file.name, file.type)
+      if (!type) {
         setFileError(`${file.name} is not a PNG, JPEG, WebP, GIF, or PDF file`)
         continue
       }
       next.push({
         id: crypto.randomUUID(),
         file,
-        previewUrl: file.type.startsWith('image/') ? URL.createObjectURL(file) : null,
+        // Use the inferred type: some OSes give image files an empty MIME type.
+        previewUrl: type.startsWith('image/') ? URL.createObjectURL(file) : null,
       })
     }
     setFiles(next)
@@ -140,6 +150,13 @@ export function ChangeRequestForm({ initialPath = '/' }: { initialPath?: string 
       return
     }
     setClientErrors(null)
+
+    if (missingAttachment && !missingAttachmentConfirmed) {
+      setMissingAttachmentConfirmed(true)
+      attachmentWarningRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+      attachmentWarningRef.current?.focus({ preventScroll: true })
+      return
+    }
 
     // Build the payload from component state so a failed submission keeps
     // every field (including selected files) intact.
@@ -295,6 +312,22 @@ export function ChangeRequestForm({ initialPath = '/' }: { initialPath?: string 
           Up to {MAX_CHANGE_REQUEST_ATTACHMENTS} files, 10 MB each. PNG, JPEG, WebP, GIF, or PDF,
           e.g. a new flyer.
         </p>
+        {/* Always mounted so screen readers announce the warning when it appears. */}
+        <div role="status" aria-live="polite">
+          {missingAttachment && (
+            <p
+              ref={attachmentWarningRef}
+              className="cr-attachment-warning"
+              tabIndex={-1}
+              data-testid="change-request-missing-attachment"
+            >
+              Your request mentions &ldquo;{attachmentMention}&rdquo; but nothing is attached.{' '}
+              {missingAttachmentConfirmed
+                ? 'Add the file above, or submit again to send the request without it.'
+                : 'Add the file above if the website agent needs it.'}
+            </p>
+          )}
+        </div>
         {(uploadError || fileError || errors?.attachments) && (
           <p className="cr-field-error" role="alert">
             {uploadError ?? fileError ?? errors?.attachments?.[0]}
@@ -354,7 +387,13 @@ export function ChangeRequestForm({ initialPath = '/' }: { initialPath?: string 
 
       <div className="flex items-center gap-4 border-t border-wood-800/10 pt-6">
         <Button type="submit" disabled={busy} className="admin-button admin-button-primary">
-          {uploading ? 'Uploading attachments…' : isPending ? 'Submitting…' : 'Submit request'}
+          {uploading
+            ? 'Uploading attachments…'
+            : isPending
+              ? 'Submitting…'
+              : missingAttachment && missingAttachmentConfirmed
+                ? 'Submit without attachment'
+                : 'Submit request'}
         </Button>
         <Button
           type="button"

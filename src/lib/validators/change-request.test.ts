@@ -5,6 +5,7 @@ import {
   changeRequestMessageSchema,
   changeRequestSchema,
   detectAttachmentType,
+  findAttachmentMention,
   formatBytes,
   guessAttachmentType,
   sanitizeAttachmentFilename,
@@ -206,5 +207,56 @@ describe('guessAttachmentType', () => {
     expect(guessAttachmentType('doc.pdf', '')).toBe('application/pdf')
     expect(guessAttachmentType('a.svg', 'image/svg+xml')).toBeNull()
     expect(guessAttachmentType('a.exe', '')).toBeNull()
+  })
+})
+
+describe('findAttachmentMention', () => {
+  it.each([
+    ['replace flyer on home page', 'use attached image', 'flyer'],
+    ['Update the photo', 'Swap the staff photo for the new one.', 'photo'],
+    ['New schedule', 'Please link the attached PDF from the giving page.', 'attached'],
+    ['Bulletin', 'See attachment for the wording.', 'attachment'],
+    ['Poster', 'Put up the Easter poster, file enclosed.', 'Poster'],
+  ])('finds a mention in %j / %j', (title, description, word) => {
+    expect(findAttachmentMention(title, description)).toBe(word)
+  })
+
+  it.each([
+    ['Fix typo', 'Change "Qurbana" to "Qurbono" in the footer.'],
+    ['Imagine', 'Imagined wording: reword the profile section intro.'],
+    ['Text only', 'No attachment needed, just update the service time to 9:15 AM.'],
+    ['Wording', 'Without an image, reword the heading to "Welcome".'],
+    ['Wording', "We don't need a photo here; shorten the paragraph."],
+    ['Heading', 'No attached image is needed; only change the heading.'],
+    ['Heading', 'Without any new photos, just correct the heading.'],
+    ['Heading', 'No image or flyer, just fix the spelling of Qurbono.'],
+  ])('ignores %j / %j', (title, description) => {
+    expect(findAttachmentMention(title, description)).toBeNull()
+  })
+
+  it('checks the title when the description has no mention', () => {
+    expect(findAttachmentMention('New flyer for the feast', 'Put it on the home page.')).toBe(
+      'flyer'
+    )
+  })
+
+  it('still finds a later mention after a negated phrase', () => {
+    expect(
+      findAttachmentMention('Heading', "We don't need a new photo, but attach the PDF bulletin.")
+    ).toBe('attach')
+  })
+
+  it.each([
+    ['No new photos\nAttach the PDF to the bulletin page.', 'Attach'],
+    ['No new photos Attach the PDF to the bulletin page.', 'Attach'],
+    ['No image and attach the flyer instead.', 'attach'],
+  ])('does not let a negation swallow the next instruction: %j', (description, word) => {
+    expect(findAttachmentMention('Bulletin', description)).toBe(word)
+  })
+
+  it('keeps looking after a negated mention', () => {
+    expect(
+      findAttachmentMention('No image change', 'Keep the layout, but use the attached flyer.')
+    ).toBe('attached')
   })
 })

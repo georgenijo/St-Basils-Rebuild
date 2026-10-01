@@ -182,4 +182,59 @@ test.describe('CI admin website change requests', () => {
     await page.goto('/admin/requests', { waitUntil: 'domcontentloaded' })
     await expect(page.getByRole('link', { name: title })).toBeVisible()
   })
+  test('warns before submitting a request that mentions a missing attachment', async ({ page }) => {
+    test.setTimeout(60_000)
+    // Neutral title, so the warning must come from the description.
+    const title = `CI request ${Date.now()}-${Math.round(Math.random() * 1000)}`
+
+    await loginAsSeedAdmin(page)
+    await page.waitForURL('**/admin/**')
+
+    await page.goto('/admin/requests/new', { waitUntil: 'domcontentloaded' })
+    const submit = page.getByRole('button', { name: 'Submit request' })
+    await waitForReactHydration(submit)
+
+    const warning = page.getByTestId('change-request-missing-attachment')
+    await page.locator('input#title').fill(title)
+    await page
+      .locator('textarea#description')
+      .fill('Replace the feast flyer on the home page, use the attached image.')
+    await expect(warning).toContainText('nothing is attached')
+
+    // First submit stops at the warning instead of queueing the request.
+    await submit.click()
+    await expect(warning).toBeFocused()
+    await expect(warning).toContainText('submit again to send the request without it')
+    await expect(page).toHaveURL(/\/admin\/requests\/new/)
+    const submitAnyway = page.getByRole('button', { name: 'Submit without attachment' })
+    await expect(submitAnyway).toBeVisible()
+
+    // Attaching a file clears the warning and shows its thumbnail.
+    await page
+      .locator('input#attachments')
+      .setInputFiles([{ name: 'feast flyer.png', mimeType: 'image/png', buffer: PNG_BYTES }])
+    await expect(warning).toBeHidden()
+    const preview = page.getByRole('img', { name: 'Preview of feast flyer.png' })
+    await expect(preview).toBeVisible()
+    await expect
+      .poll(() => preview.evaluate((img) => (img as HTMLImageElement).naturalWidth))
+      .toBeGreaterThan(0)
+    await expect(submit).toBeVisible()
+
+    // Removing it brings the warning back; the requester already confirmed,
+    // so the next submit goes through without a file.
+    await page.getByRole('button', { name: 'Remove feast flyer.png' }).click()
+    await expect(warning).toBeVisible()
+    await submitAnyway.click()
+    await page.waitForURL(/\/admin\/requests\/[0-9a-f-]{36}$/, { timeout: 30_000 })
+    const requestId = page.url().split('/').pop()!
+    createdIds.push(requestId)
+    await expect(page.getByRole('heading', { name: title, level: 1 })).toBeVisible()
+
+    const { data: files } = await getAdminClient()
+      .from('change_request_files')
+      .select('id')
+      .eq('request_id', requestId)
+    expect(files).toHaveLength(0)
+  })
 })

@@ -196,3 +196,38 @@ export function formatBytes(bytes: number): string {
   if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
+
+// Words that usually mean the requester meant to include a file. Matched as
+// whole words so e.g. "imagine" or "profile" does not trigger.
+const ATTACHMENT_WORDS =
+  'attach(?:ed|ment|ments|ing)?|enclosed|images?|photos?|photographs?|pictures?|flyers?|fliers?|posters?|brochures?|screenshots?|pdfs?|files?'
+const ATTACHMENT_MENTION_PATTERN = new RegExp(`\\b(?:${ATTACHMENT_WORDS})\\b`, 'gi')
+
+// Attachment nouns (and "attached") that can sit inside a negated phrase.
+// The verbs "attach"/"attaching" are left out so "no image, attach the PDF"
+// still counts.
+const NEGATABLE_WORDS =
+  'attached|attachments?|enclosed|images?|photos?|photographs?|pictures?|flyers?|fliers?|posters?|brochures?|screenshots?|pdfs?|files?'
+
+// "no attachment", "without any new photos", "no attached image is needed",
+// "don't need an image": the requester has said there is no file. The whole
+// negated phrase (negation plus a run of qualifiers and attachment nouns on
+// the same line) is ignored, so a later "attach the flyer" still counts.
+const NEGATED_MENTION_PATTERN = new RegExp(
+  `\\b(?:no|without|not|don'?t need|doesn'?t need|isn'?t|aren'?t)(?:[ \\t]+(?:a|an|any|the|new|separate|additional|extra|other|or|and|${NEGATABLE_WORDS})\\b)+`,
+  'gi'
+)
+
+/**
+ * The first word in the request text that suggests a file should be attached
+ * (e.g. "flyer" in "use the attached flyer"), or null. Used to warn before a
+ * request is submitted with no attachments; it is a hint, not validation.
+ */
+export function findAttachmentMention(...texts: string[]): string | null {
+  for (const text of texts) {
+    const unnegated = text.replace(NEGATED_MENTION_PATTERN, (phrase) => ' '.repeat(phrase.length))
+    const match = unnegated.match(ATTACHMENT_MENTION_PATTERN)
+    if (match) return match[0]
+  }
+  return null
+}
