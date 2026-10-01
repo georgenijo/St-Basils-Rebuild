@@ -96,7 +96,10 @@ export function loadChangeRequestDetail(
   return { request, messages, files, names }
 }
 
-/** The undo request (#363) for a request, if one is in progress or done. */
+/**
+ * The undo request (#363) for a request, if one is in progress or done (same
+ * rule as request_change_request_undo).
+ */
 export async function findUndoRequestId(
   supabase: Pick<SupabaseClient, 'from'>,
   id: string
@@ -105,7 +108,8 @@ export async function findUndoRequestId(
     .from('change_requests')
     .select('id')
     .eq('revert_of', id)
-    .neq('status', 'closed')
+    // A closed undo counts until its PR has been closed on GitHub.
+    .or('status.neq.closed,github_cleanup_pending.eq.true')
     .order('created_at', { ascending: false })
     .limit(1)
   return ((data ?? [])[0] as { id: string } | undefined)?.id ?? null

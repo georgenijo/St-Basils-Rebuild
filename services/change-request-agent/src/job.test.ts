@@ -23,7 +23,9 @@ import {
   prepareBranch,
   prepareRevisionBranch,
   pushBranch,
+  reverseApplyPull,
   stageAll,
+  stagedTreeChanges,
 } from './git'
 import type { GitHub, GithubCheckRun } from './github'
 import {
@@ -70,7 +72,9 @@ vi.mock('./git', () => ({
   prepareBranch: vi.fn(),
   prepareRevisionBranch: vi.fn(),
   pushBranch: vi.fn(),
+  reverseApplyPull: vi.fn(),
   stageAll: vi.fn(),
+  stagedTreeChanges: vi.fn(),
 }))
 vi.mock('./guardrails', async (importOriginal) => {
   const actual = await importOriginal<typeof import('./guardrails')>()
@@ -877,30 +881,53 @@ describe('processRequest: CI repair rebuilds from the base tree', () => {
 
 describe('processRequest: undo (revert) requests', () => {
   const MERGE = 'f'.repeat(40)
+  const ORIGINAL = 'abcd1234-5678-90ab-cdef-1234567890ab'
   const undoRequest = (overrides: Partial<ChangeRequest> = {}) =>
     fakeRequest({
       id: 'beef1234-5678-90ab-cdef-1234567890ab',
-      revert_of: 'abcd1234-5678-90ab-cdef-1234567890ab',
+      revert_of: ORIGINAL,
       revert_commit_sha: MERGE,
       ...overrides,
     })
 
-  it('reverts the merge commit instead of running the agent, then publishes as usual', async () => {
-    const { ctx, gh } = makeCtx()
-    vi.mocked(git).mockImplementation(async (_dir, args) =>
-      args[0] === 'rev-list' ? `${MERGE} parent0000\n` : ''
+  beforeEach(() => {
+    vi.mocked(getRequest).mockImplementation(async (_db, id) =>
+      id === ORIGINAL ? fakeRequest({ id: ORIGINAL, status: 'live', pr_number: 40 }) : fakeRequest()
     )
+    vi.mocked(reverseApplyPull).mockResolvedValue('applied')
+    vi.mocked(stagedTreeChanges).mockResolvedValue([
+      { path: 'public/images/requests/abcd1234/flyer.png', change: 'deleted', kind: 'file' },
+    ])
+  })
+
+  function undoGh() {
+    const gh = fakeGh()
+    gh.pullState.mockResolvedValue({
+      state: 'closed',
+      merged: true,
+      mergeCommitSha: MERGE,
+      headSha: 'a'.repeat(40),
+      mergedAt: null,
+    })
+    return gh
+  }
+
+  it("reverse-applies the original PR's whole change instead of running the agent, then publishes as usual", async () => {
+    const gh = undoGh()
+    const { ctx } = makeCtx({ gh })
 
     await processRequest(ctx, undoRequest())
 
     expect(runClaude).not.toHaveBeenCalled()
     expect(createAgentCheckout).not.toHaveBeenCalled()
-    expect(vi.mocked(git).mock.calls.map(([, args]) => args)).toContainEqual([
-      'revert',
-      '--no-commit',
-      '--no-edit',
-      MERGE,
-    ])
+    expect(gh.pullState).toHaveBeenCalledWith(40)
+    expect(reverseApplyPull).toHaveBeenCalledWith(ctx.config, 40, MERGE)
+    // Same type/content policy as an agent's edit, then the staged guardrails.
+    expect(evaluateChangeSet).toHaveBeenCalledWith(
+      [{ path: 'public/images/requests/abcd1234/flyer.png', change: 'deleted', kind: 'file' }],
+      expect.any(Map)
+    )
+    expect(evaluateGuardrails).toHaveBeenCalled()
     expect(prepareBranch).toHaveBeenCalledWith(ctx.config, 'change-request/beef1234-website-undo')
     expect(vi.mocked(commit).mock.calls[0][1]).toContain(`This reverts commit ${MERGE}.`)
     expect(gh.openOrUpdatePull.mock.calls[0][0].title).toContain('Undo website update abcd1234')
@@ -912,53 +939,71 @@ describe('processRequest: undo (revert) requests', () => {
     // Linked from the original request's thread.
     expect(postMessageSafe).toHaveBeenCalledWith(
       ctx.db,
-      'abcd1234-5678-90ab-cdef-1234567890ab',
+      ORIGINAL,
       'system',
       expect.stringContaining('Undo pull request #12 is open')
     )
   })
 
-  it('reverts a true merge commit against its first parent', async () => {
-    const { ctx } = makeCtx()
-    vi.mocked(git).mockImplementation(async (_dir, args) =>
-      args[0] === 'rev-list' ? `${MERGE} p1 p2\n` : ''
-    )
+  it('refuses when the PR was not merged as the recorded commit', async () => {
+    const gh = undoGh()
+    gh.pullState.mockResolvedValue({
+      state: 'closed',
+      merged: true,
+      mergeCommitSha: 'e'.repeat(40),
+      headSha: null,
+      mergedAt: null,
+    })
+    const { ctx } = makeCtx({ gh })
     await processRequest(ctx, undoRequest())
-    expect(vi.mocked(git).mock.calls.map(([, args]) => args)).toContainEqual([
-      'revert',
-      '--no-commit',
-      '--no-edit',
-      '-m',
-      '1',
-      MERGE,
-    ])
+    expect(reverseApplyPull).not.toHaveBeenCalled()
+    expect(pushBranch).not.toHaveBeenCalled()
   })
 
-  it('asks a human when later changes conflict with the revert', async () => {
-    const { ctx, gh } = makeCtx()
-    vi.mocked(git).mockImplementation(async (_dir, args) => {
-      if (args[0] === 'rev-list') return `${MERGE} parent0000\n`
-      if (args[0] === 'revert' && args[1] === '--no-commit') throw new Error('conflict')
-      return ''
-    })
+  it('asks a human when later changes conflict with the undo, without announcing success', async () => {
+    vi.mocked(reverseApplyPull).mockResolvedValue('conflict')
+    const gh = undoGh()
+    const { ctx } = makeCtx({ gh })
 
     await processRequest(ctx, undoRequest())
 
-    expect(vi.mocked(git).mock.calls.map(([, args]) => args)).toContainEqual(['revert', '--abort'])
     expect(pushBranch).not.toHaveBeenCalled()
     expect(gh.openOrUpdatePull).not.toHaveBeenCalled()
     const attention = vi
       .mocked(updateRequest)
       .mock.calls.find(([, , patch]) => patch.status === 'needs_attention')
     expect(attention?.[2].error).toMatch(/cannot be undone automatically/)
+    expect(
+      vi.mocked(postMessageSafe).mock.calls.some(([, , , body]) => body.startsWith('Undid'))
+    ).toBe(false)
   })
 
-  it('leaves the PR for a human when CI fails on the revert (no agent repair)', async () => {
-    const { ctx, gh } = makeCtx()
-    vi.mocked(git).mockImplementation(async (_dir, args) =>
-      args[0] === 'rev-list' ? `${MERGE} parent0000\n` : ''
-    )
+  it('rejects an undo that would restore a forbidden file type or module', async () => {
+    vi.mocked(evaluateChangeSet).mockReturnValue({
+      ok: false,
+      reason: "Not allowed: src/components/x.ts ('use server' directive)",
+    })
+    const gh = undoGh()
+    const { ctx } = makeCtx({ gh })
+    await processRequest(ctx, undoRequest())
+    expect(commit).not.toHaveBeenCalled()
+    expect(pushBranch).not.toHaveBeenCalled()
+  })
+
+  it('explains when there is nothing left to undo', async () => {
+    vi.mocked(reverseApplyPull).mockResolvedValue('empty')
+    const { ctx } = makeCtx({ gh: undoGh() })
+    await processRequest(ctx, undoRequest())
+    const attention = vi
+      .mocked(updateRequest)
+      .mock.calls.find(([, , patch]) => patch.status === 'needs_attention')
+    expect(attention?.[2].error).toMatch(/nothing to undo/)
+  })
+
+  it('leaves the PR for a human when CI fails on the undo (no agent repair)', async () => {
+    const gh = undoGh()
     gh.checkRunsForSha.mockResolvedValue([failureCheckRun(1)])
+    const { ctx } = makeCtx({ gh })
 
     await processRequest(ctx, undoRequest())
 
@@ -970,8 +1015,16 @@ describe('processRequest: undo (revert) requests', () => {
     expect(attention?.[2].error).toBe('CI checks failed on the undo')
   })
 
-  it('applies a requested revision to an undo with the agent, not another revert', async () => {
-    const { ctx } = makeCtx()
+  it('applies a requested revision to an undo with the agent, not another undo', async () => {
+    const gh = undoGh()
+    gh.pullState.mockResolvedValue({
+      state: 'open',
+      merged: false,
+      mergeCommitSha: null,
+      headSha: null,
+      mergedAt: null,
+    })
+    const { ctx } = makeCtx({ gh })
     await processRequest(
       ctx,
       undoRequest({
@@ -981,6 +1034,34 @@ describe('processRequest: undo (revert) requests', () => {
       })
     )
     expect(runClaude).toHaveBeenCalled()
-    expect(vi.mocked(git).mock.calls.some(([, args]) => args[0] === 'revert')).toBe(false)
+    expect(reverseApplyPull).not.toHaveBeenCalled()
+  })
+
+  it('stops instead of re-undoing when a revision base of an undo is gone', async () => {
+    vi.mocked(prepareRevisionBranch).mockResolvedValue(null)
+    const gh = undoGh()
+    gh.pullState.mockResolvedValue({
+      state: 'open',
+      merged: false,
+      mergeCommitSha: null,
+      headSha: null,
+      mergedAt: null,
+    })
+    const { ctx } = makeCtx({ gh })
+    await processRequest(
+      ctx,
+      undoRequest({
+        branch_name: 'change-request/beef1234-website-undo',
+        pr_number: 12,
+        revision_base_sha: 'a'.repeat(40),
+      })
+    )
+    expect(runClaude).not.toHaveBeenCalled()
+    expect(reverseApplyPull).not.toHaveBeenCalled()
+    expect(pushBranch).not.toHaveBeenCalled()
+    const attention = vi
+      .mocked(updateRequest)
+      .mock.calls.find(([, , patch]) => patch.status === 'needs_attention')
+    expect(attention?.[2].error).toBe('The verified undo is no longer on its branch')
   })
 })

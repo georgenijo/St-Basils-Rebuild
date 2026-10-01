@@ -1,11 +1,18 @@
 import { createHash } from 'node:crypto'
 import { existsSync } from 'node:fs'
 import fs from 'node:fs/promises'
+import os from 'node:os'
 import path from 'node:path'
 
 import type { Config } from './config'
 import { childEnv, ExecError, runChecked } from './exec'
-import { parseNumstat, parsePorcelainZ, type ChangedFile, type NumstatEntry } from './guardrails'
+import {
+  parseNumstat,
+  parsePorcelainZ,
+  type ChangedFile,
+  type NumstatEntry,
+  type TreeChange,
+} from './guardrails'
 import { log } from './log'
 
 const LOCK_MARKER = path.join('node_modules', '.change-request-agent-lock-sha256')
@@ -242,4 +249,56 @@ export async function pushBranch(config: Config, branch: string): Promise<void> 
     env: gitAuthEnv(config.githubToken),
     timeoutMs: 5 * 60_000,
   })
+}
+
+/**
+ * Undo (#363): reverse-apply a merged pull request's whole change onto the
+ * working tree and index. The change is the PR's diff from its fork point to
+ * its head (refs/pull/N/head), which is the same for squash, rebase and merge
+ * commits, so a multi-commit rebase merge is undone completely. The fork
+ * point is the merge base of the PR head and main just before the merge
+ * (`mergeSha^1`). Returns 'conflict' when later changes touched the same
+ * lines and 'empty' when the PR changed nothing.
+ */
+export async function reverseApplyPull(
+  config: Config,
+  prNumber: number,
+  mergeSha: string
+): Promise<'applied' | 'conflict' | 'empty'> {
+  if (!FULL_SHA.test(mergeSha) || !Number.isInteger(prNumber) || prNumber <= 0) {
+    throw new Error('Invalid pull request or merge commit to undo')
+  }
+  const dir = config.workDir
+  const prRef = `refs/remotes/origin/pr-${prNumber}`
+  await git(dir, ['fetch', '--no-tags', 'origin', `+refs/pull/${prNumber}/head:${prRef}`], {
+    env: gitAuthEnv(config.githubToken),
+  })
+  const forkPoint = (await git(dir, ['merge-base', `${mergeSha}^1`, prRef])).trim()
+  const patchFile = path.join(os.tmpdir(), `cra-undo-${process.pid}-${Date.now()}.patch`)
+  try {
+    // --output: binary attachments can be larger than captured stdout allows.
+    await git(dir, ['diff', '--binary', '--no-renames', `--output=${patchFile}`, forkPoint, prRef])
+    if ((await fs.stat(patchFile)).size === 0) return 'empty'
+    const code = await gitExitCode(dir, ['apply', '-R', '--3way', '--index', patchFile])
+    return code === 0 ? 'applied' : 'conflict'
+  } finally {
+    await fs.rm(patchFile, { force: true })
+  }
+}
+
+/** Staged changes as a tree change set (for the same type/content policy as agent edits). */
+export async function stagedTreeChanges(dir: string): Promise<TreeChange[]> {
+  const raw = await git(dir, ['diff', '--cached', '--raw', '--no-renames', '-z'])
+  const parts = raw.split('\0').filter((part) => part !== '')
+  const changes: TreeChange[] = []
+  for (let i = 0; i + 1 < parts.length; i += 2) {
+    const [oldMode, newMode, , , status] = parts[i].replace(/^:/, '').split(' ')
+    const mode = status === 'D' ? oldMode : newMode
+    changes.push({
+      path: parts[i + 1],
+      change: status === 'A' ? 'added' : status === 'D' ? 'deleted' : 'modified',
+      kind: mode === '120000' ? 'symlink' : mode.startsWith('100') ? 'file' : 'other',
+    })
+  }
+  return changes
 }

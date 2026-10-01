@@ -28,6 +28,8 @@ import {
   prepareBranch,
   prepareRevisionBranch,
   pushBranch,
+  reverseApplyPull,
+  stagedTreeChanges,
   stageAll,
 } from './git'
 import type { GitHub } from './github'
@@ -250,35 +252,53 @@ async function stagedChange(
 
 const FULL_SHA = /^[0-9a-f]{40}$/
 
+const UNDO_CONFLICT =
+  'Later changes touched the same parts of the site, so this change cannot be undone automatically. A developer needs to revert it by hand.'
+
 /**
- * Revert `sha` (the original request's merge commit) in the trusted checkout
- * and return it as a guarded change. A merge commit is reverted against its
- * first parent (main). Conflicts with later changes are not resolved
- * automatically: they become a GuardrailError for a human.
+ * Undo the original request's whole merged change in the trusted checkout:
+ * its pull request's diff is reverse-applied (see reverseApplyPull), which
+ * covers squash, rebase and merge commits alike. The PR must be the one that
+ * was merged as `sha`. The result passes the same type/content policy as an
+ * agent's edit (no symlinks or special files, no 'use server' modules) and
+ * then the staged-diff guardrails. Problems become a GuardrailError for a
+ * human.
  */
-async function revertCommit(ctx: JobContext, sha: string): Promise<GuardedChange> {
+async function revertCommit(
+  ctx: JobContext,
+  request: ChangeRequest,
+  sha: string
+): Promise<GuardedChange> {
   const dir = ctx.config.workDir
-  if (!FULL_SHA.test(sha)) throw new GuardrailError('The change to undo has no valid commit.')
-  const parents = (await git(dir, ['rev-list', '--parents', '-n', '1', sha])).trim().split(' ')
-  try {
-    await git(dir, [
-      'revert',
-      '--no-commit',
-      '--no-edit',
-      ...(parents.length > 2 ? ['-m', '1'] : []),
-      sha,
-    ])
-  } catch {
-    await git(dir, ['revert', '--abort']).catch(() => undefined)
+  if (!FULL_SHA.test(sha) || !request.revert_of) {
+    throw new GuardrailError('The change to undo has no valid commit.')
+  }
+  const original = await getRequest(ctx.db, request.revert_of)
+  if (!original.pr_number) {
+    throw new GuardrailError('The original request has no pull request, so it cannot be undone.')
+  }
+  const pull = await ctx.gh.pullState(original.pr_number)
+  if (!pull.merged || pull.mergeCommitSha !== sha) {
     throw new GuardrailError(
-      'Later changes touched the same parts of the site, so this change cannot be undone automatically. A developer needs to revert it by hand.'
+      `Pull request #${original.pr_number} was not merged as ${sha.slice(0, 7)}, so it cannot be undone automatically.`
     )
   }
-  const change = await stagedChange(ctx, [])
-  if (change.files.length === 0) {
+
+  const applied = await reverseApplyPull(ctx.config, original.pr_number, sha)
+  if (applied === 'conflict') throw new GuardrailError(UNDO_CONFLICT)
+  const changes = await stagedTreeChanges(dir)
+  if (applied === 'empty' || changes.length === 0) {
     throw new GuardrailError('There is nothing to undo: the live site no longer has this change.')
   }
-  return change
+  const texts = new Map<string, string>()
+  for (const c of changes) {
+    if (c.change !== 'deleted' && c.kind === 'file' && TEXT_EXT.test(c.path)) {
+      texts.set(c.path, await fs.readFile(path.join(dir, c.path), 'utf8'))
+    }
+  }
+  const verdict = evaluateChangeSet(changes, texts)
+  if (!verdict.ok) throw new GuardrailError(verdict.reason)
+  return stagedChange(ctx, [])
 }
 
 // ─── status helpers ─────────────────────────────────────────────────────
@@ -521,6 +541,16 @@ async function runPipeline(ctx: JobContext, claimed: ChangeRequest): Promise<voi
   await ensureClone(config)
   let baseSha = revisionBase ? await prepareRevisionBranch(config, branch, revisionBase) : null
   const revising = baseSha !== null
+  if (revisionBase && !revising && request.revert_commit_sha) {
+    // Rebuilding would mean a plain revert that ignores the requested changes.
+    await needsAttention(
+      ctx,
+      request.id,
+      'The verified undo is no longer on its branch',
+      'The verified undo is no longer on its branch, so the requested changes cannot be applied to it. Close this undo request and start a new undo from the original request.'
+    )
+    throw new Stop('undo revision base missing')
+  }
   if (revisionBase && !revising) {
     await postMessage(
       db,
@@ -612,10 +642,15 @@ async function runPipeline(ctx: JobContext, claimed: ChangeRequest): Promise<voi
     const summary = `Undid the earlier website change by reverting merge commit ${sha.slice(0, 7)}, so the page goes back to how it was before.`
     let change: GuardedChange
     try {
-      change = await revertCommit(ctx, sha)
+      change = await revertCommit(ctx, request, sha)
     } catch (error) {
       if (!(error instanceof GuardrailError)) throw error
-      return rejectChange(error, summary, 'The change could not be undone', 'revert rejected')
+      return rejectChange(
+        error,
+        'The undo could not be prepared.',
+        'The change could not be undone',
+        'revert rejected'
+      )
     }
     checkpoint(ctx)
     return { change, summary, agent: null }

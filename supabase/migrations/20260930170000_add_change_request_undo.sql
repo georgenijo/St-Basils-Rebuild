@@ -68,8 +68,10 @@ BEGIN
   END IF;
 
   -- One undo at a time: reuse an undo that is in progress or already done.
+  -- A closed undo still counts until the worker has closed its PR, since
+  -- that PR could still be merged on GitHub.
   SELECT id INTO v_existing FROM public.change_requests
-  WHERE revert_of = p_request_id AND status <> 'closed'
+  WHERE revert_of = p_request_id AND (status <> 'closed' OR github_cleanup_pending)
   ORDER BY created_at DESC
   LIMIT 1;
   IF v_existing IS NOT NULL THEN

@@ -245,20 +245,28 @@ the agent and opens the undo request. There is only one undo at a time: if
 one is in progress or done, the original links to it instead of offering
 another.
 
-The worker handles an undo request by reverting the merge commit in the
-trusted checkout (against the first parent for a true merge commit) instead
-of running the agent. It applies the same guardrails, then publishes as
-usual: a draft PR "Undo website update <id>" whose commit says "This reverts
-commit …", the same CI on the exact commit, the Vercel preview and the
-browser verification. The original thread gets "Undo pull request #N is open"
-with the link. From there it is a normal request: Approve & merge, then the
-live check.
+The worker handles an undo request by undoing the original pull request's
+whole change in the trusted checkout instead of running the agent. It checks
+that the PR was merged as the recorded commit, then reverse-applies the PR's
+diff from its fork point to its head (`refs/pull/N/head`) with a 3-way apply.
+That is the same for squash, rebase-and-merge (every commit, not just the
+last) and merge commits. The result must pass the same type/content policy as
+an agent's edit (no symlinks or special files, no `'use server'` modules) and
+the staged-diff guardrails. Then it publishes as usual: a draft PR "Undo
+website update <id>" whose commit says "This reverts commit …", the same CI on
+the exact commit, the Vercel preview and the browser verification. The
+original thread gets "Undo pull request #N is open" with the link. From there
+it is a normal request: Approve & merge, then the live check.
 
-If later changes touched the same files, the revert is not resolved
-automatically: the undo goes to `needs_attention` for a developer. A CI
-failure on an undo is left for a human too (there is no agent repair round),
-and "Request changes" on an undo goes through the agent, on top of the
-verified revert.
+If later changes touched the same lines, nothing is resolved automatically:
+the undo goes to `needs_attention` for a developer. That also happens when
+there is nothing left to undo. A CI failure on an undo is left for a human
+(there is no agent repair round). "Request changes" on an undo goes through
+the agent, on top of the verified undo; if that verified undo is gone from
+its branch, the worker stops and asks for a new undo instead of quietly
+re-undoing. A closed undo still counts as the request's undo until the
+worker has closed its PR, so a replacement cannot race a PR that might still
+be merged.
 
 ### Closing a request
 
