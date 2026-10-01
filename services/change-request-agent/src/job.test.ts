@@ -445,6 +445,22 @@ describe('processRequest: CI repair round', () => {
     expect(notify).toHaveBeenCalledTimes(1)
     expect(vi.mocked(notify).mock.calls[0][1].status).toBe('needs_attention')
   })
+
+  it('still emails about needs_attention when reloading the request fails', async () => {
+    const { ctx, gh } = makeCtx()
+    gh.checkRunsForSha
+      .mockResolvedValueOnce([failureCheckRun(1)])
+      .mockResolvedValueOnce([failureCheckRun(2)])
+    vi.mocked(getRequest).mockRejectedValue(new Error('Loading request failed: network'))
+
+    await processRequest(ctx, fakeRequest())
+
+    expect(notify).toHaveBeenCalledTimes(1)
+    expect(vi.mocked(notify).mock.calls[0][1]).toMatchObject({
+      status: 'needs_attention',
+      request: { id: fakeRequest().id, title: 'request abcd1234', pr_url: null },
+    })
+  })
 })
 
 describe('processRequest: shutdown mid-CI-wait', () => {
@@ -509,7 +525,30 @@ describe('processRequest: shutdown mid-CI-wait', () => {
     expect(vi.mocked(notify).mock.calls[0][1]).toMatchObject({
       status: 'needs_attention',
       headline: expect.stringContaining('used all its attempts'),
+      // Short enough to finish inside the container's stop grace period.
+      timeoutMs: 5_000,
     })
+  })
+
+  it('wakes from a CI poll wait within about a second of a shutdown request', async () => {
+    let shuttingDown = false
+    const { ctx, gh } = makeCtx({ isShuttingDown: () => shuttingDown })
+    // CI still running: the worker would normally wait ciPollMs (20 s).
+    gh.checkRunsForSha.mockImplementation(async () => {
+      setTimeout(() => {
+        shuttingDown = true
+      }, 50)
+      return [{ ...successCheckRun(1), status: 'in_progress', conclusion: null }]
+    })
+
+    const started = Date.now()
+    await processRequest(ctx, fakeRequest({ attempts: 1 }))
+
+    expect(Date.now() - started).toBeLessThan(5_000)
+    expect(gh.checkRunsForSha).toHaveBeenCalledTimes(1)
+    const patches = vi.mocked(updateRequest).mock.calls.map(([, , patch]) => patch)
+    expect(patches.some((patch) => patch.status === 'queued')).toBe(true)
+    expect(removeAgentCheckout).toHaveBeenCalledTimes(1)
   })
 })
 

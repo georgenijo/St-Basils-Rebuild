@@ -64,7 +64,7 @@ export async function recoverStaleClaims(db: Db, config: Config): Promise<void> 
     await postMessageSafe(db, row.id, 'system', message)
     if (action === 'needs_attention') {
       await notify(config, {
-        request: { ...row, status: 'needs_attention', error },
+        request: row,
         status: 'needs_attention',
         headline: message,
       })

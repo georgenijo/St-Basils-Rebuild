@@ -147,7 +147,7 @@ describe('recoverStaleClaims', () => {
     expect(vi.mocked(notify).mock.calls[0]).toEqual([
       config,
       {
-        request: expect.objectContaining({ id: 'req-1', status: 'needs_attention', error }),
+        request: expect.objectContaining({ id: 'req-1', title: 'Replace flyer' }),
         status: 'needs_attention',
         headline: expect.stringContaining('used all 3 attempts'),
       },

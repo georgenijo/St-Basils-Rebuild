@@ -74,6 +74,19 @@ function checkpoint(ctx: JobContext): void {
   if (ctx.isShuttingDown()) throw new ShutdownError()
 }
 
+/**
+ * Wait between CI/preview polls, but notice a shutdown within a second so the
+ * request can be released inside the container's stop grace period.
+ */
+async function pollDelay(ctx: JobContext, ms: number): Promise<void> {
+  const end = Date.now() + ms
+  while (Date.now() < end) {
+    checkpoint(ctx)
+    await new Promise((resolve) => setTimeout(resolve, Math.min(1_000, end - Date.now())))
+  }
+  checkpoint(ctx)
+}
+
 function humanError(error: unknown): string {
   const message = error instanceof Error ? error.message : String(error)
   return redact(message).slice(0, 1000)
@@ -226,13 +239,32 @@ async function needsAttention(
   requestId: string,
   error: string,
   message: string,
-  extra: Parameters<typeof updateRequest>[2] = {}
+  extra: Parameters<typeof updateRequest>[2] = {},
+  options: { notifyTimeoutMs?: number } = {}
 ): Promise<void> {
   await updateRequest(ctx.db, requestId, { ...extra, status: 'needs_attention', error })
   await postMessageSafe(ctx.db, requestId, 'system', message)
-  const fresh = await getRequest(ctx.db, requestId).catch(() => null)
-  if (fresh)
-    await notify(ctx.config, { request: fresh, status: 'needs_attention', headline: message })
+  // The status is already saved, so email even if the reload fails: the
+  // admin link is what matters.
+  const fresh = await getRequest(ctx.db, requestId).catch((reloadError) => {
+    log.warn('reloading request for notification failed', {
+      requestId,
+      error: String(reloadError),
+    })
+    return null
+  })
+  await notify(ctx.config, {
+    request: fresh ?? {
+      id: requestId,
+      title: `request ${shortId(requestId)}`,
+      verification: null,
+      pr_url: null,
+      preview_url: null,
+    },
+    status: 'needs_attention',
+    headline: message,
+    timeoutMs: options.notifyTimeoutMs,
+  })
 }
 
 async function resetTrusted(ctx: JobContext): Promise<void> {
@@ -263,7 +295,7 @@ async function waitForPreview(ctx: JobContext, sha: string): Promise<string> {
       if ((error as Error).message.startsWith('Vercel preview')) throw error
       log.warn('preview lookup failed; retrying', { error: String(error) })
     }
-    await new Promise((resolve) => setTimeout(resolve, ctx.config.previewPollMs))
+    await pollDelay(ctx, ctx.config.previewPollMs)
   }
   throw new Error(
     `No successful Vercel preview for ${sha.slice(0, 7)} within ${Math.round(ctx.config.previewTimeoutMs / 60_000)} minutes`
@@ -298,7 +330,7 @@ async function waitForCi(ctx: JobContext, sha: string): Promise<CiFailure | null
     } catch (error) {
       log.warn('CI status lookup failed; retrying', { error: String(error) })
     }
-    await new Promise((resolve) => setTimeout(resolve, ctx.config.ciPollMs))
+    await pollDelay(ctx, ctx.config.ciPollMs)
   }
   throw new Error(
     `CI check "${ctx.config.ciCheckName}" did not conclude for ${sha.slice(0, 7)} within ${Math.round(ctx.config.ciTimeoutMs / 60_000)} minutes`
@@ -354,11 +386,14 @@ export async function processRequest(ctx: JobContext, claimed: ChangeRequest): P
             'The worker restarted while processing this request; it has been queued again.'
           )
         } else {
+          // Keep within the stop grace period; cleanup still has to run.
           await needsAttention(
             ctx,
             claimed.id,
             'Worker restarted while processing this request',
-            'The worker restarted while processing this request and it has used all its attempts.'
+            'The worker restarted while processing this request and it has used all its attempts.',
+            {},
+            { notifyTimeoutMs: 5_000 }
           )
         }
       } catch (e) {

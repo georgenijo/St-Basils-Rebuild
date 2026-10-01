@@ -10,9 +10,11 @@ function escapeHtml(text: string): string {
 }
 
 export interface NotifyInput {
-  request: ChangeRequest
+  request: Pick<ChangeRequest, 'id' | 'title' | 'verification' | 'pr_url' | 'preview_url'>
   status: 'ready_for_review' | 'needs_attention'
   headline: string
+  /** Resend request timeout; shorter during shutdown. Default 20 s. */
+  timeoutMs?: number
 }
 
 /** Email George about a request needing him. Never throws. */
@@ -67,7 +69,7 @@ export async function notify(config: Config, input: NotifyInput): Promise<void> 
         text,
         html,
       }),
-      signal: AbortSignal.timeout(20_000),
+      signal: AbortSignal.timeout(input.timeoutMs ?? 20_000),
     })
     if (!res.ok) {
       log.warn('notification email failed', {
