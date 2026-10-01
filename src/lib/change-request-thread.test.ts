@@ -53,6 +53,25 @@ describe('tokenizeInline', () => {
     ])
   })
 
+  it('drops matched emphasis around a URL but keeps literal suffixes', () => {
+    expect(tokenizeInline('See **https://example.org/about**.', noPr)).toEqual([
+      { type: 'text', text: 'See **' },
+      {
+        type: 'link',
+        href: 'https://example.org/about',
+        label: 'example.org/about',
+        kind: 'url',
+      },
+      { type: 'text', text: '**.' },
+    ])
+    expect(tokenizeInline('_https://example.org/a_', noPr)[1]).toMatchObject({
+      href: 'https://example.org/a',
+    })
+    expect(tokenizeInline('get https://example.org/d?token=abc_', noPr)[1]).toMatchObject({
+      href: 'https://example.org/d?token=abc_',
+    })
+  })
+
   it('never links non-http schemes or markup', () => {
     const tokens = tokenizeInline(
       'javascript:alert(1) <a href="x">hi</a> data:text/html,1',

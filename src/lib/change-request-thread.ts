@@ -30,7 +30,7 @@ export interface ListItem {
   tokens: InlineToken[]
 }
 
-const URL_PATTERN = /\bhttps?:\/\/[^\s<>"'`]+/gi
+const URL_PATTERN = /(?<![A-Za-z0-9])https?:\/\/[^\s<>"'`]+/gi
 const PR_MENTION_PATTERN = /\b(pull request|PR) #(\d+)\b/gi
 const GITHUB_PR_URL = /^https:\/\/github\.com\/([\w.-]+\/[\w.-]+)\/pull\/(\d+)(?:[/?#].*)?$/i
 const TRAILING_PUNCTUATION = '.,;:!?\'"'
@@ -118,10 +118,21 @@ function tokenizeMentions(text: string, context: ThreadContext, tokens: InlineTo
   pushText(tokens, text.slice(cursor))
 }
 
+/**
+ * `**https://x.org/a**` → `https://x.org/a`: drop a trailing `*`/`_` run only
+ * when the same run opens right before the URL, so genuine URL suffixes such
+ * as `?token=abc_` are kept.
+ */
+function stripClosingEmphasis(url: string, before: string): string {
+  const opening = /[*_]+$/.exec(before)?.[0]
+  if (!opening || !url.endsWith(opening)) return url
+  return trimUrlMatch(url.slice(0, -opening.length))
+}
+
 function tokenizeLinks(text: string, context: ThreadContext, tokens: InlineToken[]) {
   let cursor = 0
   for (const match of text.matchAll(URL_PATTERN)) {
-    const raw = trimUrlMatch(match[0])
+    const raw = stripClosingEmphasis(trimUrlMatch(match[0]), text.slice(0, match.index))
     const href = safeExternalUrl(raw)
     if (!href) continue
     tokenizeMentions(text.slice(cursor, match.index), context, tokens)
