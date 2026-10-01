@@ -55,6 +55,9 @@ export interface ChangeRequest {
   /** When the change was confirmed on the live site. */
   live_at?: string | null
   live_check_failed_at?: string | null
+  /** Undo requests (#363): the original request, and the merge commit this reverts. */
+  revert_of?: string | null
+  revert_commit_sha?: string | null
   claimed_by: string | null
   claimed_at: string | null
   attempts: number

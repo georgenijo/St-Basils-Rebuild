@@ -874,3 +874,113 @@ describe('processRequest: CI repair rebuilds from the base tree', () => {
     expect(applyChanges).toHaveBeenCalledTimes(2)
   })
 })
+
+describe('processRequest: undo (revert) requests', () => {
+  const MERGE = 'f'.repeat(40)
+  const undoRequest = (overrides: Partial<ChangeRequest> = {}) =>
+    fakeRequest({
+      id: 'beef1234-5678-90ab-cdef-1234567890ab',
+      revert_of: 'abcd1234-5678-90ab-cdef-1234567890ab',
+      revert_commit_sha: MERGE,
+      ...overrides,
+    })
+
+  it('reverts the merge commit instead of running the agent, then publishes as usual', async () => {
+    const { ctx, gh } = makeCtx()
+    vi.mocked(git).mockImplementation(async (_dir, args) =>
+      args[0] === 'rev-list' ? `${MERGE} parent0000\n` : ''
+    )
+
+    await processRequest(ctx, undoRequest())
+
+    expect(runClaude).not.toHaveBeenCalled()
+    expect(createAgentCheckout).not.toHaveBeenCalled()
+    expect(vi.mocked(git).mock.calls.map(([, args]) => args)).toContainEqual([
+      'revert',
+      '--no-commit',
+      '--no-edit',
+      MERGE,
+    ])
+    expect(prepareBranch).toHaveBeenCalledWith(ctx.config, 'change-request/beef1234-website-undo')
+    expect(vi.mocked(commit).mock.calls[0][1]).toContain(`This reverts commit ${MERGE}.`)
+    expect(gh.openOrUpdatePull.mock.calls[0][0].title).toContain('Undo website update abcd1234')
+    // Same CI, preview and verification gates as any change.
+    const headSha = await vi.mocked(commit).mock.results[0].value
+    expect(gh.checkRunsForSha).toHaveBeenCalledWith(headSha)
+    expect(verifyPreview).toHaveBeenCalledWith(expect.objectContaining({ commitSha: headSha }))
+    expect(gh.markReadyForReview).toHaveBeenCalledWith(12)
+    // Linked from the original request's thread.
+    expect(postMessageSafe).toHaveBeenCalledWith(
+      ctx.db,
+      'abcd1234-5678-90ab-cdef-1234567890ab',
+      'system',
+      expect.stringContaining('Undo pull request #12 is open')
+    )
+  })
+
+  it('reverts a true merge commit against its first parent', async () => {
+    const { ctx } = makeCtx()
+    vi.mocked(git).mockImplementation(async (_dir, args) =>
+      args[0] === 'rev-list' ? `${MERGE} p1 p2\n` : ''
+    )
+    await processRequest(ctx, undoRequest())
+    expect(vi.mocked(git).mock.calls.map(([, args]) => args)).toContainEqual([
+      'revert',
+      '--no-commit',
+      '--no-edit',
+      '-m',
+      '1',
+      MERGE,
+    ])
+  })
+
+  it('asks a human when later changes conflict with the revert', async () => {
+    const { ctx, gh } = makeCtx()
+    vi.mocked(git).mockImplementation(async (_dir, args) => {
+      if (args[0] === 'rev-list') return `${MERGE} parent0000\n`
+      if (args[0] === 'revert' && args[1] === '--no-commit') throw new Error('conflict')
+      return ''
+    })
+
+    await processRequest(ctx, undoRequest())
+
+    expect(vi.mocked(git).mock.calls.map(([, args]) => args)).toContainEqual(['revert', '--abort'])
+    expect(pushBranch).not.toHaveBeenCalled()
+    expect(gh.openOrUpdatePull).not.toHaveBeenCalled()
+    const attention = vi
+      .mocked(updateRequest)
+      .mock.calls.find(([, , patch]) => patch.status === 'needs_attention')
+    expect(attention?.[2].error).toMatch(/cannot be undone automatically/)
+  })
+
+  it('leaves the PR for a human when CI fails on the revert (no agent repair)', async () => {
+    const { ctx, gh } = makeCtx()
+    vi.mocked(git).mockImplementation(async (_dir, args) =>
+      args[0] === 'rev-list' ? `${MERGE} parent0000\n` : ''
+    )
+    gh.checkRunsForSha.mockResolvedValue([failureCheckRun(1)])
+
+    await processRequest(ctx, undoRequest())
+
+    expect(runClaude).not.toHaveBeenCalled()
+    expect(pushBranch).toHaveBeenCalledTimes(1)
+    const attention = vi
+      .mocked(updateRequest)
+      .mock.calls.find(([, , patch]) => patch.status === 'needs_attention')
+    expect(attention?.[2].error).toBe('CI checks failed on the undo')
+  })
+
+  it('applies a requested revision to an undo with the agent, not another revert', async () => {
+    const { ctx } = makeCtx()
+    await processRequest(
+      ctx,
+      undoRequest({
+        branch_name: 'change-request/beef1234-website-undo',
+        pr_number: 12,
+        revision_base_sha: 'a'.repeat(40),
+      })
+    )
+    expect(runClaude).toHaveBeenCalled()
+    expect(vi.mocked(git).mock.calls.some(([, args]) => args[0] === 'revert')).toBe(false)
+  })
+})

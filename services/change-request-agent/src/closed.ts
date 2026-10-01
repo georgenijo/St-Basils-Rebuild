@@ -32,7 +32,9 @@ export async function cleanupClosedRequests(
   const rows = await listClosedPendingCleanup(db)
   for (const row of rows) {
     try {
-      const branch = row.branch_name || branchName(row.id, 'website-update')
+      const branch =
+        row.branch_name ||
+        branchName(row.id, row.revert_commit_sha ? 'website-undo' : 'website-update')
       let prNumber = row.pr_number
       if (!prNumber) {
         // Any state: a PR merged or closed before this sweep still decides the outcome.
