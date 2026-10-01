@@ -246,6 +246,14 @@ describe('findAttachmentMention', () => {
     ).toBe('attach')
   })
 
+  it.each([
+    ['No new photos\nAttach the PDF to the bulletin page.', 'Attach'],
+    ['No new photos Attach the PDF to the bulletin page.', 'Attach'],
+    ['No image and attach the flyer instead.', 'attach'],
+  ])('does not let a negation swallow the next instruction: %j', (description, word) => {
+    expect(findAttachmentMention('Bulletin', description)).toBe(word)
+  })
+
   it('keeps looking after a negated mention', () => {
     expect(
       findAttachmentMention('No image change', 'Keep the layout, but use the attached flyer.')

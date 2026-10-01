@@ -203,12 +203,18 @@ const ATTACHMENT_WORDS =
   'attach(?:ed|ment|ments|ing)?|enclosed|images?|photos?|photographs?|pictures?|flyers?|fliers?|posters?|brochures?|screenshots?|pdfs?|files?'
 const ATTACHMENT_MENTION_PATTERN = new RegExp(`\\b(?:${ATTACHMENT_WORDS})\\b`, 'gi')
 
+// Attachment nouns (and "attached") that can sit inside a negated phrase.
+// The verbs "attach"/"attaching" are left out so "no image, attach the PDF"
+// still counts.
+const NEGATABLE_WORDS =
+  'attached|attachments?|enclosed|images?|photos?|photographs?|pictures?|flyers?|fliers?|posters?|brochures?|screenshots?|pdfs?|files?'
+
 // "no attachment", "without any new photos", "no attached image is needed",
 // "don't need an image": the requester has said there is no file. The whole
-// negated phrase (negation plus any run of qualifiers and attachment words)
-// is ignored, so a later "but use the attached flyer" still counts.
+// negated phrase (negation plus a run of qualifiers and attachment nouns on
+// the same line) is ignored, so a later "attach the flyer" still counts.
 const NEGATED_MENTION_PATTERN = new RegExp(
-  `\\b(?:no|without|not|don'?t need|doesn'?t need|isn'?t|aren'?t)(?:\\s+(?:a|an|any|the|new|separate|additional|extra|other|or|and|${ATTACHMENT_WORDS})\\b)+`,
+  `\\b(?:no|without|not|don'?t need|doesn'?t need|isn'?t|aren'?t)(?:[ \\t]+(?:a|an|any|the|new|separate|additional|extra|other|or|and|${NEGATABLE_WORDS})\\b)+`,
   'gi'
 )
 
