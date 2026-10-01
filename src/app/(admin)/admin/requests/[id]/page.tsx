@@ -206,7 +206,15 @@ export default async function ChangeRequestDetailPage({ params }: PageProps) {
               </Suspense>
             </div>
             <Suspense fallback={<ChangeRequestThreadSkeleton />}>
-              <ChangeRequestThread messages={detail.messages} names={detail.names} />
+              <ChangeRequestThread
+                messages={detail.messages}
+                names={detail.names}
+                context={{
+                  prUrl,
+                  prNumber: request.pr_number,
+                  previewUrl,
+                }}
+              />
             </Suspense>
             <ChangeRequestReplyForm
               requestId={request.id}
