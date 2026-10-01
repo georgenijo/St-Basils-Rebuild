@@ -340,4 +340,115 @@ test.describe('CI admin website change requests', () => {
     await page.getByRole('link', { name: 'Back to Requests' }).click()
     await expect(page.getByRole('link', { name: title })).toBeVisible()
   })
+
+  test('admin requests changes on a ready request, or leaves a plain note', async ({ page }) => {
+    const supabase = getAdminClient()
+    const { data: admin } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('email', 'admin@stbasilsboston.org')
+      .single()
+    const verifiedSha = 'ab12'.repeat(10)
+    const title = `CI revision request ${Date.now()}-${Math.round(Math.random() * 1000)}`
+    const { data: row, error } = await supabase
+      .from('change_requests')
+      .insert({
+        requester_id: admin!.id,
+        title,
+        description: 'Please update the welcome heading on the homepage.',
+        page_path: '/',
+        status: 'ready_for_review',
+        branch_name: 'change-request/ci000000-website-update',
+        pr_number: 9999,
+        pr_url: 'https://github.com/georgenijo/St-Basils-Rebuild/pull/9999',
+        verification: {
+          verdict: 'pass',
+          summary: 'Heading updated.',
+          checks: [],
+          commit_sha: verifiedSha,
+        },
+      })
+      .select('id')
+      .single()
+    expect(error).toBeNull()
+    const requestId = row!.id as string
+    createdIds.push(requestId)
+
+    await loginAsSeedAdmin(page)
+    await page.waitForURL('**/admin/**')
+    await page.goto(`/admin/requests/${requestId}`, { waitUntil: 'domcontentloaded' })
+    await expect(page.getByTestId('change-request-status')).toContainText('Ready for review')
+
+    // A plain reply is only a note: the request stays ready and nothing is requeued.
+    const intent = page.getByTestId('reply-intent')
+    await expect(intent.getByRole('radio', { name: /Add a note/ })).toBeChecked()
+    const saveNote = page.getByRole('button', { name: 'Save note' })
+    await waitForReactHydration(saveNote)
+    await page.locator('textarea#reply-body').fill('Looks good to me.')
+    await saveNote.click()
+    await expect(page.locator('.cr-reply [role="status"]')).toContainText('Reply posted.')
+    const note = page.locator('.cr-message', { hasText: 'Looks good to me.' })
+    await expect(note.locator('.admin-status')).toHaveText('Note')
+    const { data: afterNote } = await supabase
+      .from('change_requests')
+      .select('status, revision_base_sha')
+      .eq('id', requestId)
+      .single()
+    expect(afterNote).toEqual({ status: 'ready_for_review', revision_base_sha: null })
+
+    // A form left open after the request stopped being ready saves nothing.
+    await intent.getByRole('radio', { name: /Request changes/ }).check()
+    await page.locator('textarea#reply-body').fill('A stale request for changes.')
+    await supabase.from('change_requests').update({ status: 'verifying' }).eq('id', requestId)
+    await page.getByRole('button', { name: 'Request changes' }).click()
+    await expect(page.locator('.cr-reply [role="alert"]')).toContainText(
+      'no longer ready for review, so nothing was saved'
+    )
+    const { count: staleCount } = await supabase
+      .from('change_request_messages')
+      .select('id', { count: 'exact', head: true })
+      .eq('request_id', requestId)
+      .eq('body', 'A stale request for changes.')
+    expect(staleCount).toBe(0)
+    await supabase
+      .from('change_requests')
+      .update({ status: 'ready_for_review' })
+      .eq('id', requestId)
+    await page.reload({ waitUntil: 'domcontentloaded' })
+    await waitForReactHydration(page.getByRole('button', { name: 'Save note' }))
+
+    // "Request changes" requeues it on top of the verified commit.
+    await intent.getByRole('radio', { name: /Request changes/ }).check()
+    await page.locator('textarea#reply-body').fill('Make the heading a little bigger.')
+    await page.getByRole('button', { name: 'Request changes' }).click()
+    await expect(page.locator('.cr-reply [role="status"]')).toContainText('Changes requested.')
+    await expect(page.getByTestId('change-request-status')).toContainText('Queued')
+    await expect(page.locator('.cr-thread')).toContainText(
+      'The agent will revise pull request #9999'
+    )
+    await expect(page.getByTestId('reply-intent')).toHaveCount(0)
+    const revision = page.locator('.cr-message', { hasText: 'Make the heading a little bigger.' })
+    await expect(revision.locator('.admin-status')).toHaveText('Requested changes')
+
+    const { data: afterRevision } = await supabase
+      .from('change_requests')
+      .select('status, revision_base_sha, claimed_by')
+      .eq('id', requestId)
+      .single()
+    expect(afterRevision).toEqual({
+      status: 'queued',
+      revision_base_sha: verifiedSha,
+      claimed_by: null,
+    })
+    const { data: intents } = await supabase
+      .from('change_request_messages')
+      .select('body, intent')
+      .eq('request_id', requestId)
+      .eq('author_kind', 'requester')
+      .order('created_at')
+    expect(intents).toEqual([
+      { body: 'Looks good to me.', intent: 'note' },
+      { body: 'Make the heading a little bigger.', intent: 'revision' },
+    ])
+  })
 })

@@ -520,9 +520,24 @@ async function createChangeRequestImpl(
   redirect(`/admin/requests/${requestId}`)
 }
 
+interface ReplyResult {
+  outcome: 'posted' | 'requeued' | 'revision' | 'stale' | 'not_found'
+  previous_status: string | null
+  message_id: string | null
+}
+
 /**
- * Post a requester reply. Replying to a `needs_attention` request sends it
- * back to the queue; the worker re-reads the whole thread on each attempt.
+ * Post a requester reply. The form says what the reply is for (`intent`):
+ * a plain `reply`; `requeue` on a `needs_attention` request, which sends it
+ * back to the queue (the worker re-reads the whole thread on each attempt);
+ * or, on a `ready_for_review` request, a `note` (saved only, never acted on)
+ * or a `revision` ("Request changes"), which requeues it so the worker
+ * revises the same branch and pull request on top of the verified commit.
+ *
+ * The reply and its requeue happen in one locked transaction
+ * (`reply_to_change_request`): a note or revision submitted after the
+ * request stopped being ready is rejected without saving anything, so a
+ * stale or losing submission is never read by the worker as an instruction.
  */
 async function addChangeRequestMessageImpl(
   prevState: ActionState,
@@ -536,6 +551,7 @@ async function addChangeRequestMessageImpl(
   // 2. Validate
   const parsed = changeRequestMessageSchema.safeParse({
     request_id: formData.get('request_id'),
+    intent: formData.get('intent') ?? undefined,
     body: formData.get('body'),
   })
 
@@ -547,78 +563,73 @@ async function addChangeRequestMessageImpl(
     }
   }
 
-  const { request_id: requestId, body } = parsed.data
+  const { request_id: requestId, body, intent } = parsed.data
 
-  // 3. Load the request (RLS: admins only)
-  const { data: request, error: requestError } = await supabase
-    .from('change_requests')
-    .select('id, status')
-    .eq('id', requestId)
-    .maybeSingle()
-
-  if (requestError || !request) {
-    if (requestError) log.error('change_request.load_failed', { error: requestError, requestId })
-    return { success: false, message: 'Change request not found' }
-  }
-
-  // 4. Insert the reply as the signed-in admin
-  const { error: messageError } = await supabase.from('change_request_messages').insert({
-    request_id: requestId,
-    author_kind: 'requester',
-    author_id: user.id,
-    body,
+  // 3. Save the reply and apply its requeue atomically, as the signed-in admin
+  const { data, error } = await supabase.rpc('reply_to_change_request', {
+    p_request_id: requestId,
+    p_body: body,
+    p_intent: intent,
   })
+  const result = (Array.isArray(data) ? data[0] : data) as ReplyResult | null | undefined
 
-  if (messageError) {
-    log.error('change_request.message_failed', { error: messageError, requestId })
+  if (error || !result) {
+    log.error('change_request.message_failed', { error, requestId })
     return { success: false, message: 'Failed to post your reply' }
   }
-
-  // 5. Requeue a request that was waiting on a person
-  let requeued = false
-  if (request.status === 'needs_attention') {
-    const admin = createAdminClient()
-    const { data: updated, error: requeueError } = await admin
-      .from('change_requests')
-      .update({ status: 'queued', claimed_by: null, claimed_at: null })
-      .eq('id', requestId)
-      .eq('status', 'needs_attention')
-      .select('id')
-
-    if (requeueError) {
-      log.error('change_request.requeue_failed', { error: requeueError, requestId })
-      revalidatePath(`/admin/requests/${requestId}`)
-      return {
-        success: false,
-        message: 'Your reply was posted, but the request could not be sent back to the queue.',
-      }
+  if (result.outcome === 'not_found') {
+    return { success: false, message: 'Change request not found' }
+  }
+  if (result.outcome === 'stale') {
+    revalidatePath(`/admin/requests/${requestId}`)
+    return {
+      success: false,
+      message:
+        'This request is no longer ready for review, so nothing was saved. Refresh the page to see its current status.',
     }
+  }
 
-    requeued = (updated?.length ?? 0) > 0
-    if (requeued) {
-      const who = profile?.full_name || user.email || 'the requester'
-      const { error: systemError } = await admin.from('change_request_messages').insert({
+  // 4. Explain a requeue in the thread (best effort; the requeue itself is committed)
+  const requeued = result.outcome === 'requeued' || result.outcome === 'revision'
+  if (requeued) {
+    const who = profile?.full_name || user.email || 'the requester'
+    const { data: request } = await supabase
+      .from('change_requests')
+      .select('pr_number')
+      .eq('id', requestId)
+      .maybeSingle()
+    const prNumber = (request as { pr_number: number | null } | null)?.pr_number
+    const { error: systemError } = await createAdminClient()
+      .from('change_request_messages')
+      .insert({
         request_id: requestId,
         author_kind: 'system',
         author_id: null,
-        body: `Requeued after a reply from ${who}. The agent will pick it up again and re-read the whole thread.`,
+        body:
+          result.outcome === 'revision'
+            ? `Changes requested by ${who}. The agent will revise ${prNumber ? `pull request #${prNumber}` : 'the change'} using the whole thread, then re-run the checks and verify the preview again.`
+            : `Requeued after a reply from ${who}. The agent will pick it up again and re-read the whole thread.`,
       })
-      if (systemError) {
-        log.error('change_request.system_message_failed', { error: systemError, requestId })
-      }
-      log.info('change_request.requeued', { requestId })
+    if (systemError) {
+      log.error('change_request.system_message_failed', { error: systemError, requestId })
     }
+    log.info('change_request.requeued', { requestId, revision: result.outcome === 'revision' })
   }
 
   // A reply to an already queued request also retries an unconfirmed launch.
   // The worker's atomic claim prevents duplicate processing if another run won.
-  if (requeued || request.status === 'queued') await wakeChangeRequestAgent(requestId)
+  if (requeued || result.previous_status === 'queued') await wakeChangeRequestAgent(requestId)
 
   revalidatePath(`/admin/requests/${requestId}`)
   revalidatePath('/admin/requests')
   return {
     success: true,
-    message: requeued ? 'Reply posted. The request is back in the queue.' : 'Reply posted.',
+    message:
+      result.outcome === 'revision'
+        ? 'Changes requested. The agent will update the pull request and verify it again.'
+        : result.outcome === 'requeued'
+          ? 'Reply posted. The request is back in the queue.'
+          : 'Reply posted.',
   }
 }
 

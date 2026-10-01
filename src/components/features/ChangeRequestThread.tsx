@@ -1,4 +1,5 @@
 import { formatChangeRequestDateTime } from '@/lib/change-request-detail'
+import { cn } from '@/lib/utils'
 import type { ChangeRequestMessage } from '@/types/change-request'
 
 /** Conversation messages; streamed in after the page header. */
@@ -30,6 +31,16 @@ export async function ChangeRequestThread({
                   ? 'Website agent'
                   : ((message.author_id && names.get(message.author_id)) ?? 'Admin')}
               </span>
+              {message.intent && (
+                <span
+                  className={cn(
+                    'admin-status',
+                    message.intent === 'revision' && 'admin-status-warn'
+                  )}
+                >
+                  {message.intent === 'revision' ? 'Requested changes' : 'Note'}
+                </span>
+              )}
               <span className="admin-meta">{formatChangeRequestDateTime(message.created_at)}</span>
             </div>
           )}

@@ -31,6 +31,7 @@ function request(overrides: Partial<ChangeRequest> = {}): ChangeRequest {
     pr_url: 'https://github.com/georgenijo/St-Basils-Rebuild/pull/12',
     preview_url: 'https://preview.vercel.app',
     verification: { verdict: 'pass', summary: 'Looks right.', checks: [], commit_sha: 'abc' },
+    revision_base_sha: null,
     claimed_by: 'w1',
     claimed_at: '2026-09-30T12:00:00Z',
     attempts: 1,

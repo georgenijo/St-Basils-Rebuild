@@ -4,7 +4,7 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 
 import type { Config } from './config'
-import { childEnv, runChecked } from './exec'
+import { childEnv, ExecError, runChecked } from './exec'
 import { parseNumstat, parsePorcelainZ, type ChangedFile, type NumstatEntry } from './guardrails'
 import { log } from './log'
 
@@ -78,6 +78,99 @@ export async function prepareBranch(config: Config, branch: string): Promise<str
   return (await git(dir, ['rev-parse', 'HEAD'])).trim()
 }
 
+const FULL_SHA = /^[0-9a-f]{40}$/
+
+/** Exit code of a git command whose non-zero codes are answers, not failures. */
+async function gitExitCode(
+  repoDir: string,
+  args: string[],
+  env: Record<string, string> = {}
+): Promise<number> {
+  try {
+    await git(repoDir, args, { env, timeoutMs: 2 * 60_000 })
+    return 0
+  } catch (error) {
+    const code = error instanceof ExecError && !error.result.timedOut ? error.result.code : null
+    if (code === null) throw error
+    return code
+  }
+}
+
+/**
+ * Revision of an already verified change: check out `branch` at `baseSha`
+ * (the commit the admin saw verified) so the agent edits on top of it, and
+ * anything pushed after it (e.g. a failed earlier revision) is dropped by the
+ * next force-push. Returns null only when it is established that the commit
+ * is not on the remote branch any more (branch deleted or rewritten); the
+ * caller then rebuilds from base. Network, auth and other git failures throw,
+ * so a transient error never replaces the reviewed change with a rebuild.
+ */
+export async function prepareRevisionBranch(
+  config: Config,
+  branch: string,
+  baseSha: string
+): Promise<string | null> {
+  if (!FULL_SHA.test(baseSha)) return null
+  const dir = config.workDir
+  const auth = gitAuthEnv(config.githubToken)
+  const remoteRef = `refs/remotes/origin/${branch}`
+  await git(
+    dir,
+    [
+      'fetch',
+      '--no-tags',
+      '--prune',
+      'origin',
+      `+refs/heads/${config.baseBranch}:refs/remotes/origin/${config.baseBranch}`,
+    ],
+    { env: auth }
+  )
+  // --exit-code: 2 means the ref does not exist; anything else non-zero is a failure.
+  const listed = await gitExitCode(
+    dir,
+    ['ls-remote', '--exit-code', '--heads', 'origin', `refs/heads/${branch}`],
+    auth
+  )
+  if (listed === 2) {
+    log.warn('revision branch no longer exists', { branch })
+    return null
+  }
+  if (listed !== 0) throw new Error(`Checking remote branch ${branch} failed (git exit ${listed})`)
+  await git(dir, ['fetch', '--no-tags', 'origin', `+refs/heads/${branch}:${remoteRef}`], {
+    env: auth,
+  })
+  // --verify --quiet: 1 means the commit is not in the fetched history at all.
+  const known = await gitExitCode(dir, ['rev-parse', '--verify', '--quiet', `${baseSha}^{commit}`])
+  if (known !== 0 && known !== 1) {
+    throw new Error(`Looking up commit ${baseSha.slice(0, 7)} failed (git exit ${known})`)
+  }
+  const onBranch =
+    known === 0 ? await gitExitCode(dir, ['merge-base', '--is-ancestor', baseSha, remoteRef]) : 1
+  if (onBranch === 1) {
+    log.warn('verified revision base is not on the remote branch', { branch, baseSha })
+    return null
+  }
+  if (onBranch !== 0)
+    throw new Error(`Checking commit ${baseSha.slice(0, 7)} failed (git exit ${onBranch})`)
+  await git(dir, ['reset', '--hard'])
+  await git(dir, ['clean', '-ffdx', '-e', '/node_modules'])
+  await git(dir, ['checkout', '--force', '-B', branch, baseSha])
+  await git(dir, ['clean', '-ffdx', '-e', '/node_modules'])
+  return (await git(dir, ['rev-parse', 'HEAD'])).trim()
+}
+
+/** Everything the branch changes relative to the base branch (what the PR shows). */
+export async function branchDiffNumstat(config: Config): Promise<NumstatEntry[]> {
+  return parseNumstat(
+    await git(config.workDir, [
+      'diff',
+      '--numstat',
+      '--no-renames',
+      `refs/remotes/origin/${config.baseBranch}...HEAD`,
+    ])
+  )
+}
+
 export async function ensureDependencies(config: Config): Promise<void> {
   const dir = config.workDir
   const lock = await fs.readFile(path.join(dir, 'package-lock.json'))
@@ -139,7 +232,10 @@ export async function commit(config: Config, message: string): Promise<string> {
   return (await git(dir, ['rev-parse', 'HEAD'])).trim()
 }
 
-/** Force-push: change-request/* branches are owned by the worker and rebuilt from main on every run. */
+/**
+ * Force-push: change-request/* branches are owned by the worker and rebuilt on every run, from main
+ * or, for a requested revision, from the verified commit (see prepareRevisionBranch).
+ */
 export async function pushBranch(config: Config, branch: string): Promise<void> {
   if (!config.githubToken) throw new Error('GITHUB_TOKEN is required to push')
   await git(config.workDir, ['push', '--force', 'origin', `HEAD:refs/heads/${branch}`], {

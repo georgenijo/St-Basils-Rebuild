@@ -14,12 +14,14 @@ import {
   updateRequest,
 } from './db'
 import {
+  branchDiffNumstat,
   changedFiles,
   commit,
   ensureClone,
   ensureDependencies,
   git,
   prepareBranch,
+  prepareRevisionBranch,
   pushBranch,
   stageAll,
 } from './git'
@@ -59,12 +61,14 @@ vi.mock('./claude', () => ({
   runClaude: vi.fn(),
 }))
 vi.mock('./git', () => ({
+  branchDiffNumstat: vi.fn(),
   changedFiles: vi.fn(),
   commit: vi.fn(),
   ensureClone: vi.fn(),
   ensureDependencies: vi.fn(),
   git: vi.fn(),
   prepareBranch: vi.fn(),
+  prepareRevisionBranch: vi.fn(),
   pushBranch: vi.fn(),
   stageAll: vi.fn(),
 }))
@@ -173,6 +177,7 @@ function fakeRequest(overrides: Partial<ChangeRequest> = {}): ChangeRequest {
     pr_url: null,
     preview_url: null,
     verification: null,
+    revision_base_sha: null,
     claimed_by: 'test-worker',
     claimed_at: '2026-01-01T00:00:00.000Z',
     attempts: 1,
@@ -223,6 +228,7 @@ interface FakeGh {
   openOrUpdatePull: ReturnType<typeof vi.fn>
   markReadyForReview: ReturnType<typeof vi.fn>
   markDraftForBranch: ReturnType<typeof vi.fn>
+  pullState: ReturnType<typeof vi.fn>
   comment: ReturnType<typeof vi.fn>
   jobLog: ReturnType<typeof vi.fn>
 }
@@ -244,6 +250,7 @@ function fakeGh(): FakeGh {
     }),
     markReadyForReview: vi.fn().mockResolvedValue(undefined),
     markDraftForBranch: vi.fn().mockResolvedValue(undefined),
+    pullState: vi.fn().mockResolvedValue({ state: 'open', merged: false }),
     comment: vi.fn().mockResolvedValue(undefined),
     jobLog: vi.fn().mockResolvedValue('fake CI job log output'),
   }
@@ -290,6 +297,8 @@ beforeEach(() => {
   vi.mocked(git).mockResolvedValue('')
   vi.mocked(ensureClone).mockResolvedValue(undefined)
   vi.mocked(prepareBranch).mockResolvedValue('basesha0000000000000000000000000000000')
+  vi.mocked(prepareRevisionBranch).mockImplementation(async (_config, _branch, sha) => sha)
+  vi.mocked(branchDiffNumstat).mockResolvedValue([])
   vi.mocked(ensureDependencies).mockResolvedValue(undefined)
   vi.mocked(changedFiles).mockResolvedValue([
     { path: 'public/images/requests/abcd1234/photo.png', status: 'A ' },
@@ -615,5 +624,243 @@ describe('processRequest: cleanup on an unexpected error', () => {
 
     expect(vi.mocked(git).mock.calls.some(([, args]) => args[0] === 'reset')).toBe(true)
     expect(removeAgentCheckout).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('processRequest: revision of a verified change', () => {
+  const VERIFIED = 'a'.repeat(40)
+  const revisionRequest = (overrides: Partial<ChangeRequest> = {}) =>
+    fakeRequest({
+      branch_name: 'change-request/abcd1234-website-update',
+      pr_number: 12,
+      pr_url: 'https://github.com/x/y/pull/12',
+      revision_base_sha: VERIFIED,
+      attempts: 2,
+      ...overrides,
+    })
+
+  it('builds on the verified commit of the same branch and PR, then re-verifies the new commit', async () => {
+    const { ctx, gh } = makeCtx()
+    gh.openOrUpdatePull.mockResolvedValue({
+      number: 12,
+      html_url: 'https://github.com/x/y/pull/12',
+      created: false,
+    })
+    vi.mocked(branchDiffNumstat).mockResolvedValue([
+      { path: 'src/app/(public)/page.tsx', added: 4, deleted: 1, binary: false },
+      { path: 'src/components/features/HomeHero.tsx', added: 2, deleted: 2, binary: false },
+    ])
+    vi.mocked(countChangedLines).mockImplementation((entries) =>
+      entries.reduce((sum, e) => sum + e.added + e.deleted, 0)
+    )
+
+    await processRequest(ctx, revisionRequest())
+
+    expect(prepareRevisionBranch).toHaveBeenCalledWith(
+      ctx.config,
+      'change-request/abcd1234-website-update',
+      VERIFIED
+    )
+    expect(prepareBranch).not.toHaveBeenCalled()
+    expect(createAgentCheckout).toHaveBeenCalledWith(ctx.config, expect.any(String), VERIFIED)
+    expect(gh.markDraftForBranch).toHaveBeenCalledWith('change-request/abcd1234-website-update')
+    expect(vi.mocked(gh.markDraftForBranch).mock.invocationCallOrder[0]).toBeLessThan(
+      vi.mocked(runClaude).mock.invocationCallOrder[0]
+    )
+
+    const prompt = vi.mocked(runClaude).mock.calls[0][1].prompt
+    expect(prompt).toContain('REVISION OF AN EXISTING CHANGE')
+
+    // Same branch, same PR; the body lists the whole branch diff, not just the revision.
+    expect(gh.openOrUpdatePull.mock.calls[0][0].branch).toBe(
+      'change-request/abcd1234-website-update'
+    )
+    const body = gh.openOrUpdatePull.mock.calls[0][0].body as string
+    expect(body).toContain('2 files, 9 lines')
+    expect(body).toContain('src/components/features/HomeHero.tsx')
+    expect(vi.mocked(commit).mock.calls[0][1]).toContain('Revision requested via /admin/requests')
+
+    const headSha = await vi.mocked(commit).mock.results[0].value
+    expect(gh.checkRunsForSha).toHaveBeenCalledWith(headSha)
+    expect(verifyPreview).toHaveBeenCalledWith(expect.objectContaining({ commitSha: headSha }))
+    expect(gh.markReadyForReview).toHaveBeenCalledWith(12)
+
+    const systemMessages = vi
+      .mocked(postMessage)
+      .mock.calls.filter(([, , kind]) => kind === 'system')
+      .map(([, , , body]) => body)
+    expect(systemMessages[0]).toContain('revising pull request #12')
+    expect(systemMessages.some((m) => m.includes('Pushed the requested changes'))).toBe(true)
+  })
+
+  it('rebuilds from the base branch with a notice when the verified commit is gone', async () => {
+    const { ctx } = makeCtx()
+    vi.mocked(prepareRevisionBranch).mockResolvedValue(null)
+
+    await processRequest(ctx, revisionRequest())
+
+    expect(prepareBranch).toHaveBeenCalledTimes(1)
+    expect(vi.mocked(runClaude).mock.calls[0][1].prompt).not.toContain(
+      'REVISION OF AN EXISTING CHANGE'
+    )
+    expect(branchDiffNumstat).not.toHaveBeenCalled()
+    expect(
+      vi
+        .mocked(postMessage)
+        .mock.calls.some(([, , , body]) => body.includes('is no longer on the branch'))
+    ).toBe(true)
+  })
+
+  it('does not revise a PR that was merged or closed meanwhile', async () => {
+    const { ctx, gh } = makeCtx()
+    gh.pullState.mockResolvedValue({ state: 'closed', merged: true })
+
+    await processRequest(ctx, revisionRequest())
+
+    expect(runClaude).not.toHaveBeenCalled()
+    expect(pushBranch).not.toHaveBeenCalled()
+    expect(gh.markDraftForBranch).not.toHaveBeenCalled()
+    expect(updateRequest).toHaveBeenCalledWith(ctx.db, expect.any(String), {
+      status: 'merged',
+      error: null,
+    })
+  })
+
+  it('treats a request without a PR as a normal attempt even if a revision base is set', async () => {
+    const { ctx, gh } = makeCtx()
+    await processRequest(ctx, fakeRequest({ revision_base_sha: VERIFIED }))
+    expect(gh.pullState).not.toHaveBeenCalled()
+    expect(prepareRevisionBranch).not.toHaveBeenCalled()
+    expect(prepareBranch).toHaveBeenCalledTimes(1)
+  })
+
+  it('updates only the recorded PR, and stops before pushing if it was closed meanwhile', async () => {
+    const { ctx, gh } = makeCtx()
+    gh.pullState
+      .mockResolvedValueOnce({ state: 'open', merged: false })
+      .mockResolvedValueOnce({ state: 'closed', merged: false })
+
+    await processRequest(ctx, revisionRequest())
+
+    expect(runClaude).toHaveBeenCalledTimes(1)
+    expect(pushBranch).not.toHaveBeenCalled()
+    expect(gh.openOrUpdatePull).not.toHaveBeenCalled()
+    expect(updateRequest).toHaveBeenCalledWith(ctx.db, expect.any(String), {
+      status: 'closed',
+      error: null,
+    })
+    // The terminal status is never overwritten by the generic failure path.
+    expect(
+      vi.mocked(updateRequest).mock.calls.some(([, , patch]) => patch.status === 'needs_attention')
+    ).toBe(false)
+    expect(postMessageSafe).toHaveBeenCalledWith(
+      ctx.db,
+      expect.any(String),
+      'system',
+      expect.stringContaining('was closed on GitHub')
+    )
+  })
+
+  it('keeps a modification of a file the verified change had published', async () => {
+    const { ctx } = makeCtx()
+    const modified = {
+      path: 'public/images/requests/abcd1234/flyer.png',
+      change: 'modified' as const,
+      kind: 'file' as const,
+    }
+    vi.mocked(getFiles).mockResolvedValue([
+      {
+        id: 'f1',
+        request_id: 'abcd1234-5678-90ab-cdef-1234567890ab',
+        kind: 'attachment',
+        storage_path: 'requests/abcd1234/attachments/flyer.png',
+        filename: 'flyer.png',
+        content_type: 'image/png',
+        size_bytes: 1,
+        label: null,
+        created_at: '2026-01-01T00:00:00.000Z',
+      },
+    ])
+    vi.mocked(diffSnapshots).mockReturnValue([modified])
+
+    await processRequest(ctx, revisionRequest())
+
+    expect(unreferencedAttachments).toHaveBeenCalledWith([], expect.any(Map))
+    expect(applyChanges).toHaveBeenCalledWith(expect.any(String), ctx.config.workDir, [modified])
+  })
+
+  it('passes the recorded PR number so a replacement PR is never opened', async () => {
+    const { ctx, gh } = makeCtx()
+    await processRequest(ctx, revisionRequest())
+    expect(gh.openOrUpdatePull.mock.calls[0][0].existingNumber).toBe(12)
+  })
+
+  it('keeps the deletion of an image the verified change had published', async () => {
+    const { ctx } = makeCtx()
+    const deleted = {
+      path: 'public/images/requests/abcd1234/flyer.png',
+      change: 'deleted' as const,
+      kind: 'file' as const,
+    }
+    vi.mocked(getFiles).mockResolvedValue([
+      {
+        id: 'f1',
+        request_id: 'abcd1234-5678-90ab-cdef-1234567890ab',
+        kind: 'attachment',
+        storage_path: 'requests/abcd1234/attachments/flyer.png',
+        filename: 'flyer.png',
+        content_type: 'image/png',
+        size_bytes: 1,
+        label: null,
+        created_at: '2026-01-01T00:00:00.000Z',
+      },
+    ])
+    vi.mocked(diffSnapshots).mockReturnValue([deleted])
+
+    await processRequest(ctx, revisionRequest())
+
+    expect(unreferencedAttachments).toHaveBeenCalledWith([], expect.any(Map))
+    expect(applyChanges).toHaveBeenCalledWith(expect.any(String), ctx.config.workDir, [deleted])
+  })
+})
+
+describe('processRequest: CI repair on a closed PR', () => {
+  it('does not push a repair to a PR that was closed while CI ran', async () => {
+    const { ctx, gh } = makeCtx()
+    gh.checkRunsForSha.mockResolvedValueOnce([failureCheckRun(1)])
+    gh.pullState.mockResolvedValue({ state: 'closed', merged: false })
+
+    await processRequest(ctx, fakeRequest())
+
+    expect(runClaude).toHaveBeenCalledTimes(2)
+    expect(pushBranch).toHaveBeenCalledTimes(1)
+    expect(gh.pullState).toHaveBeenCalledWith(12)
+    expect(gh.markReadyForReview).not.toHaveBeenCalled()
+    expect(updateRequest).toHaveBeenCalledWith(ctx.db, expect.any(String), {
+      status: 'closed',
+      error: null,
+    })
+  })
+})
+
+describe('processRequest: CI repair rebuilds from the base tree', () => {
+  it('resets the trusted tree to the agent base before applying the repaired sandbox', async () => {
+    const { ctx, gh } = makeCtx()
+    gh.checkRunsForSha
+      .mockResolvedValueOnce([failureCheckRun(1)])
+      .mockResolvedValueOnce(successfulChecks(2))
+
+    await processRequest(ctx, fakeRequest())
+
+    const readTrees = vi
+      .mocked(git)
+      .mock.calls.filter(([, args]) => args[0] === 'read-tree')
+      .map(([, args]) => args)
+    // Once for the first attempt and once for the repair, both from the base commit.
+    expect(readTrees).toEqual([
+      ['read-tree', '--reset', '-u', 'basesha0000000000000000000000000000000'],
+      ['read-tree', '--reset', '-u', 'basesha0000000000000000000000000000000'],
+    ])
+    expect(applyChanges).toHaveBeenCalledTimes(2)
   })
 })

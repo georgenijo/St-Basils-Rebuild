@@ -68,7 +68,7 @@ export function loadChangeRequestDetail(
   const messages = Promise.resolve(
     supabase
       .from('change_request_messages')
-      .select('id, request_id, author_kind, author_id, body, created_at')
+      .select('id, request_id, author_kind, author_id, body, intent, created_at')
       .eq('request_id', id)
       .order('created_at', { ascending: true })
       .order('id', { ascending: true })

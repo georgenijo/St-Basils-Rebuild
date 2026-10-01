@@ -1608,6 +1608,10 @@
   font-size: 12px;
 }
 
+.cr-message-author + .admin-status {
+  margin-right: auto;
+}
+
 .cr-message-author {
   font-weight: 600;
 }
@@ -1630,11 +1634,61 @@
   resize: vertical;
 }
 
+.cr-reply-intent {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.cr-reply-intent legend {
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.cr-reply-intent-option {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  align-content: start;
+  column-gap: 8px;
+  row-gap: 2px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  cursor: pointer;
+}
+
+.cr-reply-intent-option[data-selected='true'] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.cr-reply-intent-option input {
+  margin-top: 3px;
+}
+
+.cr-reply-intent-label {
+  font-weight: 600;
+}
+
+.cr-reply-intent-option .cr-help {
+  grid-column: 2;
+}
+
 .cr-reply-actions {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+}
+
+.cr-reply-actions .admin-button {
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .cr-live {
