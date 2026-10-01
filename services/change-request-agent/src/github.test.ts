@@ -111,6 +111,56 @@ describe('openOrUpdatePull draft behavior', () => {
   })
 })
 
+describe('openOrUpdatePull with the recorded pull request', () => {
+  it('updates exactly the recorded PR and never looks for another one', async () => {
+    const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
+      if (init?.method === 'PATCH') return new Response('{}', { status: 200 })
+      return new Response(
+        JSON.stringify({ number: 12, html_url: 'https://github.com/x/y/pull/12', state: 'open' })
+      )
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const pr = await configuredGitHub().openOrUpdatePull({
+      branch: 'change-request/abcd1234-x',
+      base: 'main',
+      title: 't',
+      body: 'b',
+      existingNumber: 12,
+    })
+
+    expect(pr).toEqual({ number: 12, html_url: 'https://github.com/x/y/pull/12', created: false })
+    const urls = fetchMock.mock.calls.map(([url]) => String(url))
+    expect(urls.some((url) => url.includes('/pulls?state=open'))).toBe(false)
+    expect(urls.some((url) => url.endsWith('/pulls'))).toBe(false)
+  })
+
+  it('refuses to open a replacement when the recorded PR was closed', async () => {
+    const fetchMock = vi.fn(
+      async () =>
+        new Response(
+          JSON.stringify({
+            number: 12,
+            html_url: 'https://github.com/x/y/pull/12',
+            state: 'closed',
+          })
+        )
+    )
+    vi.stubGlobal('fetch', fetchMock)
+
+    await expect(
+      configuredGitHub().openOrUpdatePull({
+        branch: 'change-request/abcd1234-x',
+        base: 'main',
+        title: 't',
+        body: 'b',
+        existingNumber: 12,
+      })
+    ).rejects.toThrow('no longer open')
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
+})
+
 describe('markDraftForBranch', () => {
   it('re-drafts an existing ready PR before its next revision can be pushed', async () => {
     const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {

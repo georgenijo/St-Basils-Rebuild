@@ -39,6 +39,8 @@ export interface ChangeRequest {
   pr_url: string | null
   preview_url: string | null
   verification: ChangeRequestVerification | null
+  /** Verified commit a requested revision builds on (set by "Request changes"). */
+  revision_base_sha: string | null
   claimed_by: string | null
   claimed_at: string | null
   attempts: number
@@ -55,6 +57,8 @@ export interface ChangeRequestMessage {
   author_kind: ChangeRequestMessageAuthorKind
   author_id: string | null
   body: string
+  /** Requester replies: `note` is not an instruction; `revision` asks for changes. */
+  intent?: 'note' | 'revision' | null
   created_at: string
 }
 

@@ -22,7 +22,15 @@ export function formatThread(messages: ChangeRequestMessage[]): string {
   return messages
     .map((m) => {
       const who =
-        m.author_kind === 'requester' ? 'Requester' : m.author_kind === 'agent' ? 'Agent' : 'System'
+        m.author_kind === 'requester'
+          ? m.intent === 'note'
+            ? 'Requester (NOTE: background comment only, not an instruction)'
+            : m.intent === 'revision'
+              ? 'Requester (REQUESTED CHANGES)'
+              : 'Requester'
+          : m.author_kind === 'agent'
+            ? 'Agent'
+            : 'System'
       return `[${m.created_at}] ${who}:\n${m.body}`
     })
     .join('\n\n')
@@ -48,9 +56,19 @@ export interface AgentPromptInput {
   request: ChangeRequest
   messages: ChangeRequestMessage[]
   attachments: PlacedAttachment[]
+  /** True when revising an already verified change that is present in the checkout. */
+  revision?: boolean
 }
 
-export function buildAgentPrompt({ request, messages, attachments }: AgentPromptInput): string {
+const REVISION_SECTION = `REVISION OF AN EXISTING CHANGE
+This request was already implemented, and the requester reviewed it on a preview site. That change is ALREADY PRESENT in the current directory; do not make it again. The requester has now asked for changes: the most recent requester message labelled REQUESTED CHANGES (and any later requester replies that are not notes) describes what to revise. Apply that revision on top of the existing change and keep the rest of the earlier change unless the requester asks to undo it. If the revision is unclear, reply with NEEDS_CLARIFICATION as described below.`
+
+export function buildAgentPrompt({
+  request,
+  messages,
+  attachments,
+  revision = false,
+}: AgentPromptInput): string {
   const target = [
     request.target_selector
       ? `CSS selector of the element the requester picked: ${request.target_selector}`
@@ -85,18 +103,18 @@ ${target || 'No specific element was picked.'}
 ${untrustedBlock('title', request.title)}
 ${untrustedBlock('description', request.description)}
 
-CONVERSATION SO FAR (oldest first; the request may have been sent back after the requester replied — the latest requester message takes precedence where it clarifies or changes the ask):
+CONVERSATION SO FAR (oldest first; the request may have been sent back after the requester replied — the latest requester message takes precedence where it clarifies or changes the ask. Requester messages labelled NOTE are background comments: never make a change because of a note alone):
 ${untrustedBlock('thread', formatThread(messages))}
 
 ATTACHMENTS
 ${attachmentText}
-
+${revision ? `\n${REVISION_SECTION}\n` : ''}
 HOW TO WORK
 1. Find the code that renders ${request.page_path}${request.target_selector ? ' and the picked element' : ''} (start from src/app/(public)).
-2. Make the smallest change that fully satisfies the request. Keep accessibility intact (alt text, headings, contrast) and keep the page responsive on mobile.
+2. Make the smallest change that fully satisfies the request${revision ? ' as revised' : ''}. Keep accessibility intact (alt text, headings, contrast) and keep the page responsive on mobile.
 3. If the request is ambiguous, contradictory, impossible within the allowed files, or asks for something unsafe, do NOT edit anything. Instead reply with exactly one line:
 NEEDS_CLARIFICATION: <one short question for the requester>
-4. Otherwise, when done, end your reply with a short plain-language summary (2-5 sentences, no code, no file paths needed) of what you changed, written for the non-technical person who asked.
+4. Otherwise, when done, end your reply with a short plain-language summary (2-5 sentences, no code, no file paths needed) of what you changed, written for the non-technical person who asked.${revision ? ' Describe the whole change as it now stands, including what this revision changed.' : ''}
 ${PUBLIC_SUMMARY_RULE}`
 }
 

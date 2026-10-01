@@ -49,27 +49,28 @@ All three tables live in `public` and are created by
 
 ### `change_requests`
 
-| column            | type        | notes                                                    |
-| ----------------- | ----------- | -------------------------------------------------------- |
-| `id`              | uuid pk     | `gen_random_uuid()`                                      |
-| `requester_id`    | uuid        | `auth.users(id)`                                         |
-| `title`           | text        | 3–120 chars                                              |
-| `description`     | text        | 10–5000 chars                                            |
-| `page_path`       | text        | site path starting with `/`, e.g. `/` or `/giving`       |
-| `target_selector` | text null   | CSS selector captured by the element picker              |
-| `target_text`     | text null   | ≤500 chars of the picked element's visible text          |
-| `status`          | text        | see lifecycle below; default `queued`                    |
-| `branch_name`     | text null   | set by worker                                            |
-| `pr_number`       | int null    | set by worker                                            |
-| `pr_url`          | text null   | set by worker                                            |
-| `preview_url`     | text null   | Vercel preview deployment URL (root, no path)            |
-| `verification`    | jsonb null  | `{ verdict: 'pass'\|'fail'\|'unsure', summary, checks }` |
-| `claimed_by`      | text null   | worker id                                                |
-| `claimed_at`      | timestamptz |                                                          |
-| `attempts`        | int         | default 0, incremented on claim                          |
-| `error`           | text null   | last failure, human readable                             |
-| `created_at`      | timestamptz |                                                          |
-| `updated_at`      | timestamptz | trigger-maintained                                       |
+| column              | type        | notes                                                      |
+| ------------------- | ----------- | ---------------------------------------------------------- |
+| `id`                | uuid pk     | `gen_random_uuid()`                                        |
+| `requester_id`      | uuid        | `auth.users(id)`                                           |
+| `title`             | text        | 3–120 chars                                                |
+| `description`       | text        | 10–5000 chars                                              |
+| `page_path`         | text        | site path starting with `/`, e.g. `/` or `/giving`         |
+| `target_selector`   | text null   | CSS selector captured by the element picker                |
+| `target_text`       | text null   | ≤500 chars of the picked element's visible text            |
+| `status`            | text        | see lifecycle below; default `queued`                      |
+| `branch_name`       | text null   | set by worker                                              |
+| `pr_number`         | int null    | set by worker                                              |
+| `pr_url`            | text null   | set by worker                                              |
+| `preview_url`       | text null   | Vercel preview deployment URL (root, no path)              |
+| `verification`      | jsonb null  | `{ verdict: 'pass'\|'fail'\|'unsure', summary, checks }`   |
+| `revision_base_sha` | text null   | verified commit a requested revision builds on (see below) |
+| `claimed_by`        | text null   | worker id                                                  |
+| `claimed_at`        | timestamptz |                                                            |
+| `attempts`          | int         | default 0, incremented on claim                            |
+| `error`             | text null   | last failure, human readable                               |
+| `created_at`        | timestamptz |                                                            |
+| `updated_at`        | timestamptz | trigger-maintained                                         |
 
 **Lifecycle (`status`):**
 
@@ -87,13 +88,59 @@ submitting → queued → in_progress → verifying → ready_for_review → mer
 - `verifying` — PR open; waiting for CI on the exact pushed commit, then the
   Vercel preview and the Playwright verification pass.
 - `ready_for_review` — PR open, preview verified; waiting for George to merge.
+  An admin can reply with **Request changes** to send it back (see
+  "Revisions" below); a plain reply is only a note.
 - `needs_attention` — something needs a human (see `error` and the thread).
 - `merged` / `closed` — worker syncs PR state after review.
+
+### Revisions
+
+On a `ready_for_review` request the reply form offers two choices:
+
+- **Add a note** (default) — saved to the thread with `intent = 'note'`; the
+  status does not change and the agent is not woken. The worker labels notes
+  in its prompts as background comments that are never instructions.
+- **Request changes** — the reply is saved with `intent = 'revision'`, the
+  verified commit (`verification.commit_sha`) is copied into
+  `revision_base_sha`, the request goes back to `queued` with a fresh attempt
+  budget (`attempts = 0`), and the site posts a system message and wakes the
+  agent.
+
+Replies go through `public.reply_to_change_request(request_id, body, intent)`
+(admins only, `SECURITY DEFINER`), which saves the reply and any requeue in
+one transaction with the request row locked. A note or revision submitted
+after the request stopped being ready (e.g. a stale page, or another admin
+won) is rejected without saving anything, so the worker never sees it as an
+instruction. Any other reply that lands on a ready request is stored as a
+note, and only an explicit "Reply and requeue" (`intent = 'requeue'`) sends a
+`needs_attention` request back to the queue.
+
+The thread tags these replies "Note" and "Requested changes".
+
+When the worker claims a request that has `revision_base_sha`, `branch_name`
+and `pr_number`, it re-drafts the PR and checks out the branch **at the
+verified commit** (anything pushed after it, such as a failed earlier
+revision, is dropped by the next force-push). The agent is told the change is
+already present and to apply the latest requested changes on top, with the
+whole thread as context. The revision is committed on top and goes through
+the same CI, preview and verification gates with fresh evidence. The PR body
+lists the whole branch diff.
+
+Any request that already has a PR is only worked on through that PR: the
+worker checks it is still open when it starts and again right before pushing
+(a merged or closed PR syncs the request status and stops), and updates that
+PR by number rather than opening a replacement. If the verified commit is
+confirmed to be gone from the branch (deleted or rewritten), the worker says
+so in the thread and rebuilds the whole change from `main`; a network or git
+failure stops the run with an error instead. Replies to a `needs_attention`
+revision requeue it as usual and keep building on the same verified commit.
 
 ### `change_request_messages`
 
 `id`, `request_id` (fk, cascade), `author_kind` (`requester` | `agent` |
-`system`), `author_id` (uuid null), `body` (1–5000 chars), `created_at`.
+`system`), `author_id` (uuid null), `body` (1–5000 chars), `intent`
+(`note` | `revision` | null; requester replies on ready requests only),
+`created_at`.
 The thread shown on the request detail page, oldest first.
 
 ### `change_request_files`

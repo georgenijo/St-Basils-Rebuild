@@ -84,8 +84,18 @@ export const changeRequestSchema = z.object({
 
 export type ChangeRequestFormData = z.infer<typeof changeRequestSchema>
 
+/**
+ * What a reply is for. `reply` is a plain reply; `requeue` answers a
+ * needs_attention request and sends it back to the queue. On a request that
+ * is ready for review, `note` only saves the reply and `revision`
+ * ("Request changes") sends it back to the agent to revise the same PR.
+ */
+export const CHANGE_REQUEST_REPLY_INTENTS = ['reply', 'requeue', 'note', 'revision'] as const
+export type ChangeRequestReplyIntent = (typeof CHANGE_REQUEST_REPLY_INTENTS)[number]
+
 export const changeRequestMessageSchema = z.object({
   request_id: z.uuid('Invalid request'),
+  intent: z.enum(CHANGE_REQUEST_REPLY_INTENTS, { error: 'Invalid reply type' }).default('reply'),
   body: z
     .string({ error: 'Message is required' })
     .trim()

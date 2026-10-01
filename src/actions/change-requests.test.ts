@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 // ─── Mocks ───────────────────────────────────────────────────────────
 
 const mockGetUser = vi.fn()
+const mockRpc = vi.fn()
 const userInserts: { table: string; row: unknown }[] = []
 const adminInserts: { table: string; row: unknown }[] = []
 const adminUpdates: { table: string; values: unknown; filters: [string, unknown][] }[] = []
@@ -10,6 +11,7 @@ const adminDeletes: { table: string; filters: [string, unknown][] }[] = []
 const signedUploads: string[] = []
 const moves: { from: string; to: string }[] = []
 const removed: string[][] = []
+const MESSAGE_ID = '99999999-9999-4999-8999-999999999999'
 /** Order of side effects, to assert the row exists before any move. */
 const events: string[] = []
 
@@ -24,7 +26,12 @@ let profile: { role: string; full_name: string | null } | null = {
   role: 'admin',
   full_name: 'Fr. Admin',
 }
-let requestRow: { id: string; status: string } | null = null
+let requestRow: {
+  id: string
+  status: string
+  pr_number?: number | null
+  verification?: { commit_sha?: string | null } | null
+} | null = null
 let userInsertError: { message: string } | null = null
 let fileInsertError: { message: string } | null = null
 let moveFailOn: number | null = null
@@ -60,7 +67,11 @@ function userFrom(table: string) {
     return {
       insert: (row: unknown) => {
         userInserts.push({ table, row })
-        return Promise.resolve({ error: null })
+        return {
+          select: () => ({
+            single: () => Promise.resolve({ data: { id: MESSAGE_ID }, error: null }),
+          }),
+        }
       },
     }
   }
@@ -115,7 +126,9 @@ function adminFrom(table: string) {
 }
 
 vi.mock('@/lib/supabase/server', () => ({
-  createClient: vi.fn(() => Promise.resolve({ auth: { getUser: mockGetUser }, from: userFrom })),
+  createClient: vi.fn(() =>
+    Promise.resolve({ auth: { getUser: mockGetUser }, from: userFrom, rpc: mockRpc })
+  ),
 }))
 
 vi.mock('@/lib/supabase/admin', () => ({
@@ -744,90 +757,132 @@ describe('createChangeRequest', () => {
 
 // ─── addChangeRequestMessage ─────────────────────────────────────────
 
-function replyForm(body = 'Use the second photo instead.') {
+function replyForm(body = 'Use the second photo instead.', intent?: string) {
   const formData = new FormData()
   formData.set('request_id', REQUEST_ID)
   formData.set('body', body)
+  if (intent) formData.set('intent', intent)
   return formData
 }
 
+function rpcReturns(outcome: string, previousStatus: string | null = 'in_progress') {
+  mockRpc.mockResolvedValue({
+    data: [{ outcome, previous_status: previousStatus, message_id: 'msg-1' }],
+    error: null,
+  })
+}
+
 describe('addChangeRequestMessage', () => {
+  beforeEach(() => {
+    requestRow = { id: REQUEST_ID, status: 'queued', pr_number: 12 }
+  })
+
   it('rejects a non-admin', async () => {
     profile = null
     const result = await addChangeRequestMessage(INITIAL, replyForm())
     expect(result).toEqual({ success: false, message: 'Forbidden: admin access required' })
-    expect(userInserts).toHaveLength(0)
+    expect(mockRpc).not.toHaveBeenCalled()
   })
 
   it('validates the body', async () => {
-    requestRow = { id: REQUEST_ID, status: 'queued' }
     const result = await addChangeRequestMessage(INITIAL, replyForm('   '))
     expect(result.errors).toHaveProperty('body')
+    expect(mockRpc).not.toHaveBeenCalled()
+  })
+
+  it('rejects an unknown reply intent', async () => {
+    const result = await addChangeRequestMessage(INITIAL, replyForm('Hi', 'merge'))
+    expect(result.errors).toHaveProperty('intent')
+    expect(mockRpc).not.toHaveBeenCalled()
+  })
+
+  it('saves the reply and any requeue in one transactional call as the signed-in admin', async () => {
+    rpcReturns('posted')
+    await addChangeRequestMessage(INITIAL, replyForm('Make it bigger.', 'revision'))
+    expect(mockRpc).toHaveBeenCalledExactlyOnceWith('reply_to_change_request', {
+      p_request_id: REQUEST_ID,
+      p_body: 'Make it bigger.',
+      p_intent: 'revision',
+    })
+  })
+
+  it('defaults to a plain reply', async () => {
+    rpcReturns('posted')
+    await addChangeRequestMessage(INITIAL, replyForm())
+    expect(mockRpc.mock.calls[0][1].p_intent).toBe('reply')
   })
 
   it('returns not found for an unknown request', async () => {
+    rpcReturns('not_found', null)
     const result = await addChangeRequestMessage(INITIAL, replyForm())
     expect(result).toEqual({ success: false, message: 'Change request not found' })
-    expect(userInserts).toHaveLength(0)
   })
 
-  it('posts a requester reply without requeueing an in-flight request', async () => {
-    requestRow = { id: REQUEST_ID, status: 'in_progress' }
+  it('reports a failed save', async () => {
+    mockRpc.mockResolvedValue({ data: null, error: { message: 'boom' } })
+    const result = await addChangeRequestMessage(INITIAL, replyForm())
+    expect(result).toEqual({ success: false, message: 'Failed to post your reply' })
+    expect(mockTriggerAgent).not.toHaveBeenCalled()
+  })
+
+  it('posts a plain reply without a system message or launch for an in-flight request', async () => {
+    rpcReturns('posted', 'in_progress')
     const result = await addChangeRequestMessage(INITIAL, replyForm())
     expect(result).toEqual({ success: true, message: 'Reply posted.' })
-    expect(userInserts).toEqual([
-      {
-        table: 'change_request_messages',
-        row: {
-          request_id: REQUEST_ID,
-          author_kind: 'requester',
-          author_id: USER_ID,
-          body: 'Use the second photo instead.',
-        },
-      },
-    ])
-    expect(adminUpdates).toHaveLength(0)
     expect(adminInserts).toHaveLength(0)
     expect(mockTriggerAgent).not.toHaveBeenCalled()
   })
 
-  it('retries launch on a queued reply without resetting an existing claim', async () => {
-    requestRow = { id: REQUEST_ID, status: 'queued' }
+  it('retries launch on a reply to a queued request', async () => {
+    rpcReturns('posted', 'queued')
     const result = await addChangeRequestMessage(INITIAL, replyForm())
     expect(result).toEqual({ success: true, message: 'Reply posted.' })
     expect(mockTriggerAgent).toHaveBeenCalledExactlyOnceWith(REQUEST_ID)
-    expect(adminUpdates).toHaveLength(0)
   })
 
-  it('requeues a needs_attention request and adds a system message', async () => {
-    requestRow = { id: REQUEST_ID, status: 'needs_attention' }
-    const result = await addChangeRequestMessage(INITIAL, replyForm())
+  it('explains a requeue in the thread and wakes the agent', async () => {
+    rpcReturns('requeued', 'needs_attention')
+    const result = await addChangeRequestMessage(INITIAL, replyForm('Try again.', 'requeue'))
     expect(result.success).toBe(true)
     expect(result.message).toMatch(/back in the queue/)
-    expect(adminUpdates).toEqual([
-      {
-        table: 'change_requests',
-        values: { status: 'queued', claimed_by: null, claimed_at: null },
-        filters: [
-          ['id', REQUEST_ID],
-          ['status', 'needs_attention'],
-        ],
-      },
-    ])
     expect(adminInserts).toHaveLength(1)
     expect(adminInserts[0]).toMatchObject({
       table: 'change_request_messages',
       row: { request_id: REQUEST_ID, author_kind: 'system', author_id: null },
     })
-    expect((adminInserts[0].row as { body: string }).body).toMatch(/Requeued/)
+    expect((adminInserts[0].row as { body: string }).body).toMatch(/^Requeued after a reply from/)
     expect(mockTriggerAgent).toHaveBeenCalledExactlyOnceWith(REQUEST_ID)
   })
 
-  it('does not add a system message if the status changed underneath the reply', async () => {
-    requestRow = { id: REQUEST_ID, status: 'needs_attention' }
-    requeueMatches = false
-    const result = await addChangeRequestMessage(INITIAL, replyForm())
+  it('keeps a note on a ready request as a note', async () => {
+    rpcReturns('posted', 'ready_for_review')
+    const result = await addChangeRequestMessage(INITIAL, replyForm('Looks good.', 'note'))
     expect(result).toEqual({ success: true, message: 'Reply posted.' })
+    expect(adminInserts).toHaveLength(0)
+    expect(mockTriggerAgent).not.toHaveBeenCalled()
+  })
+
+  it('requests changes: explains it with the PR number and wakes the agent', async () => {
+    rpcReturns('revision', 'ready_for_review')
+    const result = await addChangeRequestMessage(
+      INITIAL,
+      replyForm('Make the heading bigger.', 'revision')
+    )
+    expect(result).toEqual({
+      success: true,
+      message: 'Changes requested. The agent will update the pull request and verify it again.',
+    })
+    expect((adminInserts[0].row as { body: string }).body).toMatch(
+      /^Changes requested by Fr\. Admin\. The agent will revise pull request #12/
+    )
+    expect(mockTriggerAgent).toHaveBeenCalledExactlyOnceWith(REQUEST_ID)
+  })
+
+  it('tells the admin nothing was saved when the request is no longer ready', async () => {
+    rpcReturns('stale', 'queued')
+    const result = await addChangeRequestMessage(INITIAL, replyForm('Make it blue.', 'revision'))
+    expect(result.success).toBe(false)
+    expect(result.message).toMatch(/no longer ready for review, so nothing was saved/)
     expect(adminInserts).toHaveLength(0)
     expect(mockTriggerAgent).not.toHaveBeenCalled()
   })

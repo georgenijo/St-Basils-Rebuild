@@ -211,6 +211,7 @@ export default async function ChangeRequestDetailPage({ params }: PageProps) {
             <ChangeRequestReplyForm
               requestId={request.id}
               requeuesOnReply={request.status === 'needs_attention'}
+              canRequestChanges={request.status === 'ready_for_review'}
             />
           </section>
         </div>

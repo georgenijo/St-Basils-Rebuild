@@ -162,13 +162,33 @@ export class GitHub {
     )
   }
 
-  /** Open as draft, or update a PR already re-drafted at pipeline admission. */
+  /**
+   * Open as draft, or update a PR already re-drafted at pipeline admission.
+   * With `existingNumber` (the PR recorded on the request) only that PR is
+   * updated: if it is no longer open this throws instead of opening a
+   * replacement, so closing a PR on GitHub is never undone by the worker.
+   */
   async openOrUpdatePull(input: {
     branch: string
     base: string
     title: string
     body: string
+    existingNumber?: number | null
   }): Promise<{ number: number; html_url: string; created: boolean }> {
+    if (input.existingNumber) {
+      const pr = await this.request<{ number: number; html_url: string; state: string }>(
+        'GET',
+        `/repos/${this.repo}/pulls/${input.existingNumber}`
+      )
+      if (pr.state !== 'open') {
+        throw new Error(`Pull request #${input.existingNumber} is no longer open`)
+      }
+      await this.request('PATCH', `/repos/${this.repo}/pulls/${pr.number}`, {
+        title: this.scrub(input.title, 100),
+        body: this.scrub(input.body, 60_000),
+      })
+      return { number: pr.number, html_url: pr.html_url, created: false }
+    }
     const existing = await this.findOpenPullForBranch(input.branch)
     if (existing) {
       await this.request('PATCH', `/repos/${this.repo}/pulls/${existing.number}`, {

@@ -34,7 +34,7 @@ export const CHANGE_REQUEST_STATUS_INFO: Record<ChangeRequestStatus, StatusInfo>
   ready_for_review: {
     label: 'Ready for review',
     description:
-      'The change is on a preview site and passed its checks. Nothing is live until the pull request is merged.',
+      'The change is on a preview site and passed its checks. Nothing is live until the pull request is merged. To have the agent revise it, choose "Request changes" below.',
     tone: 'ok',
   },
   needs_attention: {

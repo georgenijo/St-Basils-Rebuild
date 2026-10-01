@@ -18,12 +18,14 @@ import {
   type Db,
 } from './db'
 import {
+  branchDiffNumstat,
   changedFiles,
   commit,
   ensureClone,
   ensureDependencies,
   git,
   prepareBranch,
+  prepareRevisionBranch,
   pushBranch,
   stageAll,
 } from './git'
@@ -142,6 +144,8 @@ class GuardrailError extends Error {}
 
 interface Workspace {
   agentDir: string
+  /** Commit the agent checkout was exported from (what baseSnapshot describes). */
+  baseSha: string
   baseSnapshot: Snapshot
   attachments: PlacedAttachment[]
 }
@@ -150,6 +154,9 @@ interface Workspace {
  * Validate the agent's sandbox changes, then reset the trusted checkout to
  * the base commit and copy in only the validated files. Nothing the agent
  * wrote reaches the trusted checkout (where tooling runs) before this passes.
+ * The working tree is rebuilt from the base commit's tree even when HEAD has
+ * moved on (the CI repair round commits on top of the failed attempt), so a
+ * file the repair restored to its original content is restored here too.
  */
 async function syncValidatedChanges(ctx: JobContext, ws: Workspace): Promise<GuardedChange> {
   const trusted = ctx.config.workDir
@@ -162,8 +169,13 @@ async function syncValidatedChanges(ctx: JobContext, ws: Workspace): Promise<Gua
       texts.set(c.path, await readText(c.path))
     }
   }
+  // Only newly added, unreferenced uploads are dropped; modifying or deleting
+  // a file the base already had (e.g. a revision removing a published image)
+  // is kept.
   const unused = unreferencedAttachments(
-    ws.attachments.filter((a) => changes.some((c) => c.path === a.repoPath)),
+    ws.attachments.filter((a) =>
+      changes.some((c) => c.path === a.repoPath && c.change === 'added')
+    ),
     texts
   )
   if (unused.length) {
@@ -177,6 +189,7 @@ async function syncValidatedChanges(ctx: JobContext, ws: Workspace): Promise<Gua
   if (!verdict.ok) throw new GuardrailError(verdict.reason)
 
   await resetTrusted(ctx)
+  await git(trusted, ['read-tree', '--reset', '-u', ws.baseSha])
   await applyChanges(ws.agentDir, trusted, changes)
 
   // Anything git would ignore must not sit silently in the trusted checkout.
@@ -427,6 +440,28 @@ async function runPipeline(ctx: JobContext, claimed: ChangeRequest): Promise<voi
   const messages = await getMessages(db, request.id)
   // Reuse existing branches, but never publish private titles in new names.
   const branch = request.branch_name || branchName(request.id, 'website-update')
+  // "Request changes" on a ready request: revise the verified commit on the same branch and PR.
+  const revisionBase =
+    request.revision_base_sha && request.branch_name && request.pr_number
+      ? request.revision_base_sha
+      : null
+  // A request that already has a PR is only ever worked on through that PR.
+  const recordedPr = request.pr_number
+  // Checked before every push, so a PR closed on GitHub is never pushed to again.
+  const stopIfPullClosed = async (prNumber: number | null) => {
+    if (!prNumber || config.dryRun) return
+    const pr = await ctx.gh.pullState(prNumber)
+    if (pr.state !== 'closed') return
+    await updateRequest(db, request.id, { status: pr.merged ? 'merged' : 'closed', error: null })
+    await postMessageSafe(
+      db,
+      request.id,
+      'system',
+      `Pull request #${prNumber} was ${pr.merged ? 'merged' : 'closed'} on GitHub, so the agent stopped without changing it. Submit a new request for further changes.`
+    )
+    throw new Stop('pull request no longer open')
+  }
+  await stopIfPullClosed(recordedPr)
   if (!config.dryRun) await ctx.gh.markDraftForBranch(branch)
 
   // 2. Prepare. Old verification screenshots belong to an older revision.
@@ -436,10 +471,22 @@ async function runPipeline(ctx: JobContext, claimed: ChangeRequest): Promise<voi
     db,
     request.id,
     'system',
-    'The worker picked up this request and is preparing a change.'
+    revisionBase
+      ? `The worker picked up the requested changes and is revising pull request #${request.pr_number}.`
+      : 'The worker picked up this request and is preparing a change.'
   )
   await ensureClone(config)
-  const baseSha = await prepareBranch(config, branch)
+  let baseSha = revisionBase ? await prepareRevisionBranch(config, branch, revisionBase) : null
+  const revising = baseSha !== null
+  if (revisionBase && !revising) {
+    await postMessage(
+      db,
+      request.id,
+      'system',
+      `The verified commit ${revisionBase.slice(0, 7)} is no longer on the branch, so the agent is rebuilding the whole change from the conversation instead.`
+    )
+  }
+  baseSha ??= await prepareBranch(config, branch)
   await ensureDependencies(config)
 
   // Agent sandbox: plain export of the base commit, no .git, no node_modules.
@@ -447,12 +494,12 @@ async function runPipeline(ctx: JobContext, claimed: ChangeRequest): Promise<voi
   await createAgentCheckout(config, agentDir, baseSha)
   const baseSnapshot = await snapshotTree(agentDir)
   const attachments = await placeAttachments(ctx, request, agentDir)
-  const ws: Workspace = { agentDir, baseSnapshot, attachments }
-  log.info('checkouts ready', { requestId: request.id, branch, baseSha, agentDir })
+  const ws: Workspace = { agentDir, baseSha, baseSnapshot, attachments }
+  log.info('checkouts ready', { requestId: request.id, branch, baseSha, agentDir, revising })
   checkpoint(ctx)
 
   // 3. Agent (sandbox only)
-  const prompt = buildAgentPrompt({ request, messages, attachments })
+  const prompt = buildAgentPrompt({ request, messages, attachments, revision: revising })
   const first = await runClaude(config, {
     cwd: agentDir,
     prompt,
@@ -503,7 +550,7 @@ async function runPipeline(ctx: JobContext, claimed: ChangeRequest): Promise<voi
 
   // 6. Commit (trusted checkout) / PR. Commit messages are public.
   const commitMessage = redactPublic(
-    `${prTitle(`Website update ${shortId(request.id)}`, ctx.secrets)}\n\nSubmitted via /admin/requests (request ${request.id}).`,
+    `${prTitle(`Website update ${shortId(request.id)}`, ctx.secrets)}\n\n${revising ? 'Revision requested' : 'Submitted'} via /admin/requests (request ${request.id}).`,
     ctx.secrets
   )
   let headSha = await commit(config, commitMessage)
@@ -530,8 +577,12 @@ async function runPipeline(ctx: JobContext, claimed: ChangeRequest): Promise<voi
     throw new Stop('dry run')
   }
 
+  await stopIfPullClosed(recordedPr)
   await pushBranch(config, branch)
+  // A revision commit only holds the revision; the PR body describes the whole branch.
+  const prDiff = revising ? await branchDiffNumstat(config) : null
   const pr = await ctx.gh.openOrUpdatePull({
+    existingNumber: recordedPr,
     branch,
     base: config.baseBranch,
     title: prTitle(`Website update ${shortId(request.id)}`, ctx.secrets),
@@ -539,8 +590,8 @@ async function runPipeline(ctx: JobContext, claimed: ChangeRequest): Promise<voi
       request,
       siteUrl: config.siteUrl,
       agentSummary: summary,
-      changedFiles: change.files,
-      changedLines: change.changedLines,
+      changedFiles: prDiff ? prDiff.map((entry) => entry.path) : change.files,
+      changedLines: prDiff ? countChangedLines(prDiff) : change.changedLines,
       attachmentNames: change.keptAttachments.map((a) => path.posix.basename(a.repoPath)),
       secrets: ctx.secrets,
     }),
@@ -559,7 +610,9 @@ async function runPipeline(ctx: JobContext, claimed: ChangeRequest): Promise<voi
     db,
     request.id,
     'system',
-    `${pr.created ? 'Opened pull request' : 'Updated pull request'} #${pr.number}: ${pr.html_url}\n${pr.created ? 'It opens as a draft and is' : 'It is'} marked ready for review automatically once CI checks and the Vercel preview verification both pass.`
+    revising
+      ? `Pushed the requested changes to pull request #${pr.number} (commit ${headSha.slice(0, 7)}): ${pr.html_url}\nIt is marked ready for review again once CI checks and the Vercel preview verification both pass on the new commit.`
+      : `${pr.created ? 'Opened pull request' : 'Updated pull request'} #${pr.number}: ${pr.html_url}\n${pr.created ? 'It opens as a draft and is' : 'It is'} marked ready for review automatically once CI checks and the Vercel preview verification both pass.`
   )
   log.info('pull request ready', { requestId: request.id, pr: pr.number, created: pr.created })
 
@@ -628,6 +681,7 @@ async function runPipeline(ctx: JobContext, claimed: ChangeRequest): Promise<voi
 
     headSha = await commit(config, commitMessage)
     log.info('committed CI repair', { requestId: request.id, headSha })
+    await stopIfPullClosed(pr.number)
     await pushBranch(config, branch)
     await postMessage(db, request.id, 'agent', summary)
     await postMessage(
