@@ -97,20 +97,25 @@
   }
 }
 
-body {
-  font-family: var(--font-body);
-  background-color: var(--color-cream-50);
-  color: var(--color-wood-800);
-}
+/* Element defaults live in the base layer so Tailwind utilities (e.g.
+   text-cream-50 on a hero or dark-section heading) always win. Unlayered
+   rules beat every layered rule regardless of specificity (#312). */
+@layer base {
+  body {
+    font-family: var(--font-body);
+    background-color: var(--color-cream-50);
+    color: var(--color-wood-800);
+  }
 
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  font-family: var(--font-heading);
-  color: var(--color-wood-900);
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-heading);
+    color: var(--color-wood-900);
+  }
 }
 
 /* ─── Focus-visible styles (WCAG 2.1 AA) ─── */
