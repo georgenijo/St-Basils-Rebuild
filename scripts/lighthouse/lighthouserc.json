@@ -1,10 +1,7 @@
 {
   "ci": {
     "collect": {
-      "numberOfRuns": 3,
-      "settings": {
-        "skipAudits": ["is-crawlable"]
-      }
+      "numberOfRuns": 3
     },
     "assert": {
       "assertMatrix": [
@@ -13,7 +10,7 @@
           "assertions": {
             "categories:accessibility": ["error", { "minScore": 0.95 }],
             "categories:best-practices": ["error", { "minScore": 0.9 }],
-            "categories:seo": ["error", { "minScore": 0.9 }],
+            "categories:seo": ["error", { "minScore": 0.65 }],
             "document-title": ["error", { "minScore": 1 }],
             "meta-description": ["error", { "minScore": 1 }],
             "http-status-code": ["error", { "minScore": 1 }],
@@ -28,7 +25,7 @@
           "matchingUrlPattern": "^https?://[^/]+/?$",
           "aggregationMethod": "median",
           "assertions": {
-            "categories:performance": ["error", { "minScore": 0.7 }]
+            "categories:performance": ["error", { "minScore": 0.74 }]
           }
         },
         {
@@ -42,21 +39,21 @@
           "matchingUrlPattern": "^https?://[^/]+/our-clergy/?$",
           "aggregationMethod": "median",
           "assertions": {
-            "categories:performance": ["error", { "minScore": 0.7 }]
+            "categories:performance": ["error", { "minScore": 0.74 }]
           }
         },
         {
           "matchingUrlPattern": "^https?://[^/]+/our-organizations/?$",
           "aggregationMethod": "median",
           "assertions": {
-            "categories:performance": ["error", { "minScore": 0.7 }]
+            "categories:performance": ["error", { "minScore": 0.77 }]
           }
         },
         {
           "matchingUrlPattern": "^https?://[^/]+/events/?$",
           "aggregationMethod": "median",
           "assertions": {
-            "categories:performance": ["error", { "minScore": 0.7 }]
+            "categories:performance": ["error", { "minScore": 0.74 }]
           }
         }
       ]

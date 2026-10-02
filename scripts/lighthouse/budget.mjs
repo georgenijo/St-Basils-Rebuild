@@ -19,6 +19,30 @@ import { fileURLToPath } from 'node:url'
 export const PATHS = ['/', '/about', '/our-clergy', '/our-organizations', '/events']
 export const IMAGE_MAX_BYTES = 500 * 1024
 export const PERFORMANCE_TARGET = 0.8
+export const CATEGORY_TARGETS = { accessibility: 0.95, 'best-practices': 0.9, seo: 0.9 }
+
+// Raw medians of the first 3-run baseline, taken before these thresholds were
+// set: preview st-basils-rebuild-6m5qthfcg (ca674ad, same tree as main
+// 9cd5135), LHCI 0.15.1 default mobile emulation and simulated throttling, on a
+// local Apple-silicon Mac mini with Chromium 1234, 2026-10-02. Where a median
+// misses its target, lighthouserc.json uses a floor exactly 0.01 below it.
+// SEO is 0.66 on every page because Vercel previews send
+// `x-robots-tag: noindex`, which fails `is-crawlable`. Every other SEO audit
+// passes and is still asserted on its own. Performance is lower and noisier on
+// GitHub-hosted runners, and a footer layout shift (#397) splits runs into
+// fast and slow ones.
+export const BASELINE_MEDIANS = {
+  performance: {
+    '/': 0.75,
+    '/about': 0.96,
+    '/our-clergy': 0.75,
+    '/our-organizations': 0.78,
+    '/events': 0.75,
+  },
+  accessibility: 0.96,
+  'best-practices': 1,
+  seo: 0.66,
+}
 export const CATEGORIES = [
   ['performance', 'Performance'],
   ['accessibility', 'Accessibility'],
@@ -173,7 +197,14 @@ export function renderComment({ manifest, links = {}, imageBudget }) {
   if (floors.length) {
     lines.push(
       `Performance target is ${pct(PERFORMANCE_TARGET)}; ${floors.join(', ')} ` +
-        'use a floor just below the measured median until they are fixed (#331).',
+        'use a floor just below the 3-run baseline median measured on main (#331).',
+      ''
+    )
+  }
+  if (summary.some(({ thresholds }) => thresholds.seo < CATEGORY_TARGETS.seo)) {
+    lines.push(
+      'SEO is scored as-is on the preview, whose `x-robots-tag: noindex` fails ' +
+        '`is-crawlable`; the individual SEO audits must still all pass.',
       ''
     )
   }

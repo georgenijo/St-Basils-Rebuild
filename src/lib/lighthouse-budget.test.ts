@@ -7,6 +7,8 @@ import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 
 import {
+  BASELINE_MEDIANS,
+  CATEGORY_TARGETS,
   IMAGE_MAX_BYTES,
   PATHS,
   PERFORMANCE_TARGET,
@@ -17,10 +19,10 @@ import {
   oversizedImages,
   renderComment,
   thresholdsFor,
-} from './budget.mjs'
+} from '../../scripts/lighthouse/budget.mjs'
 
 const PREVIEW = 'https://st-basils-rebuild-abc123-george-nijos-projects.vercel.app'
-const SCRIPT = fileURLToPath(new URL('./budget.mjs', import.meta.url))
+const SCRIPT = fileURLToPath(new URL('../../scripts/lighthouse/budget.mjs', import.meta.url))
 
 type NetworkItem = {
   url: string
@@ -76,12 +78,10 @@ describe('Lighthouse thresholds', () => {
     assertions: Record<string, [string, { minScore: number }]>
   }[]
 
-  it('collects 3 mobile runs and only skips the preview-noindex audit', () => {
+  it('collects 3 mobile runs with every audit scored as-is', () => {
     const { collect } = lighthouseConfig.ci
     expect(collect.numberOfRuns).toBe(3)
-    expect(collect.settings.preset).toBeUndefined()
-    expect(collect.settings.formFactor ?? 'mobile').toBe('mobile')
-    expect(collect.settings.skipAudits).toEqual(['is-crawlable'])
+    expect(collect.settings).toBeUndefined()
   })
 
   it('asserts the median run, not the best run, and fails the job', () => {
@@ -94,12 +94,17 @@ describe('Lighthouse thresholds', () => {
   it.each(PATHS)('enforces every category on %s', (path) => {
     const url = PREVIEW + path
     const thresholds = thresholdsFor(url)
-    expect(thresholds.accessibility).toBeGreaterThanOrEqual(0.95)
-    expect(thresholds['best-practices']).toBeGreaterThanOrEqual(0.9)
-    expect(thresholds.seo).toBeGreaterThanOrEqual(0.9)
-    // Pages below the 80 target use a floor just under the measured median.
-    expect(thresholds.performance).toBeGreaterThanOrEqual(0.7)
-    expect(thresholds.performance).toBeLessThanOrEqual(PERFORMANCE_TARGET)
+    // Each category asserts its target, or exactly 0.01 below the documented
+    // baseline median when today's median misses it. Never lower.
+    const floor = (target: number, median: number) =>
+      median >= target ? target : Math.round((median - 0.01) * 100) / 100
+    const performance =
+      BASELINE_MEDIANS.performance[path as keyof typeof BASELINE_MEDIANS.performance]
+    expect(thresholds.performance).toBe(floor(PERFORMANCE_TARGET, performance))
+    for (const [id, target] of Object.entries(CATEGORY_TARGETS)) {
+      const median = BASELINE_MEDIANS[id as keyof typeof CATEGORY_TARGETS]
+      expect(thresholds[id]).toBe(floor(target, median))
+    }
 
     const performanceEntries = matrix.filter(
       (entry) =>
@@ -217,11 +222,19 @@ describe('PR comment', () => {
 
     expect(body).not.toMatch(/secret|bypass/)
     // Median of 52/64/95 is 64, below the floor for `/`: the best run (95) must not win.
-    expect(body).toMatch(/\| `\/` \| \*\*64\*\* \/ \d+ ❌ \|/)
+    expect(body).toMatch(/\| `\/` \| \*\*64\*\* \/ 74 ❌ \|/)
     expect(body).toContain(
       '| [`/about`](https://storage.googleapis.com/report.html) | **90** / 80 ✅'
     )
     expect(body).toContain('`/our-clergy` loads `/images/about/church-exterior.jpg` (3909 KiB)')
+  })
+
+  it('passes the raw preview SEO score of 66 and explains the noindex', () => {
+    const { manifest } = runsFor()
+    const preview = manifest.map((run) => ({ ...run, summary: { ...run.summary, seo: 0.66 } }))
+    const body = renderComment({ manifest: preview, imageBudget: undefined })
+    expect(body).toMatch(/\| \*\*66\*\* \/ 65 ✅ \|$/m)
+    expect(body).toContain('`x-robots-tag: noindex` fails `is-crawlable`')
   })
 
   it('says so when every image is within budget', () => {
