@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import type { CSSProperties } from 'react'
 
 import { sanityFetch } from '@/lib/sanity/client'
 import { urlFor } from '@/lib/sanity/image'
@@ -6,7 +7,7 @@ import { allUsefulLinksQuery, usefulLinksPageQuery } from '@/lib/sanity/queries'
 import { breadcrumbSchema } from '@/lib/structured-data'
 import { PageHero, SectionHeader, ScrollReveal, JsonLd } from '@/components/ui'
 
-import type { UsefulLink, UsefulLinksPage } from '@/lib/sanity/types'
+import type { SanityImageSource, UsefulLink, UsefulLinksPage } from '@/lib/sanity/types'
 
 const fallbackDescription =
   "Download liturgical texts, prayer books, and other resources from St. Basil's Syriac Orthodox Church in Boston."
@@ -36,6 +37,16 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export const revalidate = 60
 
+// PageHero has no object-position prop, so the editor's Sanity hotspot reaches
+// its next/image through a CSS variable scoped to this page's hero.
+function heroFocalPoint(image: SanityImageSource): string | undefined {
+  if (typeof image === 'object' && 'hotspot' in image && image.hotspot) {
+    const { x, y } = image.hotspot
+    return `${x * 100}% ${y * 100}%`
+  }
+  return undefined
+}
+
 export default async function UsefulLinksPageRoute() {
   const [pageContent, links] = await Promise.all([
     sanityFetch<UsefulLinksPage | null>({
@@ -51,6 +62,7 @@ export default async function UsefulLinksPageRoute() {
   ])
 
   const title = pageContent?.pageTitle || 'Useful Links'
+  const focalPoint = pageContent?.heroImage ? heroFocalPoint(pageContent.heroImage) : undefined
 
   // Group links by category
   const grouped = links.reduce<Record<string, UsefulLink[]>>((acc, link) => {
@@ -62,18 +74,29 @@ export default async function UsefulLinksPageRoute() {
 
   const categories = Object.keys(grouped)
 
+  const hero = (
+    <PageHero
+      title={title}
+      backgroundImage={
+        pageContent?.heroImage
+          ? urlFor(pageContent.heroImage).url()
+          : '/images/about/church-exterior.jpg'
+      }
+      className={focalPoint ? '[&_img]:object-[var(--hero-focal-point)]' : undefined}
+    />
+  )
+
   return (
     <>
       <JsonLd data={breadcrumbSchema([{ name: 'Useful Links', path: '/useful-links' }])} />
 
-      <PageHero
-        title={title}
-        backgroundImage={
-          pageContent?.heroImage
-            ? urlFor(pageContent.heroImage).url()
-            : '/images/about/church-exterior.jpg'
-        }
-      />
+      {focalPoint ? (
+        <div className="contents" style={{ '--hero-focal-point': focalPoint } as CSSProperties}>
+          {hero}
+        </div>
+      ) : (
+        hero
+      )}
 
       {/* Intro */}
       {pageContent?.introText && (

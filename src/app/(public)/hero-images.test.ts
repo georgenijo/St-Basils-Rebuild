@@ -1,8 +1,10 @@
 import { readFileSync, statSync } from 'node:fs'
 import path from 'node:path'
 
-import { isValidElement, type ReactElement, type ReactNode } from 'react'
+import { createElement, isValidElement, type ReactElement, type ReactNode } from 'react'
+import { renderToStaticMarkup } from 'react-dom/server'
 import sharp from 'sharp'
+import { compile } from 'tailwindcss'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const sanityFetch = vi.fn()
@@ -105,6 +107,75 @@ describe('public page heroes use the shared next/image PageHero (#320)', () => {
       backgroundImage: 'https://cdn.sanity.io/images/test/production/hero.jpg',
     })
     expect(inlineBackgrounds).toEqual([])
+  })
+})
+
+// Server-renders the page and returns the hero (first <section>) together with
+// whatever wraps it, plus the CSS Tailwind generates for the hero's classes.
+async function renderUsefulLinksHero() {
+  const markup = renderToStaticMarkup(await UsefulLinksPageRoute())
+  const start = markup.indexOf('</script>') + '</script>'.length
+  const heroMarkup = markup.slice(start, markup.indexOf('</section>') + '</section>'.length)
+  const sectionClasses = /<section class="([^"]*)"/.exec(heroMarkup)?.[1].split(' ') ?? []
+  const css = (await compile('@tailwind utilities;')).build(
+    sectionClasses.map((name) => name.replaceAll('&amp;', '&'))
+  )
+  return { heroMarkup, css }
+}
+
+function mockUsefulLinksPage(page: Record<string, unknown> | null) {
+  sanityFetch.mockImplementation(({ tags }: { tags: string[] }) =>
+    Promise.resolve(tags.includes('usefulLinksPage') ? page : [])
+  )
+}
+
+describe('Useful Links hero keeps the editor-chosen Sanity hotspot (#320)', () => {
+  beforeEach(() => {
+    sanityFetch.mockReset()
+  })
+
+  it('positions the optimized hero image on an off-centre hotspot', async () => {
+    mockUsefulLinksPage({
+      pageTitle: 'Resources',
+      heroImage: {
+        asset: { _ref: 'image-hero-jpg' },
+        hotspot: { x: 0.1, y: 0.9, width: 0.2, height: 0.2 },
+      },
+    })
+    const { heroMarkup, css } = await renderUsefulLinksHero()
+
+    expect(heroMarkup).toMatch(
+      /^<div class="contents" style="--hero-focal-point:10% 90%"><section /
+    )
+    expect(heroMarkup).toContain('<img alt=""')
+    expect(heroMarkup).toContain('_next/image?url=https%3A%2F%2Fcdn.sanity.io')
+    expect(css).toMatch(/& img \{\s*object-position: var\(--hero-focal-point\);\s*\}/)
+  })
+
+  it('leaves a Sanity hero without a hotspot centred', async () => {
+    mockUsefulLinksPage({
+      pageTitle: 'Resources',
+      heroImage: { asset: { _ref: 'image-hero-jpg' } },
+    })
+    const { heroMarkup, css } = await renderUsefulLinksHero()
+
+    expect(heroMarkup).not.toContain('--hero-focal-point')
+    expect(css).not.toContain('object-position')
+  })
+
+  it('renders the fallback hero exactly like a plain PageHero', async () => {
+    mockUsefulLinksPage(null)
+    const { heroMarkup, css } = await renderUsefulLinksHero()
+
+    // React hoists the image preload <link> ahead of a standalone render.
+    const plainHero = renderToStaticMarkup(
+      createElement(PageHero, {
+        title: 'Useful Links',
+        backgroundImage: '/images/about/church-exterior.jpg',
+      })
+    )
+    expect(heroMarkup).toBe(plainHero.slice(plainHero.indexOf('<section')))
+    expect(css).not.toContain('object-position')
   })
 })
 
