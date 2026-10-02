@@ -1,177 +1,144 @@
 # St. Basil's Syriac Orthodox Church Website
 
-> **Note:** The production app is the **Next.js** rebuild (`src/`, `README.md`). The old Bootstrap static site is archived under `archive/legacy-static-site/`. The sections below describe that legacy site for reference.
+The production app is the **Next.js rebuild** (`src/`, `README.md`). The legacy Bootstrap static site is archived at `archive/legacy-static-site/`.
 
 ## Overview
-Static HTML website for St. Basil's Syriac Orthodox Church in Boston, Massachusetts. Serves the Jacobite Malayalee community in the New England region.
+
+Next.js 15 (App Router) + React 19 website for St. Basil's Syriac Orthodox Church in Newton, MA. Serves the Jacobite Malayalee community in the New England region.
 
 - **Address**: 73 Ellis Street, Newton, MA 02464
 - **Domain**: stbasilsboston.org
 
 ## Technology Stack
-- **Frontend**: Static HTML5, CSS3, JavaScript (no build step)
-- **CSS Framework**: Bootstrap 5.3.3 (Squadfree template base)
-- **Backend**: PHP contact forms (currently non-functional)
-- **Hosting**: Vercel
-- **CI/CD**: GitHub Actions (Supabase migrations), Vercel (deployments)
-- **Database**: Supabase (Postgres)
+
+| Layer             | Technology                                                                            |
+| ----------------- | ------------------------------------------------------------------------------------- |
+| App               | Next.js 15 (App Router), React 19, TypeScript (strict), Tailwind CSS 4               |
+| Structured data   | Supabase — events, announcements, subscribers, contact, families, payments, profiles  |
+| Editorial content | Sanity — clergy, organizations, page copy, spiritual leaders, useful links            |
+| Email             | Resend + React Email templates                                                        |
+| Forms             | Server Actions, Zod, Cloudflare Turnstile                                             |
+| Hosting           | Vercel (preview deploys on PRs; production auto-deploys on merge to `main`)           |
 
 ## Project Structure
 
-### Root HTML Pages (20 total)
+```
+src/
+├── app/
+│   ├── (public)/          # Marketing pages + Navbar/Footer; no auth check
+│   ├── (auth)/            # Login, forgot-password, set-password; centred layout, no role check
+│   ├── (admin)/admin/     # Admin dashboard + CRUD; requires profiles.role = 'admin'
+│   ├── (member)/member/   # Member portal; requires profiles.role = 'member'  ⚠️ retiring — see Epic 10
+│   ├── (dev)/             # admin-preview, showcase; dev/preview helpers only
+│   ├── studio/[[...tool]] # Sanity Studio (embedded)
+│   └── api/               # Webhooks, ICS, newsletter, OG images, test helpers, revalidation
+├── actions/               # Server Actions
+├── components/            # UI, layout, feature components
+├── emails/                # React Email templates
+├── lib/                   # Supabase, Sanity, validators, event-time, email
+└── sanity/                # Schemas and GROQ queries
 
-**Active — linked from navigation (14):**
-```
-index.html              # Homepage
-about.html              # Our History
-spiritual-leader.html   # Our Spiritual Fathers
-our-clergy.html         # Our Clergy
-office-bearers.html     # Our Office Bearers
-acolytes-choir.html     # Our Acolytes & Choir
-our-organizations.html  # Our Organizations
-events-calendar.html    # Events Calendar (custom JS calendar)
-useful-links.html       # Useful Links
-first-time.html         # First Time Visiting?
-giving.html             # Giving / Donations
-contact-us.html         # Contact Us
-privacy-policy.html     # Privacy Policy (footer link)
-terms-of-use.html       # Terms of Use (footer link)
-```
-
-**Orphaned — exist but not linked from navigation (4):**
-```
-sunday-school.html      # Replaced by our-organizations.html
-stpauls-mensfellow.html # Replaced by our-organizations.html
-stmarys-womens.html     # Replaced by our-organizations.html
-youth.html              # Replaced by our-organizations.html
+supabase/migrations/       # Postgres schema + RLS (applied to production on push to main)
+services/change-request-agent/  # Standalone Node service (do not edit from this repo)
+e2e/                       # Playwright smoke + CI integration specs
+archive/                   # Legacy static site, design assets (archive/README.md)
 ```
 
-**Template — unused (2):**
-```
-portfolio-details.html  # Squadfree template page
-starter-page.html       # Squadfree template page
-```
+### Route group details
 
-### Key Directories
-```
-/assets/
-├── css/main.css            # Primary stylesheet (2,352 lines)
-├── js/main.js              # Primary script (210 lines)
-├── img/                    # Images organized by page/section
-├── PDFs/                   # Liturgical documents (12 PDFs)
-├── scss/                   # SCSS source (Readme.txt only)
-└── vendor/                 # Third-party libraries
-    ├── aos/                # Animate On Scroll
-    ├── bootstrap/          # Bootstrap 5.3.3
-    ├── bootstrap-icons/    # Icon library
-    ├── glightbox/          # Image/video lightbox
-    ├── imagesloaded/       # Image load detection
-    ├── isotope-layout/     # Masonry/grid filtering
-    ├── php-email-form/     # Form validation JS (PHP library MISSING)
-    ├── purecounter/        # Counter animations
-    └── swiper/             # Touch slider/carousel
+| Group | URL prefix | Auth boundary | Layout notes |
+|-------|-----------|---------------|--------------|
+| `(public)` | `/` | None — middleware skips session refresh; pages are cache-eligible | Navbar + Footer |
+| `(auth)` | `/login`, `/forgot-password`, `/set-password` | Middleware refreshes session; layout has no role check | Centred full-page form |
+| `(admin)` | `/admin/**` | Layout redirects to `/login` if no user; redirects to `/` if `profile.role !== 'admin'` | AdminSidebar + AdminTopBar |
+| `(member)` | `/member/**` | Layout redirects to `/login` if no user; redirects to `/` if `profile.role !== 'member'` | MemberSidebar + MemberTopBar |
+| `(dev)` | `/admin-preview`, `/showcase` | No auth gate | Dev helpers, not in production navigation |
+| `api` | `/api/**` | Per-route; middleware always refreshes session for `/api` paths | Route handlers |
+| `studio` | `/studio/**` | Sanity's own auth | Sanity Studio |
 
-/forms/
-├── contact.php             # Contact form handler (BROKEN - see Known Issues)
-└── newsletter.php          # Newsletter handler (BROKEN - see Known Issues)
+**Middleware session-refresh paths** (`src/lib/session-paths.ts`): `/admin`, `/member`, `/login`, `/forgot-password`, `/set-password`, `/rsvp`, `/api`. All other paths skip the Supabase `auth.getUser()` round-trip so public pages remain cache-eligible for Vercel/Next.js.
 
-/.github/workflows/
-├── ci.yml                  # Validate + unit tests + smoke tests on PRs/pushes to main
-├── migrate.yml             # Supabase migrations: push to main with changes in supabase/migrations/
-├── claude.yml              # Claude Code automation
-├── claude-code-review.yml  # Claude Code PR review
-└── lighthouse.yml          # Lighthouse performance checks
-```
+## Data Split
 
-## Navigation Structure
-```
-Home
-About (Dropdown)
-  ├── Our History
-  ├── Our Spiritual Fathers
-  ├── Our Clergy
-  ├── Our Office Bearers
-  ├── Our Acolytes & Choir
-  └── Our Organizations
-Resources (Dropdown)
-  ├── Events Calendar
-  ├── Useful Links
-  └── First Time Visiting?
-Giving
-Contact Us
-```
+**Sanity (editorial content — edited in Studio):**
+- Clergy, spiritual leaders, office bearers, organizations, acolytes & choir page, useful links, page content (privacy policy, terms of use)
+- Schema types in `src/sanity/schemas/`
+- Webhook → `POST /api/revalidate` (authenticated with `SANITY_WEBHOOK_SECRET`) triggers `revalidatePath()` for the affected route
 
-## Service Times
-- Morning Prayer: 8:30 AM EST (Sundays)
-- Holy Qurbono: 9:15 AM EST (Sundays)
+**Supabase (operational data — managed via admin console or migrations):**
+- `events`, `announcements`, `email_subscribers`, `contact_submissions`
+- `profiles`, `families`, `family_members`, `shares`, `payments`, `event_charges`, `event_rsvps`
+- `change_requests`, `change_request_messages`, `change_request_files` (Storage bucket)
+- `admin_audit_log`, `site_settings`
 
-## Design System
+## Caching
 
-### Colors (CSS Variables in main.css)
-- `--accent-color`: #67b0d1 (light blue)
-- `--heading-color`: #2f4d5a (dark blue-gray)
-- `--default-color`: #444444 (body text)
-- Header/Nav background: #FEFAE0 (cream)
-- Accent sections: #91203C (deep maroon)
-- Dark sections: #273f49 (dark teal)
+All `(public)` pages export `export const revalidate = 60` (60-second ISR). Pages backed by Supabase data (`events`, `announcements`) use `unstable_cache` with cache tags (`public-events`, `public-announcements`, `public-site-settings` — see `src/lib/cache-tags.ts`). Sanity-backed pages use `unstable_cache` with `revalidate: 60`.
 
-### Fonts
-- **Body**: Roboto
-- **Headings**: Raleway
-- **Navigation**: Libre Baskerville
-- Also loaded: Poppins, Merriweather
+The sitemap (`src/app/sitemap.ts`) uses `export const revalidate = 300`. The ICS feed uses `export const revalidate = 3600`. Admin pages use `export const revalidate = 0` (always dynamic).
 
-### Frontend Libraries
-- Bootstrap 5.3.3, Bootstrap Icons
-- AOS (Animate On Scroll)
-- GLightbox (image/video lightbox)
-- Swiper 11.1.9 (carousel/slider)
-- Isotope (grid filtering)
-- ImagesLoaded (image load detection)
-- PureCounter 1.5.0 (number animations)
+## Scripts (`package.json`)
 
-## Interactive Features
-- Mobile-responsive hamburger navigation
-- Scroll-triggered animations (AOS)
-- Image lightbox galleries (GLightbox)
-- Swiper carousels
-- Custom liturgical calendar (events-calendar.html, JS, hardcoded events 2024-2026)
-- Background music player with toggle (index.html)
-- Expandable parking/metro tabs (contact-us.html)
-- PureCounter number animations
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Development server (`next dev`) |
+| `npm run build` | Production build (`next build`) |
+| `npm run ci:validate` | Format check + lint + typecheck + build (full CI gate) |
+| `npm test` | Vitest unit tests |
+| `npm run test:e2e:ci` | Playwright CI suite (`e2e/ci` + `e2e/smoke`, Chromium) |
+| `npm run test:smoke` | Playwright smoke tests (`@smoke` grep) |
+| `npm run typecheck` | TypeScript type check only |
+| `npm run lint` | ESLint only |
+| `npm run format:check` | Prettier check only |
+| `npm run bench:public-nav` | Navigation performance benchmark |
+
+## CI Jobs (`.github/workflows/ci.yml`)
+
+Runs on every PR and push to `main`:
+
+| Job | Runs on | What it does |
+|-----|---------|--------------|
+| **Validate** | every event | `npm ci` → `npm run ci:validate` (format check, lint, typecheck, build) |
+| **Unit Tests** | every event | `npm ci` → `npm test` (Vitest) |
+| **Change Request Agent Service** | every event | Installs service's own locked deps, runs its `typecheck` + `npx vitest run services/change-request-agent` |
+| **Browser Flow Tests** | PR only | Spins up local Supabase stack, installs Playwright Chromium, runs `npm run test:e2e:ci -- --project=chromium` |
+
+**Lighthouse CI** (`.github/workflows/lighthouse.yml`) — PR only: waits for Vercel preview, runs Lighthouse, posts scores as a PR comment (no bypass secret in URL per #367/#371).
 
 ## Deployment
-- **Production**: Vercel auto-deploys on push to `main`
-- **Preview**: Vercel deploys preview URLs on PRs
-- **Supabase Migrations**: Push to `main` with changes in `supabase/migrations/` triggers `.github/workflows/migrate.yml` → runs `supabase db push`
-- Migration workflow requires GitHub Secrets: `SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_ID`, `SUPABASE_DB_PASSWORD`
 
-## Known Issues
+### App (Vercel)
+- **Production**: Push or merge to `main` → Vercel auto-deploys to production.
+- **Preview**: Every PR gets a Vercel preview URL (used by Browser Flow Tests and Lighthouse CI).
 
-### Critical
-1. **Contact form broken**: `forms/contact.php` uses placeholder email `contact@example.com`, and the required PHP Email Form library (`assets/vendor/php-email-form/php-email-form.php`) is not included
-2. **JS null reference**: `assets/js/main.js` line 82 calls `scrollTop.addEventListener()` without null check — crashes if `.scroll-top` element is missing
-3. **No HTML form exists**: `validate.js` is loaded on all 20 pages but no `<form class="php-email-form">` exists anywhere
+### Database migrations (Supabase)
+- Push to `main` with changes under `supabase/migrations/**` triggers `.github/workflows/migrate.yml`.
+- That workflow runs `supabase db push --db-url $SUPABASE_DB_URL --skip-vault` (transaction-pooler connection).
+- Required GitHub secret: `SUPABASE_DB_URL` (replaces the legacy `SUPABASE_ACCESS_TOKEN` / `SUPABASE_DB_PASSWORD` approach).
 
-### SEO
-- Empty meta descriptions on `index.html` and `our-clergy.html`
-- No Open Graph or Twitter Card tags on any page
-- Duplicate `<title>` tags on sunday-school, stmarys-womens, stpauls-mensfellow, youth
-- No canonical tags
+### Content (Sanity)
+- Sanity webhook POSTs to `/api/revalidate` on document change; `SANITY_WEBHOOK_SECRET` authenticates the request; affected Next.js routes are revalidated via `revalidatePath()`.
 
-### CSS
-- 34 `!important` declarations in main.css
-- Duplicate class definitions (`.image-container`, `.text-overlay`, `.service-item`)
-- 70+ inline styles in `about.html`, heavy inline styling across other pages
-- Non-standard inch-based CSS units mixed with pixels
+## Change-Request Agent PRs
 
-### Accessibility
-- Empty alt text on images in orphaned organization pages
-- Missing ARIA labels on navigation elements
-- Heading hierarchy issues (H2 before H1 on index)
+The `services/change-request-agent/` worker opens PRs when processing admin change requests. These PRs:
+- Do **not** contain a `Fixes #N` / `Closes #N` link — the worker intentionally omits closing keywords (see `services/change-request-agent/src/prbody.ts`).
+- Open as drafts until CI passes and the Vercel preview is verified.
+- Merge only after a human reviews and merges them; nothing deploys automatically.
 
-### Other
-- `newsletter.php` bug: `from_name` set to email address instead of subscriber name
-- `our-clergy.html` re-initializes AOS with conflicting settings vs `main.js`
-- Function typo: `mobileNavToogle` instead of `mobileNavToggle` in main.js
-- Missing image: `assets/img/organizations/youth.jpg` (exists at `assets/img/Our Orgs/youth.jpg`)
+Do not modify `services/change-request-agent/`, `supabase/migrations/`, or PRs opened by the change-request-agent worker.
+
+## Community / Member portal — Retiring
+
+The `/member` portal and related community features are being retired. See **Epic 10**: https://github.com/georgenijo/St-Basils-Rebuild/issues/400
+
+Do not implement new member/community features. Phases 1–4 are tracked in issues #401–#404; George's approval is required before Phase 1 (hide entry points) and Phase 4 (data drop).
+
+## Other CI Workflows
+
+| Workflow | Trigger | Purpose |
+|----------|---------|---------|
+| `claude.yml` | `@claude` mention in issues/PRs | Claude Code automation |
+| `claude-code-review.yml` | Every PR | Claude Code automated review |
+| `change-request-agent-image.yml` | Push/PR to `main` touching `services/change-request-agent/**` | Builds + publishes worker Docker image to GHCR |
+| `change-request-agent-maintenance.yml` | Scheduled | Wakes the managed agent for periodic maintenance sweep |
