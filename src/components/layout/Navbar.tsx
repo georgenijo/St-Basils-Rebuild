@@ -142,7 +142,7 @@ export function Navbar({ className }: NavbarProps) {
       {/* Backdrop overlay for mobile menu */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/20 xl:hidden"
+          className="fixed inset-0 z-40 bg-black/20 lg:hidden"
           aria-hidden="true"
           onClick={() => setMobileOpen(false)}
         />
@@ -169,7 +169,7 @@ export function Navbar({ className }: NavbarProps) {
             </Link>
 
             {/* ── Desktop links ── */}
-            <ul className="hidden xl:flex xl:items-center xl:gap-1">
+            <ul className="hidden lg:flex lg:items-center lg:gap-0.5 xl:gap-1">
               {navigation.map((item) =>
                 item.children ? (
                   <li
@@ -255,7 +255,7 @@ export function Navbar({ className }: NavbarProps) {
             {/* ── Desktop login link ── */}
             <Link
               href="/login"
-              className="hidden xl:inline-flex items-center rounded-lg border border-burgundy-700 px-4 py-1.5 text-sm font-medium text-burgundy-700 transition-colors hover:bg-burgundy-700 hover:text-white"
+              className="hidden lg:inline-flex items-center rounded-lg border border-burgundy-700 px-4 py-1.5 text-sm font-medium text-burgundy-700 transition-colors hover:bg-burgundy-700 hover:text-white"
             >
               Login
             </Link>
@@ -265,7 +265,7 @@ export function Navbar({ className }: NavbarProps) {
               <button
                 ref={hamburgerRef}
                 type="button"
-                className="flex h-11 w-11 items-center justify-center rounded-lg text-wood-800 transition-colors hover:text-burgundy-700 xl:hidden"
+                className="flex h-11 w-11 items-center justify-center rounded-lg text-wood-800 transition-colors hover:text-burgundy-700 lg:hidden"
                 onClick={(event) => {
                   event.stopPropagation()
                   setMobileOpen((open) => !open)
@@ -277,7 +277,7 @@ export function Navbar({ className }: NavbarProps) {
                 {mobileOpen ? <CloseIcon /> : <HamburgerIcon />}
               </button>
             ) : (
-              <div className="h-11 w-11 xl:hidden" aria-hidden="true" />
+              <div className="h-11 w-11 lg:hidden" aria-hidden="true" />
             )}
           </div>
         </div>
@@ -293,7 +293,7 @@ export function Navbar({ className }: NavbarProps) {
           id="mobile-menu"
           hidden={!mobileOpen}
           aria-hidden={!mobileOpen}
-          className="relative z-10 overflow-hidden bg-cream-50 xl:hidden"
+          className="relative z-10 overflow-hidden bg-cream-50 lg:hidden"
         >
           <ul className="max-h-[calc(100vh-5rem)] space-y-1 overflow-y-auto px-4 py-4">
             {navigation.map((item) =>
