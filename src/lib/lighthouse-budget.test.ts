@@ -158,6 +158,7 @@ describe('image budget', () => {
         { page: '/our-clergy', image: '/images/about/church-exterior.jpg', bytes: 4_002_818 },
       ],
       unmeasured: [],
+      missingNetwork: [],
     })
   })
 
@@ -165,6 +166,75 @@ describe('image budget', () => {
     const { manifest, readLhr } = runsFor()
     const result = checkImageBudget(manifest.slice(1), readLhr)
     expect(result.unmeasured).toEqual(['/'])
+  })
+})
+
+// LH-1: a run without usable network requests must fail closed, not count as
+// a page with no oversized images.
+const MALFORMED_NETWORK: [string, object][] = [
+  ['network-requests audit missing', {}],
+  ['details missing', { 'network-requests': {} }],
+  ['items missing', { 'network-requests': { details: {} } }],
+  ['items not an array', { 'network-requests': { details: { items: { 0: 'x' } } } }],
+  ['items null', { 'network-requests': { details: { items: null } } }],
+]
+
+function withoutNetwork(path: string, audits: object) {
+  return { finalUrl: PREVIEW + path, audits }
+}
+
+describe('image budget with missing network data (LH-1)', () => {
+  it.each(MALFORMED_NETWORK)('fails a page whose only run has %s', (_, audits) => {
+    const { manifest, readLhr } = runsFor()
+    const read = (jsonPath: string) =>
+      jsonPath === '/our-clergy' ? withoutNetwork('/our-clergy', audits) : readLhr(jsonPath)
+    expect(checkImageBudget(manifest, read)).toEqual({
+      violations: [],
+      unmeasured: ['/our-clergy'],
+      missingNetwork: ['/our-clergy'],
+    })
+    expect(() => oversizedImages(withoutNetwork('/our-clergy', audits))).toThrow(/network-requests/)
+  })
+
+  it('fails every page when the audit is missing from every run', () => {
+    const { manifest } = runsFor()
+    const result = checkImageBudget(manifest, (path: string) => withoutNetwork(path, {}))
+    expect(result).toEqual({ violations: [], unmeasured: PATHS, missingNetwork: PATHS })
+  })
+
+  it('fails a page when one of its runs lacks network data even if the others pass', () => {
+    const { manifest, readLhr } = runsFor()
+    const clergy = manifest.find((run) => run.jsonPath === '/our-clergy')!
+    const broken = { ...clergy, jsonPath: 'broken' }
+    const read = (jsonPath: string) =>
+      jsonPath === 'broken' ? withoutNetwork('/our-clergy', {}) : readLhr(jsonPath)
+    const result = checkImageBudget([...manifest, clergy, broken], read)
+    expect(result.unmeasured).toEqual([])
+    expect(result.missingNetwork).toEqual(['/our-clergy'])
+  })
+
+  it('never reports the budget as met in the PR comment', () => {
+    const { manifest } = runsFor()
+    const imageBudget = checkImageBudget(manifest, (path: string) => withoutNetwork(path, {}))
+    const body = renderComment({ manifest, imageBudget })
+    expect(body).not.toContain('No image over budget')
+    expect(body).toContain('- ❌ `/our-clergy` has a run without network requests to check')
+  })
+
+  it('makes check-images exit 1', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'lighthouse-budget-'))
+    const { manifest } = runsFor()
+    const onDisk = manifest.map((entry, index) => {
+      const jsonPath = join(dir, `${index}.json`)
+      writeFileSync(jsonPath, JSON.stringify(withoutNetwork(entry.jsonPath, {})))
+      return { ...entry, jsonPath }
+    })
+    const result = spawnSync(process.execPath, [SCRIPT, 'check-images'], {
+      env: { ...process.env, LIGHTHOUSE_MANIFEST: JSON.stringify(onDisk) },
+      encoding: 'utf8',
+    })
+    expect(result.status).toBe(1)
+    expect(result.stderr).toContain('/our-clergy: a run has no network-requests items to check')
   })
 })
 

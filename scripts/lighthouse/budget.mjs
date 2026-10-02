@@ -94,11 +94,20 @@ export function median(values) {
   return sorted.length % 2 ? sorted[mid] : (sorted[mid] + sorted[mid + 1]) / 2
 }
 
+// The run's network requests, or null when the `network-requests` audit,
+// its details or its items are missing or malformed. A run without them
+// cannot show that its images are within budget.
+export function networkItems(lhr) {
+  const items = lhr?.audits?.['network-requests']?.details?.items
+  return Array.isArray(items) ? items : null
+}
+
 // Images the browser downloaded that exceed the budget. Uses the larger of the
 // bytes transferred and the decoded body so a cached or compressed response
 // cannot hide a heavy file.
 export function oversizedImages(lhr, maxBytes = IMAGE_MAX_BYTES) {
-  const items = lhr.audits?.['network-requests']?.details?.items ?? []
+  const items = networkItems(lhr)
+  if (!items) throw new Error('Lighthouse result has no network-requests items')
   return items
     .filter((item) => item.resourceType === 'Image')
     .map((item) => ({
@@ -118,14 +127,20 @@ export function displayImage(url) {
   return parsed.pathname
 }
 
-// Checks every run in an LHCI manifest. Returns the budget violations and any
-// audited page that has no result, both of which must fail the check.
+// Checks every run in an LHCI manifest. Returns the budget violations, any
+// audited page with no checkable result, and any page with a run whose network
+// requests are missing. All three must fail the check.
 export function checkImageBudget(manifest, readLhr = readLhrFile, maxBytes = IMAGE_MAX_BYTES) {
   const violations = new Map()
   const measured = new Set()
+  const missingNetwork = new Set()
   for (const run of manifest) {
     const lhr = readLhr(run.jsonPath)
-    const page = pathOf(lhr.finalUrl || run.url)
+    const page = pathOf(lhr?.finalUrl || run.url)
+    if (!networkItems(lhr)) {
+      missingNetwork.add(page)
+      continue
+    }
     measured.add(page)
     for (const image of oversizedImages(lhr, maxBytes)) {
       const label = displayImage(image.url)
@@ -138,6 +153,7 @@ export function checkImageBudget(manifest, readLhr = readLhrFile, maxBytes = IMA
   return {
     violations: [...violations.values()],
     unmeasured: PATHS.filter((path) => !measured.has(path)),
+    missingNetwork: [...missingNetwork],
   }
 }
 
@@ -212,8 +228,8 @@ export function renderComment({ manifest, links = {}, imageBudget }) {
   if (!imageBudget) {
     lines.push('Image budget was not checked.')
   } else {
-    const { violations, unmeasured } = imageBudget
-    if (!violations.length && !unmeasured.length) {
+    const { violations, unmeasured, missingNetwork } = imageBudget
+    if (!violations.length && !unmeasured.length && !missingNetwork.length) {
       lines.push('✅ No image over budget.')
     }
     for (const { page, image, bytes } of violations) {
@@ -221,6 +237,9 @@ export function renderComment({ manifest, links = {}, imageBudget }) {
     }
     for (const page of unmeasured) {
       lines.push(`- ❌ \`${page}\` has no Lighthouse result`)
+    }
+    for (const page of missingNetwork) {
+      lines.push(`- ❌ \`${page}\` has a run without network requests to check`)
     }
   }
   return lines.join('\n')
@@ -238,12 +257,15 @@ function main([command, arg]) {
       console.error('No Lighthouse results to check.')
       return 1
     }
-    const { violations, unmeasured } = checkImageBudget(manifest)
+    const { violations, unmeasured, missingNetwork } = checkImageBudget(manifest)
     for (const { page, image, bytes } of violations) {
       console.error(`${page}: ${image} is ${kib(bytes)} (budget ${kib(IMAGE_MAX_BYTES)})`)
     }
     for (const page of unmeasured) console.error(`${page}: no Lighthouse result`)
-    if (violations.length || unmeasured.length) return 1
+    for (const page of missingNetwork) {
+      console.error(`${page}: a run has no network-requests items to check`)
+    }
+    if (violations.length || unmeasured.length || missingNetwork.length) return 1
     console.log(`All images on ${PATHS.join(', ')} are within ${kib(IMAGE_MAX_BYTES)}.`)
     return 0
   }
