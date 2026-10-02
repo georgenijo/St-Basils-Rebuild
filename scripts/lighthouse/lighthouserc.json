@@ -1,0 +1,65 @@
+{
+  "ci": {
+    "collect": {
+      "numberOfRuns": 3,
+      "settings": {
+        "skipAudits": ["is-crawlable"]
+      }
+    },
+    "assert": {
+      "assertMatrix": [
+        {
+          "aggregationMethod": "median",
+          "assertions": {
+            "categories:accessibility": ["error", { "minScore": 0.95 }],
+            "categories:best-practices": ["error", { "minScore": 0.9 }],
+            "categories:seo": ["error", { "minScore": 0.9 }],
+            "document-title": ["error", { "minScore": 1 }],
+            "meta-description": ["error", { "minScore": 1 }],
+            "http-status-code": ["error", { "minScore": 1 }],
+            "link-text": ["error", { "minScore": 1 }],
+            "crawlable-anchors": ["error", { "minScore": 1 }],
+            "robots-txt": ["error", { "minScore": 1 }],
+            "image-alt": ["error", { "minScore": 1 }],
+            "hreflang": ["error", { "minScore": 1 }]
+          }
+        },
+        {
+          "matchingUrlPattern": "^https?://[^/]+/?$",
+          "aggregationMethod": "median",
+          "assertions": {
+            "categories:performance": ["error", { "minScore": 0.7 }]
+          }
+        },
+        {
+          "matchingUrlPattern": "^https?://[^/]+/about/?$",
+          "aggregationMethod": "median",
+          "assertions": {
+            "categories:performance": ["error", { "minScore": 0.8 }]
+          }
+        },
+        {
+          "matchingUrlPattern": "^https?://[^/]+/our-clergy/?$",
+          "aggregationMethod": "median",
+          "assertions": {
+            "categories:performance": ["error", { "minScore": 0.7 }]
+          }
+        },
+        {
+          "matchingUrlPattern": "^https?://[^/]+/our-organizations/?$",
+          "aggregationMethod": "median",
+          "assertions": {
+            "categories:performance": ["error", { "minScore": 0.7 }]
+          }
+        },
+        {
+          "matchingUrlPattern": "^https?://[^/]+/events/?$",
+          "aggregationMethod": "median",
+          "assertions": {
+            "categories:performance": ["error", { "minScore": 0.7 }]
+          }
+        }
+      ]
+    }
+  }
+}

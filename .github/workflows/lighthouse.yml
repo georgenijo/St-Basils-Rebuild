@@ -23,8 +23,22 @@ jobs:
         uses: patrickedqvist/wait-for-vercel-preview@v1.3.2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          max_timeout: 300
+          # The action waits half of this for Vercel to create the deployment
+          # and the full value for it to finish. 300 failed runs whenever the
+          # Vercel build queued for more than 150s.
+          max_timeout: 900
           check_interval: 10
+
+      - name: List pages to audit
+        id: urls
+        env:
+          PREVIEW_URL: ${{ steps.vercel.outputs.url }}
+        run: |
+          {
+            echo 'urls<<EOF'
+            node scripts/lighthouse/budget.mjs urls "$PREVIEW_URL"
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
 
       - name: Run Lighthouse CI
         id: lighthouse
@@ -32,11 +46,20 @@ jobs:
         with:
           # Never put the protection-bypass secret in the tested URL: Lighthouse
           # records that URL in the uploaded public report and in the PR
-          # comment. Previews are not protected, so no bypass is needed.
-          urls: ${{ steps.vercel.outputs.url }}
-          configPath: .github/lighthouse/lighthouserc.json
+          # comment. Previews are not protected, so no bypass is needed, and
+          # budget.mjs keeps only the preview's origin.
+          urls: ${{ steps.urls.outputs.urls }}
+          # Thresholds (median of 3 mobile runs per page) live in this file.
+          configPath: scripts/lighthouse/lighthouserc.json
           uploadArtifacts: true
           temporaryPublicStorage: true
+
+      - name: Check image budget
+        id: images
+        if: always() && steps.lighthouse.outputs.manifest != ''
+        env:
+          LIGHTHOUSE_MANIFEST: ${{ steps.lighthouse.outputs.manifest }}
+        run: node scripts/lighthouse/budget.mjs check-images
 
       - name: Post Results
         if: always() && steps.lighthouse.outcome != 'skipped'
@@ -54,38 +77,18 @@ jobs:
               return;
             }
 
-            const result = manifest[0];
-            const { summary } = result;
-
-            const score = (v) => Math.round(v * 100);
-            const badge = (v, t) => v >= t ? '\u2705' : '\u274C';
-
-            const perf = score(summary.performance);
-            const a11y = score(summary.accessibility);
-            const seo = score(summary.seo);
-            const bp = score(summary['best-practices']);
-            const seoStatus = seo >= 90
-              ? badge(seo, 90)
-              : 'Preview noindex expected';
-
-            const reportUrl = Object.values(links)[0];
-            // Defence in depth: never echo a query string into a public comment.
-            const testedUrl = String(result.url).split(/[?#]/)[0];
-
-            const body = [
-              '## Lighthouse Results',
-              '',
-              '| Category | Score | Threshold | Status |',
-              '|----------|-------|-----------|--------|',
-              `| Performance | **${perf}** | >= 90 | ${badge(perf, 90)} |`,
-              `| Accessibility | **${a11y}** | >= 95 | ${badge(a11y, 95)} |`,
-              `| SEO | **${seo}** | individual audits | ${seoStatus} |`,
-              `| Best Practices | **${bp}** | — | — |`,
-              '',
-              reportUrl ? `[Full Report](${reportUrl})` : '',
-              '',
-              `*Tested: ${testedUrl}*`,
-            ].join('\n');
+            const { checkImageBudget, renderComment } = await import(
+              `${process.env.GITHUB_WORKSPACE}/scripts/lighthouse/budget.mjs`
+            );
+            let imageBudget;
+            try {
+              imageBudget = checkImageBudget(manifest);
+            } catch (error) {
+              core.warning(`Image budget could not be read: ${error.message}`);
+            }
+            // Tested URLs and image labels are printed without query strings,
+            // so nothing from a URL's query can reach this public comment.
+            const body = renderComment({ manifest, links, imageBudget });
 
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
