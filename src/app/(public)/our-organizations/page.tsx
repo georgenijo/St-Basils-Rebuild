@@ -7,7 +7,7 @@ import { SanityImage } from '@/lib/sanity/image'
 import { allOrganizationsQuery } from '@/lib/sanity/queries'
 import { cn } from '@/lib/utils'
 import { breadcrumbSchema } from '@/lib/structured-data'
-import { GoldDivider, JsonLd, ScrollReveal } from '@/components/ui'
+import { GoldDivider, JsonLd, PageHero, ScrollReveal } from '@/components/ui'
 
 import type { Organization } from '@/lib/sanity/types'
 
@@ -41,18 +41,7 @@ export default async function OurOrganizationsPage() {
         data={breadcrumbSchema([{ name: 'Our Organizations', path: '/our-organizations' }])}
       />
 
-      {/* Parallax Hero */}
-      <section className="relative flex h-[40vh] items-center justify-center overflow-hidden md:h-[60vh]">
-        <div
-          className="absolute inset-0 bg-cover bg-fixed bg-center"
-          style={{ backgroundImage: "url('/images/about/group-photo.jpg')" }}
-          aria-hidden="true"
-        />
-        <div className="absolute inset-0 bg-black/50" aria-hidden="true" />
-        <h1 className="relative z-10 animate-drop-in px-4 text-center font-heading text-[2.5rem] font-light leading-[1.1] text-cream-50 md:text-[4rem]">
-          Our Organizations
-        </h1>
-      </section>
+      <PageHero title="Our Organizations" backgroundImage="/images/about/group-photo.jpg" />
 
       {/* Organizations */}
       {organizations.length > 0 ? (

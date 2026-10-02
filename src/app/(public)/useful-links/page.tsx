@@ -1,10 +1,10 @@
 import type { Metadata } from 'next'
 
 import { sanityFetch } from '@/lib/sanity/client'
-import { urlFor, SanityImage } from '@/lib/sanity/image'
+import { urlFor } from '@/lib/sanity/image'
 import { allUsefulLinksQuery, usefulLinksPageQuery } from '@/lib/sanity/queries'
 import { breadcrumbSchema } from '@/lib/structured-data'
-import { SectionHeader, ScrollReveal, JsonLd } from '@/components/ui'
+import { PageHero, SectionHeader, ScrollReveal, JsonLd } from '@/components/ui'
 
 import type { UsefulLink, UsefulLinksPage } from '@/lib/sanity/types'
 
@@ -66,30 +66,14 @@ export default async function UsefulLinksPageRoute() {
     <>
       <JsonLd data={breadcrumbSchema([{ name: 'Useful Links', path: '/useful-links' }])} />
 
-      {/* Parallax Hero */}
-      <section className="relative flex h-[40vh] items-center justify-center overflow-hidden md:h-[60vh]">
-        {pageContent?.heroImage ? (
-          <SanityImage
-            image={pageContent.heroImage}
-            alt=""
-            fill
-            priority
-            className="object-cover"
-            style={{ position: 'absolute' }}
-            sizes="100vw"
-          />
-        ) : (
-          <div
-            className="absolute inset-0 bg-cover bg-fixed bg-center"
-            style={{ backgroundImage: "url('/images/about/church-exterior.jpg')" }}
-            aria-hidden="true"
-          />
-        )}
-        <div className="absolute inset-0 bg-black/50" aria-hidden="true" />
-        <h1 className="relative z-10 animate-drop-in px-4 text-center font-heading text-[2.5rem] font-light leading-[1.1] text-cream-50 md:text-[4rem]">
-          {title}
-        </h1>
-      </section>
+      <PageHero
+        title={title}
+        backgroundImage={
+          pageContent?.heroImage
+            ? urlFor(pageContent.heroImage).url()
+            : '/images/about/church-exterior.jpg'
+        }
+      />
 
       {/* Intro */}
       {pageContent?.introText && (

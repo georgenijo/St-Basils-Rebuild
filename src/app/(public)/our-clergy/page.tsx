@@ -6,7 +6,7 @@ import { SanityImage } from '@/lib/sanity/image'
 import { allClergyQuery } from '@/lib/sanity/queries'
 import { cn } from '@/lib/utils'
 import { breadcrumbSchema } from '@/lib/structured-data'
-import { SectionHeader, ScrollReveal, JsonLd } from '@/components/ui'
+import { PageHero, SectionHeader, ScrollReveal, JsonLd } from '@/components/ui'
 import { CandleFlame } from '@/components/features/CandleFlame'
 
 import type { Clergy } from '@/lib/sanity/types'
@@ -55,18 +55,7 @@ export default async function OurClergyPage() {
     <>
       <JsonLd data={breadcrumbSchema([{ name: 'Our Clergy', path: '/our-clergy' }])} />
 
-      {/* Fixed Background Hero */}
-      <section className="relative flex h-[40vh] items-center justify-center overflow-hidden md:h-[60vh]">
-        <div
-          className="absolute inset-0 bg-cover bg-fixed bg-center"
-          style={{ backgroundImage: "url('/images/about/church-exterior.jpg')" }}
-          aria-hidden="true"
-        />
-        <div className="absolute inset-0 bg-black/50" aria-hidden="true" />
-        <h1 className="relative z-10 animate-drop-in px-4 text-center font-heading text-[2.5rem] font-light leading-[1.1] text-cream-50 md:text-[4rem]">
-          Our Clergy
-        </h1>
-      </section>
+      <PageHero title="Our Clergy" backgroundImage="/images/about/church-exterior.jpg" />
 
       {/* Current Clergy */}
       {current.length > 0 && (
