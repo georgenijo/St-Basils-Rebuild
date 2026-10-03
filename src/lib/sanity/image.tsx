@@ -16,7 +16,7 @@ export function urlFor(source: SanityImageSource) {
   return builder.image(source)
 }
 
-function getHotspotPosition(image: SanityImageSource): string | undefined {
+export function getHotspotPosition(image: SanityImageSource): string | undefined {
   if (typeof image === 'object' && 'hotspot' in image && image.hotspot) {
     const { x, y } = image.hotspot
     return `${x * 100}% ${y * 100}%`
