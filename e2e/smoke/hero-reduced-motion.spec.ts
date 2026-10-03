@@ -22,7 +22,9 @@ async function expectNoHorizontalOverflow(page: Page) {
 }
 
 async function expectHeroVisibleWithoutMotion(page: Page) {
-  expect(await page.evaluate(() => matchMedia('(prefers-reduced-motion: reduce)').matches)).toBe(true)
+  expect(await page.evaluate(() => matchMedia('(prefers-reduced-motion: reduce)').matches)).toBe(
+    true
+  )
   const { heading, wrapper, quote } = heroLocators(page)
   const dropInHeading = wrapper.getByRole('heading', {
     level: 2,
