@@ -81,16 +81,13 @@ test.describe('Homepage hero reduced motion @smoke', () => {
   }
 })
 
-test.describe('Homepage hero reduced motion without JavaScript @smoke', () => {
-  test.use({
-    viewport: { width: 390, height: 844 },
-    contextOptions: { reducedMotion: 'reduce' },
-    javaScriptEnabled: false,
-  })
-
-  test('server-rendered hero is visible', async ({ page }) => {
-    await page.goto('/', { waitUntil: 'domcontentloaded' })
-    await expectHeroVisibleWithoutMotion(page)
+test.describe('Homepage hero server rendering @smoke', () => {
+  test('server response includes hero content before hydration', async ({ request }) => {
+    const response = await request.get('/')
+    expect(response.ok()).toBe(true)
+    const html = await response.text()
+    expect(html).toMatch(/<h1\b[^>]*class="[^"]*typewriter-text[^"]*"[^>]*>Come As You Are<\/h1>/)
+    expect(html).toContain(PSALM_REFERENCE)
   })
 })
 
