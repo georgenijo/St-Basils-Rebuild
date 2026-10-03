@@ -11,6 +11,10 @@ the completion boundary for historical broadcasts.
 
 - Fetch/preparation failures return HTTP 500, with no provider call. A later
   invocation must pass the atomic claim again.
+- The subscriber query requests an exact count and refuses to claim/send if
+  the returned audience is truncated by the API row limit. Large audiences
+  require separately implemented pagination or a confirmed higher row limit;
+  they are never silently reported as complete.
 - Claim locks the announcement, checks current eligibility and content, and
   inserts one unique ledger row per announcement. Competing invocations return
   HTTP 409 while it is claimed. The ledger stores counts and IDs, no email

@@ -27,6 +27,7 @@ class SyntheticDatabase {
   }))
   claim: { attempt: string; state: string; accepted: number; total: number } | null = null
   fail = new Set<string>()
+  audienceCount: number | null | undefined = undefined
   beforeClaim?: () => void
   failOnce(operation: string) {
     this.fail.add(operation)
@@ -47,7 +48,11 @@ class SyntheticDatabase {
         }
         return this.response('fetch', this.record)
       }
-      if (table === 'email_subscribers') return this.response('subscribers', this.subscribers)
+      if (table === 'email_subscribers')
+        return {
+          ...this.response('subscribers', this.subscribers),
+          count: this.audienceCount === undefined ? this.subscribers.length : this.audienceCount,
+        }
       const operation = update?.state ? 'reconcile' : 'progress'
       const res = this.response(operation, { announcement_id: id })
       if (res.error) return res
@@ -257,6 +262,17 @@ describe('production announcement Edge handler with synthetic DB and fake sends'
       expect(e.accepted).toHaveLength(0)
       expect((await e.invoke()).status).toBe(200)
       expect(new Set(e.accepted).size).toBe(201)
+    }
+  })
+
+  it('refuses to claim or send when the subscriber audience is truncated or count is unknown', async () => {
+    for (const count of [1001, null]) {
+      const e = edge()
+      e.db.audienceCount = count
+      expect((await e.invoke()).status).toBe(500)
+      expect(e.db.claim).toBeNull()
+      expect(e.accepted).toHaveLength(0)
+      expect(e.db.record.email_sent_at).toBeNull()
     }
   })
 

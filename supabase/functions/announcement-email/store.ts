@@ -1,9 +1,9 @@
 import type { Announcement, BroadcastStore, Claim, Subscriber } from './lifecycle.ts'
 
-type DbResult = { data: unknown; error: unknown }
+type DbResult = { data: unknown; error: unknown; count?: number | null }
 // The subset used here is compatible with supabase-js and a synthetic DB.
 interface Query {
-  select(columns: string): Query
+  select(columns: string, options?: { count: 'exact' }): Query
   eq(column: string, value: unknown): Query
   is(column: string, value: null): Query
   single(): PromiseLike<DbResult>
@@ -11,7 +11,7 @@ interface Query {
 }
 export interface Database {
   from(table: string): {
-    select(columns: string): Query
+    select(columns: string, options?: { count: 'exact' }): Query
     update(values: Record<string, unknown>): Query
   }
   rpc(name: string, args: Record<string, unknown>): PromiseLike<DbResult>
@@ -43,14 +43,16 @@ export function createBroadcastStore(db: Database): BroadcastStore {
       return data as Announcement
     },
     async getSubscribers() {
-      const data = checked(
-        await db
-          .from('email_subscribers')
-          .select('email, name, unsubscribe_token')
-          .eq('confirmed', true)
-          .is('unsubscribed_at', null)
-      )
+      const response = await db
+        .from('email_subscribers')
+        .select('email, name, unsubscribe_token', { count: 'exact' })
+        .eq('confirmed', true)
+        .is('unsubscribed_at', null)
+      const data = checked(response)
       if (!Array.isArray(data)) throw new Error('Subscribers not returned')
+      // PostgREST can silently cap the returned rows. Fail before claiming or
+      // sending rather than mark a truncated audience fully complete.
+      if (response.count !== data.length) throw new Error('Incomplete subscriber audience')
       return data as Subscriber[]
     },
     async claim(id, attempt, total) {
