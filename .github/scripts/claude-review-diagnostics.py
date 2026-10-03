@@ -29,6 +29,15 @@ RESULT_SUBTYPES = frozenset(
         "error_max_budget_usd", "error_max_structured_output_retries",
     )
 )
+# All top-level discriminants in SDKMessage 0.3.288. Payloads of the event-only
+# types are deliberately ignored, including auth_status.output/error.
+MESSAGE_TYPES = frozenset(
+    (
+        "system", "assistant", "user", "result", "stream_event",
+        "tool_progress", "auth_status", "tool_use_summary", "rate_limit_event",
+        "prompt_suggestion", "conversation_reset",
+    )
+)
 
 
 def bounded_int(value, maximum, minimum=0):
@@ -45,6 +54,8 @@ def category(error, status, result):
         return "rate_limit"
     if status == 400:
         return "invalid_request"
+    if status == 529:
+        return "overloaded"
     if status is not None and status >= 500:
         return "server_error"
     if status is not None:
@@ -62,7 +73,7 @@ def category(error, status, result):
 def diagnose(messages):
     if not isinstance(messages, list) or not 0 < len(messages) <= MAX_COUNT:
         return UNAVAILABLE.copy()
-    if any(not isinstance(m, dict) or m.get("type") not in ("system", "assistant", "user", "result") for m in messages):
+    if any(not isinstance(m, dict) or not isinstance(m.get("type"), str) or m["type"] not in MESSAGE_TYPES for m in messages):
         return UNAVAILABLE.copy()
     results = [m for m in messages if m["type"] == "result"]
     if len(results) != 1:

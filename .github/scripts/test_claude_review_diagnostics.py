@@ -34,7 +34,7 @@ class DiagnosticsTests(unittest.TestCase):
                 record = diagnostics.diagnose(frames(error))
                 self.assertEqual(record["assistant_error"], error)
                 self.assertEqual(record["known_error_category"], error)
-        for status, expected in ((401, "authentication_failed"), (429, "rate_limit"), (400, "invalid_request"), (503, "server_error"), (403, "unknown")):
+        for status, expected in ((401, "authentication_failed"), (429, "rate_limit"), (400, "invalid_request"), (503, "server_error"), (529, "overloaded"), (403, "unknown")):
             with self.subTest(status=status):
                 record = diagnostics.diagnose(frames(status=status))
                 self.assertEqual(record["api_error_status"], status)
@@ -89,8 +89,8 @@ class DiagnosticsTests(unittest.TestCase):
         messages = frames()
         messages[0]["type"] = []
         malformed.append(messages)
-        for messages in malformed:
-            with self.subTest(shape=len(malformed)):
+        for index, messages in enumerate(malformed):
+            with self.subTest(shape=index):
                 self.assertEqual(diagnostics.diagnose(messages), diagnostics.UNAVAILABLE)
 
     def test_all_result_subtypes_are_allowlisted(self):
@@ -115,6 +115,30 @@ class DiagnosticsTests(unittest.TestCase):
             self.assertEqual(record["assistant_error"], "unknown")
             self.assertEqual(record["known_error_category"], "unknown")
             self.assertEqual(record["permission_denials_count"], 1)
+
+    def test_documented_sdk_event_stream_ignores_sensitive_payloads(self):
+        event_types = {
+            "stream_event", "tool_progress", "auth_status", "tool_use_summary",
+            "rate_limit_event", "prompt_suggestion", "conversation_reset",
+        }
+        self.assertEqual(event_types | {"system", "assistant", "user", "result"}, diagnostics.MESSAGE_TYPES)
+        canary = "SYNTHETIC-SECRET person@example.invalid https://private.invalid ::error::INJECTED"
+        for status, expected in ((401, "authentication_failed"), (429, "rate_limit")):
+            messages = frames(status=status)
+            events = [{"type": kind, "error": canary, "output": [canary], "event": {"input": canary}, "rate_limit_info": {"status": canary}, "summary": canary} for kind in sorted(event_types)]
+            messages[1:1] = events
+            messages.insert(1, {"type": "system", "subtype": "hook_response", "output": canary})
+            record = diagnostics.diagnose(messages)
+            self.assertEqual(record["known_error_category"], expected)
+            self.assertNotIn(canary, json.dumps(record))
+            with tempfile.TemporaryDirectory() as directory:
+                (Path(directory) / "claude-execution-output.json").write_text(json.dumps(messages))
+                process = self.run_cli(directory)
+                self.assertEqual(json.loads(process.stdout), record)
+                self.assertEqual(process.stderr, "")
+                self.assertNotIn("SYNTHETIC-SECRET", process.stdout)
+        messages.insert(1, {"type": "future_sdk_type", "output": canary})
+        self.assertEqual(diagnostics.diagnose(messages), diagnostics.UNAVAILABLE)
 
     def run_cli(self, directory, path=""):
         return subprocess.run([sys.executable, str(SCRIPT)], env={"RUNNER_TEMP": str(directory), "CLAUDE_EXECUTION_FILE": str(path)}, capture_output=True, text=True, timeout=5)
