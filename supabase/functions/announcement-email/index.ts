@@ -1,11 +1,12 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { broadcast } from './lifecycle.ts'
+import { createBroadcastStore, type Database } from './store.ts'
 
 const RESEND_API_URL = 'https://api.resend.com/emails/batch'
 const CHURCH_NAME = "St. Basil's Syriac Orthodox Church"
 const CHURCH_ADDRESS = '73 Ellis Street, Newton, MA 02464'
 const FROM_EMAIL = 'announcements@stbasilsboston.org'
 const SITE_URL = Deno.env.get('SITE_URL') ?? 'https://stbasilsboston.org'
-const RESEND_BATCH_LIMIT = 100
 const EMAIL_TRANSPORT = Deno.env.get('EMAIL_TRANSPORT') ?? 'resend'
 const EMAIL_SINK_BASE_URL = Deno.env.get('EMAIL_SINK_BASE_URL')
 const TEST_SUPPORT_SECRET = Deno.env.get('TEST_SUPPORT_SECRET')
@@ -40,12 +41,6 @@ interface TiptapNode {
 interface TiptapMark {
   type: string
   attrs?: Record<string, unknown>
-}
-
-interface Subscriber {
-  email: string
-  name: string | null
-  unsubscribe_token: string
 }
 
 // ─── Tiptap JSON → HTML ─────────────────────────────────────────────
@@ -209,8 +204,7 @@ async function sendBatch(
       })
 
       if (!res.ok) {
-        const body = await res.text()
-        return { success: false, error: `Email sink ${res.status}: ${body}` }
+        return { success: false, error: `Email sink ${res.status}` }
       }
     }
 
@@ -226,13 +220,31 @@ async function sendBatch(
     headers: {
       Authorization: `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
+      'x-batch-validation': 'strict',
     },
-    body: JSON.stringify(emails),
+    // Sink metadata is test-only; send only documented provider fields.
+    body: JSON.stringify(
+      emails.map((email) => ({
+        from: email.from,
+        to: email.to,
+        subject: email.subject,
+        html: email.html,
+      }))
+    ),
   })
 
   if (!res.ok) {
-    const body = await res.text()
-    return { success: false, error: `Resend API ${res.status}: ${body}` }
+    return { success: false, error: `Resend API ${res.status}` }
+  }
+
+  const response = await res.json()
+  if (
+    !Array.isArray(response.data) ||
+    response.data.length !== emails.length ||
+    response.data.some((email: { id?: unknown }) => !email || typeof email.id !== 'string') ||
+    (response.errors && (!Array.isArray(response.errors) || response.errors.length > 0))
+  ) {
+    return { success: false, error: 'Incomplete or unrecognized provider acceptance response' }
   }
 
   return { success: true }
@@ -248,7 +260,7 @@ Deno.serve(async (req) => {
   // Verify authorization
   const authHeader = req.headers.get('Authorization')
   const expectedKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
-  if (!authHeader || authHeader !== `Bearer ${expectedKey}`) {
+  if (!expectedKey || !authHeader || authHeader !== `Bearer ${expectedKey}`) {
     return new Response('Unauthorized', { status: 401 })
   }
 
@@ -270,110 +282,48 @@ Deno.serve(async (req) => {
     })
   }
 
-  const { record } = payload
+  const record = payload?.record
 
-  // Idempotency: skip if already sent or conditions not met
-  if (!record.send_email || record.email_sent_at || !record.published_at) {
-    return new Response(
-      JSON.stringify({ skipped: true, reason: 'Conditions not met for sending' }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
-    )
+  // Webhook records may be stale. Only the ID is trusted; current eligibility
+  // and content are fetched from the database and rechecked under the claim lock.
+  if (!record || typeof record.id !== 'string') {
+    return new Response(JSON.stringify({ error: 'Announcement ID required' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    })
   }
-
-  // Create Supabase admin client
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL')!,
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
   )
-
-  // Double-check idempotency from DB (race condition guard)
-  const { data: freshRecord, error: fetchError } = await supabase
-    .from('announcements')
-    .select('email_sent_at')
-    .eq('id', record.id)
-    .single()
-
-  if (fetchError || freshRecord?.email_sent_at) {
-    return new Response(JSON.stringify({ skipped: true, reason: 'Already sent (DB check)' }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    })
-  }
-
-  // Fetch active, confirmed, non-unsubscribed subscribers
-  const { data: subscribers, error: subError } = await supabase
-    .from('email_subscribers')
-    .select('email, name, unsubscribe_token')
-    .eq('confirmed', true)
-    .is('unsubscribed_at', null)
-
-  if (subError) {
-    return new Response(
-      JSON.stringify({ error: 'Failed to fetch subscribers', details: subError.message }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    )
-  }
-
-  if (!subscribers || subscribers.length === 0) {
-    // Mark as sent even with no subscribers to avoid retrying
-    await supabase
-      .from('announcements')
-      .update({ email_sent_at: new Date().toISOString() })
-      .eq('id', record.id)
-
-    return new Response(JSON.stringify({ sent: 0, reason: 'No active subscribers' }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    })
-  }
-
-  // Build and send emails in batches
-  const subject = record.title
-  let totalSent = 0
-  const errors: string[] = []
-
-  for (let i = 0; i < subscribers.length; i += RESEND_BATCH_LIMIT) {
-    const batch = (subscribers as Subscriber[]).slice(i, i + RESEND_BATCH_LIMIT)
-    const emails = batch.map((sub) => {
-      const unsubscribeUrl = `${SITE_URL}/api/newsletter/unsubscribe?token=${sub.unsubscribe_token}`
-      return {
-        from: `${CHURCH_NAME} <${FROM_EMAIL}>`,
-        to: sub.email,
-        subject,
-        html: buildEmailHtml(record, unsubscribeUrl),
-        metadata: {
-          template: 'announcement-broadcast',
-          announcementId: record.id,
-          announcementUrl: `${SITE_URL}/announcements/${record.slug}`,
-          unsubscribeUrl,
-        },
-      }
-    })
-
-    const result = await sendBatch(emails, resendApiKey)
-    if (result.success) {
-      totalSent += batch.length
-    } else {
-      errors.push(result.error ?? 'Unknown error')
+  const outcome = await broadcast(
+    record.id,
+    crypto.randomUUID(),
+    // Keep the adapter's small testable query contract separate from
+    // supabase-js's recursive schema-inference types.
+    createBroadcastStore(supabase as unknown as Database),
+    async (announcement, subscribers) => {
+      const emails = subscribers.map((sub) => {
+        const unsubscribeUrl = `${SITE_URL}/api/newsletter/unsubscribe?token=${encodeURIComponent(sub.unsubscribe_token)}`
+        return {
+          from: `${CHURCH_NAME} <${FROM_EMAIL}>`,
+          to: sub.email,
+          subject: announcement.title,
+          html: buildEmailHtml(announcement as AnnouncementRecord, unsubscribeUrl),
+          metadata: {
+            template: 'announcement-broadcast',
+            announcementId: announcement.id,
+            announcementUrl: `${SITE_URL}/announcements/${announcement.slug}`,
+            unsubscribeUrl,
+          },
+        }
+      })
+      const sent = await sendBatch(emails, resendApiKey)
+      if (!sent.success) throw new Error('Provider acceptance failed or uncertain')
     }
-  }
-
-  // Only mark as sent when ALL batches succeeded — partial failures
-  // leave email_sent_at NULL so a manual retry can re-trigger the webhook.
-  if (errors.length === 0) {
-    await supabase
-      .from('announcements')
-      .update({ email_sent_at: new Date().toISOString() })
-      .eq('id', record.id)
-  }
-
-  const status = errors.length === 0 ? 200 : 500
-  return new Response(
-    JSON.stringify({
-      sent: totalSent,
-      total: subscribers.length,
-      errors: errors.length > 0 ? errors : undefined,
-    }),
-    { status, headers: { 'Content-Type': 'application/json' } }
   )
+  return new Response(JSON.stringify(outcome.body), {
+    status: outcome.status,
+    headers: { 'Content-Type': 'application/json' },
+  })
 })
