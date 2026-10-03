@@ -43,6 +43,9 @@ jobs:
 
       - run: npm test
 
+      - name: Synthetic announcement broadcast database and race tests
+        run: bash scripts/tests/test-announcement-email-db.sh
+
   service-change-request-agent:
     name: Change Request Agent Service
     runs-on: ubuntu-latest
