@@ -22,6 +22,7 @@ async function expectNoHorizontalOverflow(page: Page) {
 }
 
 async function expectHeroVisibleWithoutMotion(page: Page) {
+  expect(await page.evaluate(() => matchMedia('(prefers-reduced-motion: reduce)').matches)).toBe(true)
   const { heading, wrapper, quote } = heroLocators(page)
   const dropInHeading = wrapper.getByRole('heading', {
     level: 2,
@@ -67,7 +68,7 @@ test.describe('Homepage hero reduced motion @smoke', () => {
     test.describe(`${viewport.label} viewport`, () => {
       test.use({
         viewport: { width: viewport.width, height: viewport.height },
-        reducedMotion: 'reduce',
+        contextOptions: { reducedMotion: 'reduce' },
       })
 
       test('hero is fully visible with reduced motion', async ({ page }) => {
@@ -81,7 +82,7 @@ test.describe('Homepage hero reduced motion @smoke', () => {
 test.describe('Homepage hero reduced motion without JavaScript @smoke', () => {
   test.use({
     viewport: { width: 390, height: 844 },
-    reducedMotion: 'reduce',
+    contextOptions: { reducedMotion: 'reduce' },
     javaScriptEnabled: false,
   })
 
@@ -94,7 +95,7 @@ test.describe('Homepage hero reduced motion without JavaScript @smoke', () => {
 test.describe('Homepage hero without reduced motion @smoke', () => {
   test.use({
     viewport: { width: 390, height: 844 },
-    reducedMotion: 'no-preference',
+    contextOptions: { reducedMotion: 'no-preference' },
   })
 
   test('hero eventually appears with its animations', async ({ page }) => {
