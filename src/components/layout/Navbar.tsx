@@ -92,7 +92,8 @@ export function Navbar({ className }: NavbarProps) {
     setActiveAccordion(null)
   }, [pathname])
 
-  // Escape key closes dropdowns, then mobile menu
+  // Escape key closes dropdowns, then mobile menu.
+  // NAV-1: Tab/ShiftTab trapped within the nav while mobile menu is open.
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if (e.key === 'Escape') {
@@ -101,6 +102,39 @@ export function Navbar({ className }: NavbarProps) {
         } else if (mobileOpen) {
           setMobileOpen(false)
           hamburgerRef.current?.focus()
+        }
+        return
+      }
+
+      if (e.key === 'Tab' && mobileOpen) {
+        // Collect focusable elements visible in the mobile context.
+        // Logo and hamburger are in the top-bar; mobile menu items are in #mobile-menu.
+        // Collapsed accordion links have tabIndex=-1 (NAV-2) and are excluded by the selector.
+        const nav = navRef.current
+        if (!nav) return
+
+        const logoLink = nav.querySelector<HTMLElement>('a[aria-label]')
+        const mobileItems = Array.from(
+          document.querySelectorAll<HTMLElement>(
+            '#mobile-menu a[href]:not([tabindex="-1"]), #mobile-menu button:not([disabled]):not([tabindex="-1"])'
+          )
+        )
+        const focusable: HTMLElement[] = [
+          ...(logoLink ? [logoLink] : []),
+          ...(hamburgerRef.current ? [hamburgerRef.current] : []),
+          ...mobileItems,
+        ]
+        if (focusable.length === 0) return
+
+        const first = focusable[0]
+        const last = focusable[focusable.length - 1]
+
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault()
+          last.focus()
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault()
+          first.focus()
         }
       }
     }
@@ -127,6 +161,20 @@ export function Navbar({ className }: NavbarProps) {
     }
   }, [mobileOpen])
 
+  // NAV-3: Close mobile menu when viewport crosses the lg breakpoint (1024 px).
+  // Without this, body overflow:hidden persists when CSS hides the menu via lg:hidden.
+  useEffect(() => {
+    if (!mobileOpen) return
+    function onResize() {
+      if (window.innerWidth >= 1024) {
+        setMobileOpen(false)
+        setActiveAccordion(null)
+      }
+    }
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [mobileOpen])
+
   const isActive = useCallback(
     (item: NavItem) => {
       if (item.href) return pathname === item.href
@@ -142,7 +190,7 @@ export function Navbar({ className }: NavbarProps) {
       {/* Backdrop overlay for mobile menu */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/20 xl:hidden"
+          className="fixed inset-0 z-40 bg-black/20 lg:hidden"
           aria-hidden="true"
           onClick={() => setMobileOpen(false)}
         />
@@ -169,7 +217,7 @@ export function Navbar({ className }: NavbarProps) {
             </Link>
 
             {/* ── Desktop links ── */}
-            <ul className="hidden xl:flex xl:items-center xl:gap-1">
+            <ul className="hidden lg:flex lg:items-center lg:gap-0.5 xl:gap-1">
               {navigation.map((item) =>
                 item.children ? (
                   <li
@@ -255,7 +303,7 @@ export function Navbar({ className }: NavbarProps) {
             {/* ── Desktop login link ── */}
             <Link
               href="/login"
-              className="hidden xl:inline-flex items-center rounded-lg border border-burgundy-700 px-4 py-1.5 text-sm font-medium text-burgundy-700 transition-colors hover:bg-burgundy-700 hover:text-white"
+              className="hidden lg:inline-flex items-center rounded-lg border border-burgundy-700 px-4 py-1.5 text-sm font-medium text-burgundy-700 transition-colors hover:bg-burgundy-700 hover:text-white"
             >
               Login
             </Link>
@@ -265,7 +313,7 @@ export function Navbar({ className }: NavbarProps) {
               <button
                 ref={hamburgerRef}
                 type="button"
-                className="flex h-11 w-11 items-center justify-center rounded-lg text-wood-800 transition-colors hover:text-burgundy-700 xl:hidden"
+                className="flex h-11 w-11 items-center justify-center rounded-lg text-wood-800 transition-colors hover:text-burgundy-700 lg:hidden"
                 onClick={(event) => {
                   event.stopPropagation()
                   setMobileOpen((open) => !open)
@@ -277,7 +325,7 @@ export function Navbar({ className }: NavbarProps) {
                 {mobileOpen ? <CloseIcon /> : <HamburgerIcon />}
               </button>
             ) : (
-              <div className="h-11 w-11 xl:hidden" aria-hidden="true" />
+              <div className="h-11 w-11 lg:hidden" aria-hidden="true" />
             )}
           </div>
         </div>
@@ -293,13 +341,14 @@ export function Navbar({ className }: NavbarProps) {
           id="mobile-menu"
           hidden={!mobileOpen}
           aria-hidden={!mobileOpen}
-          className="relative z-10 overflow-hidden bg-cream-50 xl:hidden"
+          className="relative z-10 overflow-hidden bg-cream-50 lg:hidden"
         >
           <ul className="max-h-[calc(100vh-5rem)] space-y-1 overflow-y-auto px-4 py-4">
             {navigation.map((item) =>
               item.children ? (
                 <li key={item.label}>
                   <button
+                    id={`accordion-btn-${item.label}`}
                     type="button"
                     className={cn(
                       'flex w-full items-center justify-between rounded-lg min-h-[44px] px-4 py-3 text-base font-medium transition-colors',
@@ -320,9 +369,11 @@ export function Navbar({ className }: NavbarProps) {
                     />
                   </button>
 
-                  {/* Accordion panel */}
+                  {/* Accordion panel — NAV-2: hidden from AT and tab-order when collapsed */}
                   <ul
                     id={`accordion-${item.label}`}
+                    aria-labelledby={`accordion-btn-${item.label}`}
+                    aria-hidden={activeAccordion !== item.label}
                     className={cn(
                       'overflow-hidden transition-all duration-200',
                       activeAccordion === item.label ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
@@ -332,6 +383,7 @@ export function Navbar({ className }: NavbarProps) {
                       <li key={child.href}>
                         <Link
                           href={child.href}
+                          tabIndex={activeAccordion === item.label ? undefined : -1}
                           className={cn(
                             'flex items-center rounded-lg min-h-[44px] py-2.5 pl-8 pr-4 text-sm transition-colors',
                             isChildActive(child.href)
