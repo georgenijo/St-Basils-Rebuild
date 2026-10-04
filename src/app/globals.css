@@ -160,6 +160,10 @@ select:focus:not(:focus-visible),
     animation: none;
   }
 
+  .animate-fade-in-delay {
+    opacity: 1;
+  }
+
   .typewriter-text {
     animation: none;
     width: auto;

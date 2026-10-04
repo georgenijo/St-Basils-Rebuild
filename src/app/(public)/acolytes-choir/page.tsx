@@ -2,10 +2,10 @@ import type { Metadata } from 'next'
 import { PortableText } from 'next-sanity'
 
 import { sanityFetch } from '@/lib/sanity/client'
-import { urlFor, SanityImage } from '@/lib/sanity/image'
+import { getHotspotPosition, urlFor, SanityImage } from '@/lib/sanity/image'
 import { acolytesChoirPageQuery } from '@/lib/sanity/queries'
 import { breadcrumbSchema } from '@/lib/structured-data'
-import { GoldDivider, JsonLd, ScrollReveal } from '@/components/ui'
+import { GoldDivider, JsonLd, PageHero, ScrollReveal } from '@/components/ui'
 
 import type { AcolytesChoirPage } from '@/lib/sanity/types'
 
@@ -59,24 +59,11 @@ export default async function AcolytesChoirPage() {
         data={breadcrumbSchema([{ name: 'Our Acolytes & Choir', path: '/acolytes-choir' }])}
       />
 
-      {/* Parallax Hero */}
-      <section className="relative flex h-[40vh] items-center justify-center overflow-hidden md:h-[60vh]">
-        {page?.heroImage ? (
-          <div
-            className="absolute inset-0 bg-cover bg-fixed bg-center"
-            style={{
-              backgroundImage: `url(${urlFor(page.heroImage).width(1920).quality(80).auto('format').url()})`,
-            }}
-            aria-hidden="true"
-          />
-        ) : (
-          <div className="absolute inset-0 bg-charcoal" aria-hidden="true" />
-        )}
-        <div className="absolute inset-0 bg-black/50" aria-hidden="true" />
-        <h1 className="relative z-10 animate-drop-in px-4 text-center font-heading text-[2.5rem] font-light leading-[1.1] text-cream-50 md:text-[4rem]">
-          {title}
-        </h1>
-      </section>
+      <PageHero
+        title={title}
+        backgroundImage={page?.heroImage ? urlFor(page.heroImage).auto('format').url() : undefined}
+        imagePosition={page?.heroImage ? getHotspotPosition(page.heroImage) : undefined}
+      />
 
       {/* Description */}
       {page?.description && (

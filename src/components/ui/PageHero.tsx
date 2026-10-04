@@ -1,14 +1,16 @@
 import Image from 'next/image'
+import type { CSSProperties } from 'react'
 
 import { cn } from '@/lib/utils'
 
 export interface PageHeroProps {
   title: string
-  backgroundImage: string
+  backgroundImage?: string
+  imagePosition?: CSSProperties['objectPosition']
   className?: string
 }
 
-export function PageHero({ title, backgroundImage, className }: PageHeroProps) {
+export function PageHero({ title, backgroundImage, imagePosition, className }: PageHeroProps) {
   return (
     <section
       className={cn(
@@ -16,7 +18,19 @@ export function PageHero({ title, backgroundImage, className }: PageHeroProps) {
         className
       )}
     >
-      <Image src={backgroundImage} alt="" fill priority className="object-cover" sizes="100vw" />
+      {backgroundImage ? (
+        <Image
+          src={backgroundImage}
+          alt=""
+          fill
+          priority
+          className="object-cover"
+          sizes="100vw"
+          style={imagePosition ? { objectPosition: imagePosition } : undefined}
+        />
+      ) : (
+        <div className="absolute inset-0 bg-charcoal" aria-hidden="true" />
+      )}
 
       <div className="absolute inset-0 bg-black/50" aria-hidden="true" />
 
